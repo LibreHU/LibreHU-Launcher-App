@@ -63,7 +63,13 @@ class ThemeProvider : ContentProvider() {
                 .putInt("accent", accent)
                 .apply()
             context.contentResolver.notifyChange(URI, null)
+            // Running apps listen to the implicit broadcast; manifest receivers (widgets of apps that are not
+            // running) only get broadcasts aimed at their package (Android 8+).
             context.sendBroadcast(ThemeStore.themeIntent(dark, accent))
+            for (pkg in LIBREHU_PACKAGES) context.sendBroadcast(ThemeStore.themeIntent(dark, accent).setPackage(pkg))
         }
+
+        /** LibreHU apps with widgets to redraw on theme changes. */
+        private val LIBREHU_PACKAGES = listOf("org.librehu.fm", "org.librehu.widgets")
     }
 }
