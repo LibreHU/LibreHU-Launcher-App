@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.graphics.drawable.AnimatedImageDrawable
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,26 +16,59 @@ import java.io.File
 
 enum class ThemeMode { LIGHT, DARK, AUTO }
 
+/** What is drawn behind the launcher. */
+enum class WallpaperKind {
+    NONE,
+
+    /** Still picture (JPEG / PNG…), scaled down to the screen. */
+    IMAGE,
+
+    /** Animated GIF / WebP / HEIF sequence, played with [android.graphics.drawable.AnimatedImageDrawable]. */
+    ANIMATED,
+
+    /** Looping, muted video (MP4 / WebM). */
+    VIDEO,
+
+    /** The Android wallpaper, including live wallpapers ("Live Wallpaper" apps). */
+    SYSTEM,
+
+    /** Built-in animations, drawn in the accent colour. */
+    AURORA,
+    STARS,
+    WAVES,
+    ;
+
+    val builtIn get() = this == AURORA || this == STARS || this == WAVES
+}
+
 data class ThemeSettings(
     val mode: ThemeMode = ThemeMode.AUTO,
     val accent: Accent = Accent.BLUE,
     /** Also switch the whole system (other apps) to light / dark. Needs MODIFY_DAY_NIGHT_MODE (privileged). */
     val systemWide: Boolean = true,
-    val hasWallpaper: Boolean = false,
-)
+    val wallpaper: WallpaperKind = WallpaperKind.NONE,
+) {
+    val hasWallpaper get() = wallpaper != WallpaperKind.NONE
+}
 
-/** Persistence of the appearance settings and of the wallpaper image. */
+/** Persistence of the appearance settings and of the wallpaper files. */
 class ThemeStore(
     private val context: Context,
 ) {
     private val prefs = context.getSharedPreferences("theme", Context.MODE_PRIVATE)
     val wallpaperFile = File(context.filesDir, "wallpaper.jpg")
+    val animatedFile = File(context.filesDir, "wallpaper_animated")
+    val videoFile = File(context.filesDir, "wallpaper_video")
 
     private val _settings = MutableStateFlow(load())
     val settings: StateFlow<ThemeSettings> = _settings.asStateFlow()
 
     private val _wallpaper = MutableStateFlow(loadWallpaper())
     val wallpaper: StateFlow<Bitmap?> = _wallpaper.asStateFlow()
+
+    /** Bumped each time a wallpaper file is replaced, so that the players reload it. */
+    private val _revision = MutableStateFlow(0)
+    val revision: StateFlow<Int> = _revision.asStateFlow()
 
     fun update(transform: (ThemeSettings) -> ThemeSettings) {
         val s = transform(_settings.value)
@@ -41,12 +77,35 @@ class ThemeStore(
             .putString("mode", s.mode.name)
             .putString("accent", s.accent.name)
             .putBoolean("system_wide", s.systemWide)
+            .putString("wallpaper", s.wallpaper.name)
             .apply()
         _settings.value = s
     }
 
-    /** Copies the picked image, scaled down to the screen size. */
-    fun setWallpaper(uri: Uri): Boolean {
+    /** Built-in animation, system wallpaper or none: no file needed. */
+    fun setWallpaperKind(kind: WallpaperKind) {
+        if (kind == WallpaperKind.NONE) {
+            clearWallpaper()
+        } else {
+            update { it.copy(wallpaper = kind) }
+        }
+    }
+
+    /**
+     * Uses the picked picture: animated GIF / WebP are kept as they are and played, other pictures are scaled
+     * down to the screen size. Blocking (decodes / copies), call it off the main thread.
+     */
+    fun setImage(uri: Uri): Boolean {
+        val tmp = File(context.cacheDir, "wallpaper_pick")
+        try {
+            if (!copy(uri, tmp, MAX_ANIMATED_BYTES)) return false
+            if (isAnimated(tmp)) {
+                replace(tmp, animatedFile)
+                return use(WallpaperKind.ANIMATED)
+            }
+        } finally {
+            tmp.delete()
+        }
         val dm = context.resources.displayMetrics
         val target = maxOf(dm.widthPixels, dm.heightPixels)
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -59,35 +118,134 @@ class ThemeStore(
             context.contentResolver.openInputStream(uri)?.use {
                 BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
             } ?: return false
-        wallpaperFile.outputStream().use { bmp.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+        val out = File(context.cacheDir, "wallpaper_jpg")
+        out.outputStream().use { bmp.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+        replace(out, wallpaperFile)
         _wallpaper.value = bmp
-        _settings.value = _settings.value.copy(hasWallpaper = true)
-        return true
+        return use(WallpaperKind.IMAGE)
+    }
+
+    /** Copies the picked video (played muted and looping). Blocking, call it off the main thread. */
+    fun setVideo(uri: Uri): Boolean {
+        val tmp = File(context.cacheDir, "wallpaper_pick")
+        try {
+            if (!copy(uri, tmp, MAX_VIDEO_BYTES) || !isVideo(tmp)) return false
+            replace(tmp, videoFile)
+        } finally {
+            tmp.delete()
+        }
+        return use(WallpaperKind.VIDEO)
     }
 
     fun clearWallpaper() {
-        wallpaperFile.delete()
-        _wallpaper.value = null
-        _settings.value = _settings.value.copy(hasWallpaper = false)
+        deleteFiles()
+        update { it.copy(wallpaper = WallpaperKind.NONE) }
     }
 
     fun reset() {
         prefs.edit().clear().apply()
-        clearWallpaper()
+        deleteFiles()
         _settings.value = ThemeSettings()
     }
 
-    private fun load() =
-        ThemeSettings(
+    private fun use(kind: WallpaperKind): Boolean {
+        // Only keep the file of the wallpaper in use.
+        if (kind != WallpaperKind.IMAGE) {
+            wallpaperFile.delete()
+            _wallpaper.value = null
+        }
+        if (kind != WallpaperKind.ANIMATED) animatedFile.delete()
+        if (kind != WallpaperKind.VIDEO) videoFile.delete()
+        _revision.value++
+        update { it.copy(wallpaper = kind) }
+        return true
+    }
+
+    private fun deleteFiles() {
+        wallpaperFile.delete()
+        animatedFile.delete()
+        videoFile.delete()
+        _wallpaper.value = null
+        _revision.value++
+    }
+
+    private fun copy(
+        uri: Uri,
+        to: File,
+        max: Long,
+    ): Boolean {
+        val input = context.contentResolver.openInputStream(uri) ?: return false
+        var total = 0L
+        input.use { i ->
+            to.outputStream().use { o ->
+                val buf = ByteArray(64 * 1024)
+                while (true) {
+                    val n = i.read(buf)
+                    if (n < 0) break
+                    total += n
+                    if (total > max) return false
+                    o.write(buf, 0, n)
+                }
+            }
+        }
+        return total > 0
+    }
+
+    /** The players read the final file: never let them see a half-written one. */
+    private fun replace(
+        from: File,
+        to: File,
+    ) {
+        to.delete()
+        if (!from.renameTo(to)) {
+            from.copyTo(to, overwrite = true)
+            from.delete()
+        }
+    }
+
+    private fun isAnimated(f: File): Boolean =
+        try {
+            ImageDecoder.decodeDrawable(ImageDecoder.createSource(f)) { d, info, _ ->
+                // Only the type matters here: decode as small as possible.
+                d.setTargetSize(maxOf(1, info.size.width / 8), maxOf(1, info.size.height / 8))
+            } is AnimatedImageDrawable
+        } catch (e: Exception) {
+            false
+        }
+
+    private fun isVideo(f: File): Boolean {
+        val r = MediaMetadataRetriever()
+        return try {
+            r.setDataSource(f.path)
+            r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO) == "yes"
+        } catch (e: Exception) {
+            false
+        } finally {
+            r.release()
+        }
+    }
+
+    private fun load(): ThemeSettings {
+        val stored = prefs.getString("wallpaper", null)
+        val kind =
+            runCatching { WallpaperKind.valueOf(stored!!) }.getOrElse {
+                // Settings saved before the animated wallpapers: an image file means IMAGE.
+                if (wallpaperFile.exists()) WallpaperKind.IMAGE else WallpaperKind.NONE
+            }
+        return ThemeSettings(
             mode = runCatching { ThemeMode.valueOf(prefs.getString("mode", null)!!) }.getOrDefault(ThemeMode.AUTO),
             accent = runCatching { Accent.valueOf(prefs.getString("accent", null)!!) }.getOrDefault(Accent.BLUE),
             systemWide = prefs.getBoolean("system_wide", true),
-            hasWallpaper = wallpaperFile.exists(),
+            wallpaper = kind,
         )
+    }
 
     private fun loadWallpaper(): Bitmap? = if (wallpaperFile.exists()) BitmapFactory.decodeFile(wallpaperFile.path) else null
 
     companion object {
+        private const val MAX_ANIMATED_BYTES = 64L * 1024 * 1024
+        private const val MAX_VIDEO_BYTES = 512L * 1024 * 1024
+
         /** Sent to the other LibreHU apps when the effective theme changes (extras: dark, accent). */
         const val ACTION_THEME_CHANGED = "org.librehu.action.THEME_CHANGED"
 

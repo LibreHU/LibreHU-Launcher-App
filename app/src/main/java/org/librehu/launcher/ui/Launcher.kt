@@ -85,6 +85,7 @@ import org.librehu.launcher.data.NowPlaying
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeSettings
 import org.librehu.launcher.data.ThemeStore
+import org.librehu.launcher.data.WallpaperKind
 import org.librehu.launcher.data.WidgetHost
 import org.librehu.launcher.tpms.TpmsManager
 import java.text.DateFormat
@@ -110,8 +111,10 @@ class LauncherActions(
     val forceStop: (String) -> Unit,
     val appInfo: (String) -> Unit,
     val setTheme: ((ThemeSettings) -> ThemeSettings) -> Unit,
-    val pickWallpaper: () -> Unit,
-    val clearWallpaper: () -> Unit,
+    val pickImage: () -> Unit,
+    val pickVideo: () -> Unit,
+    val setWallpaper: (WallpaperKind) -> Unit,
+    val chooseLiveWallpaper: () -> Unit,
     val resetAll: () -> Unit,
 )
 
@@ -129,21 +132,10 @@ fun LauncherScreen(
 ) {
     val apps by appsRepo.apps.collectAsStateWithLifecycle()
     val pins by prefs.pins.collectAsStateWithLifecycle()
-    val wallpaper by theme.wallpaper.collectAsStateWithLifecycle()
     var menuFor by remember { mutableStateOf<LauncherApp?>(null) }
     val byKey = apps.associateBy { it.key }
-    Box(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .background(CarColors.Background),
-    ) {
-        wallpaper?.let { bmp ->
-            val image = remember(bmp) { bmp.asImageBitmap() }
-            Image(image, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-            // Keep the text readable whatever the picture.
-            Box(Modifier.fillMaxSize().background(CarColors.Background.copy(alpha = 0.35f)))
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Wallpaper(theme)
         Row(modifier = Modifier.fillMaxSize()) {
             Rail(pins.mapNotNull { byKey[it] }, screen, actions) { menuFor = it }
             Box(

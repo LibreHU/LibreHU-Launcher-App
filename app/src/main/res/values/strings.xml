@@ -35,8 +35,7 @@
     <string name="theme_system_wide_denied">Not allowed: install the launcher as a privileged app (MODIFY_DAY_NIGHT_MODE). LibreHU apps follow the launcher anyway.</string>
     <string name="accent">Accent colour</string>
     <string name="wallpaper">Wallpaper</string>
-    <string name="wallpaper_pick">Choose an image</string>
-    <string name="wallpaper_remove">Remove</string>
+    <string name="wallpaper_pick">Image / GIF</string>
     <string name="wallpaper_error">This image could not be read.</string>
     <string name="reset">Reset</string>
     <string name="reset_all">Reset the launcher</string>
@@ -82,4 +81,15 @@
     <string name="tpms_show_spare">Spare wheel</string>
     <string name="tpms_alarms">Alarm notifications</string>
     <string name="tpms_on_dashboard">Card on the dashboard</string>
+    <string name="wallpaper_none">None</string>
+    <string name="wallpaper_aurora">Aurora</string>
+    <string name="wallpaper_stars">Stars</string>
+    <string name="wallpaper_waves">Waves</string>
+    <string name="wallpaper_video">Video</string>
+    <string name="wallpaper_system">Android / live wallpaper</string>
+    <string name="wallpaper_live_choose">Choose the Android wallpaper…</string>
+    <string name="wallpaper_hint">Aurora, stars and waves follow the accent colour. Animated GIF / WebP and videos (MP4) loop silently and pause when the launcher is hidden. “Android / live wallpaper” shows the system wallpaper, including live wallpaper apps.</string>
+    <string name="wallpaper_video_error">This video could not be read (too big or unsupported format).</string>
+    <string name="wallpaper_live_error">No wallpaper picker on this system.</string>
+    <string name="tpms_widget_description">Pressure and temperature of the four tyres</string>
 </resources>
