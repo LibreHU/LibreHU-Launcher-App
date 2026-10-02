@@ -47,6 +47,15 @@ class LauncherPrefs(
         _slots.value = _slots.value + (slot to appWidgetId)
     }
 
+    /** Back to the first-start state: default rail shortcuts, empty widget slots (ids returned to delete). */
+    fun reset(): List<Int> {
+        val widgetIds = _slots.value.values.filter { it >= 0 }
+        prefs.edit().clear().apply()
+        _pins.value = loadPins()
+        _slots.value = Slot.entries.associateWith { NO_WIDGET }
+        return widgetIds
+    }
+
     private fun savePins(list: List<String>) {
         prefs.edit().putString("pins", list.joinToString("\n")).apply()
         _pins.value = list

@@ -31,14 +31,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Widgets
@@ -75,11 +81,14 @@ import org.librehu.launcher.data.LauncherApp
 import org.librehu.launcher.data.LauncherPrefs
 import org.librehu.launcher.data.MediaRepository
 import org.librehu.launcher.data.NowPlaying
+import org.librehu.launcher.data.ThemeController
+import org.librehu.launcher.data.ThemeSettings
+import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.data.WidgetHost
 import java.text.DateFormat
 import java.util.Date
 
-enum class Screen { HOME, APPS }
+enum class Screen { HOME, APPS, SETTINGS }
 
 class LauncherActions(
     val launch: (ComponentName) -> Unit,
@@ -95,6 +104,13 @@ class LauncherActions(
     val grantMediaAccess: () -> Unit,
     val addWidget: (LauncherPrefs.Slot, ComponentName) -> Unit,
     val removeWidget: (LauncherPrefs.Slot) -> Unit,
+    val uninstall: (String) -> Unit,
+    val forceStop: (String) -> Unit,
+    val appInfo: (String) -> Unit,
+    val setTheme: ((ThemeSettings) -> ThemeSettings) -> Unit,
+    val pickWallpaper: () -> Unit,
+    val clearWallpaper: () -> Unit,
+    val resetAll: () -> Unit,
 )
 
 /** Car dashboard: shortcut rail on the left, dashboard or app grid on the right. */
@@ -104,32 +120,46 @@ fun LauncherScreen(
     prefs: LauncherPrefs,
     media: MediaRepository,
     widgets: WidgetHost,
+    theme: ThemeStore,
+    themeController: ThemeController,
     screen: Screen,
     actions: LauncherActions,
 ) {
     val apps by appsRepo.apps.collectAsStateWithLifecycle()
     val pins by prefs.pins.collectAsStateWithLifecycle()
+    val wallpaper by theme.wallpaper.collectAsStateWithLifecycle()
+    var menuFor by remember { mutableStateOf<LauncherApp?>(null) }
     val byKey = apps.associateBy { it.key }
-    Row(
+    Box(
         modifier =
             Modifier
                 .fillMaxSize()
                 .background(CarColors.Background),
     ) {
-        Rail(pins.mapNotNull { byKey[it] }, screen, actions)
-        Box(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .padding(top = 12.dp, end = 12.dp, bottom = 12.dp),
-        ) {
-            when (screen) {
-                Screen.HOME -> Dashboard(prefs, media, widgets, actions)
-                Screen.APPS -> AppGrid(apps, pins, actions)
+        wallpaper?.let { bmp ->
+            val image = remember(bmp) { bmp.asImageBitmap() }
+            Image(image, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            // Keep the text readable whatever the picture.
+            Box(Modifier.fillMaxSize().background(CarColors.Background.copy(alpha = 0.35f)))
+        }
+        Row(modifier = Modifier.fillMaxSize()) {
+            Rail(pins.mapNotNull { byKey[it] }, screen, actions) { menuFor = it }
+            Box(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(top = 12.dp, end = 12.dp, bottom = 12.dp),
+            ) {
+                when (screen) {
+                    Screen.HOME -> Dashboard(prefs, media, widgets, actions)
+                    Screen.APPS -> AppGrid(apps, pins, actions) { menuFor = it }
+                    Screen.SETTINGS -> SettingsScreen(theme, themeController, actions)
+                }
             }
         }
     }
+    menuFor?.let { app -> AppMenu(app, app.key in pins, actions) { menuFor = null } }
 }
 
 // --- Rail --------------------------------------------------------------------------------------------------------
@@ -139,6 +169,7 @@ private fun Rail(
     pinned: List<LauncherApp>,
     screen: Screen,
     actions: LauncherActions,
+    onMenu: (LauncherApp) -> Unit,
 ) {
     Column(
         modifier =
@@ -156,7 +187,7 @@ private fun Rail(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             items(pinned, key = { it.key }) { app ->
-                AppIcon(app, size = 64) {
+                AppIcon(app, size = 64, onLongClick = { onMenu(app) }) {
                     actions.launch(app.component)
                 }
             }
@@ -566,8 +597,8 @@ private fun AppGrid(
     apps: List<LauncherApp>,
     pins: List<String>,
     actions: LauncherActions,
+    onMenu: (LauncherApp) -> Unit,
 ) {
-    var menuFor by remember { mutableStateOf<LauncherApp?>(null) }
     Column(
         modifier =
             Modifier
@@ -584,10 +615,18 @@ private fun AppGrid(
             contentPadding = PaddingValues(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            item(key = "settings") {
+                GridTile(stringResource(R.string.settings), onClick = { actions.show(Screen.SETTINGS) }) {
+                    Box(
+                        Modifier.size(72.dp).clip(CircleShape).background(CarColors.Accent),
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(Icons.Default.Settings, null, tint = CarColors.OnAccent, modifier = Modifier.size(40.dp)) }
+                }
+            }
             items(apps, key = { it.key }) { app ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)) {
+                GridTile(app.label) {
                     Box {
-                        AppIcon(app, size = 72, onLongClick = { menuFor = app }) {
+                        AppIcon(app, size = 72, onLongClick = { onMenu(app) }) {
                             actions.launch(app.component)
                             actions.show(Screen.HOME)
                         }
@@ -600,43 +639,102 @@ private fun AppGrid(
                             )
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        app.label,
-                        color = CarColors.Text,
-                        fontSize = 15.sp,
-                        maxLines = 2,
-                        textAlign = TextAlign.Center,
-                        overflow = TextOverflow.Ellipsis,
-                    )
                 }
             }
         }
     }
-    menuFor?.let { app ->
-        val pinned = app.key in pins
+}
+
+@Composable
+private fun GridTile(
+    label: String,
+    onClick: (() -> Unit)? = null,
+    icon: @Composable () -> Unit,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .padding(4.dp),
+    ) {
+        icon()
+        Spacer(Modifier.height(8.dp))
+        Text(label, color = CarColors.Text, fontSize = 15.sp, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** Long press on an app (rail or grid): pin, reorder, app info, force stop, uninstall. */
+@Composable
+private fun AppMenu(
+    app: LauncherApp,
+    pinned: Boolean,
+    actions: LauncherActions,
+    onDismiss: () -> Unit,
+) {
+    val pkg = app.component.packageName
+    var confirmUninstall by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Image(app.icon, null, modifier = Modifier.size(56.dp).clip(CircleShape)) },
+        title = { Text(app.label) },
+        text = {
+            Column {
+                MenuRow(Icons.Default.PushPin, stringResource(if (pinned) R.string.unpin else R.string.pin)) {
+                    actions.togglePin(app.key)
+                    onDismiss()
+                }
+                if (pinned) {
+                    MenuRow(Icons.Default.ArrowUpward, stringResource(R.string.move_up)) { actions.movePin(app.key, -1) }
+                    MenuRow(Icons.Default.ArrowDownward, stringResource(R.string.move_down)) { actions.movePin(app.key, 1) }
+                }
+                MenuRow(Icons.Default.Info, stringResource(R.string.app_info)) {
+                    actions.appInfo(pkg)
+                    onDismiss()
+                }
+                MenuRow(Icons.Default.Block, stringResource(R.string.force_stop)) {
+                    actions.forceStop(pkg)
+                    onDismiss()
+                }
+                MenuRow(Icons.Default.Delete, stringResource(R.string.uninstall)) { confirmUninstall = true }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+    )
+    if (confirmUninstall) {
         AlertDialog(
-            onDismissRequest = { menuFor = null },
-            title = { Text(app.label) },
-            text = { if (pinned) RowMoveButtons(app, actions) },
+            onDismissRequest = { confirmUninstall = false },
+            title = { Text(stringResource(R.string.uninstall_confirm, app.label)) },
             confirmButton = {
                 TextButton(onClick = {
-                    actions.togglePin(app.key)
-                    menuFor = null
-                }) { Text(stringResource(if (pinned) R.string.unpin else R.string.pin)) }
+                    confirmUninstall = false
+                    actions.uninstall(pkg)
+                    onDismiss()
+                }) { Text(stringResource(R.string.uninstall)) }
             },
-            dismissButton = { TextButton(onClick = { menuFor = null }) { Text(stringResource(R.string.cancel)) } },
+            dismissButton = { TextButton(onClick = { confirmUninstall = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }
 
 @Composable
-private fun RowMoveButtons(
-    app: LauncherApp,
-    actions: LauncherActions,
+private fun MenuRow(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        TextButton(onClick = { actions.movePin(app.key, -1) }) { Text(stringResource(R.string.move_up)) }
-        TextButton(onClick = { actions.movePin(app.key, 1) }) { Text(stringResource(R.string.move_down)) }
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 8.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, null, tint = CarColors.Accent, modifier = Modifier.size(26.dp))
+        Spacer(Modifier.width(16.dp))
+        Text(label, color = CarColors.Text, fontSize = 18.sp)
     }
 }
