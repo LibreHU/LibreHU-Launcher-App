@@ -4,6 +4,7 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
+import android.hardware.usb.UsbManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -24,6 +25,7 @@ import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.data.WidgetHost
 import org.librehu.launcher.headunit.HeadUnitBridge
+import org.librehu.launcher.tpms.TpmsManager
 import org.librehu.launcher.ui.CarTheme
 import org.librehu.launcher.ui.LauncherActions
 import org.librehu.launcher.ui.LauncherScreen
@@ -64,6 +66,7 @@ class MainActivity : ComponentActivity() {
         theme = ThemeStore(this)
         themeController = ThemeController(applicationContext, theme, headUnit.headlights)
         themeController.start(lifecycleScope)
+        TpmsManager.get(this).start()
         apps.start()
         hideSystemBars()
 
@@ -135,6 +138,8 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         // Home pressed while already home: back to the dashboard.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) screen.value = Screen.HOME
+        // USB TPMS receiver plugged in (device filter): permission granted, connect.
+        if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED) TpmsManager.get(this).connect()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

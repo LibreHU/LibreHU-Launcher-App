@@ -65,6 +65,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -85,10 +86,11 @@ import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeSettings
 import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.data.WidgetHost
+import org.librehu.launcher.tpms.TpmsManager
 import java.text.DateFormat
 import java.util.Date
 
-enum class Screen { HOME, APPS, SETTINGS }
+enum class Screen { HOME, APPS, SETTINGS, TPMS }
 
 class LauncherActions(
     val launch: (ComponentName) -> Unit,
@@ -155,6 +157,7 @@ fun LauncherScreen(
                     Screen.HOME -> Dashboard(prefs, media, widgets, actions)
                     Screen.APPS -> AppGrid(apps, pins, actions) { menuFor = it }
                     Screen.SETTINGS -> SettingsScreen(theme, themeController, actions)
+                    Screen.TPMS -> TpmsScreen()
                 }
             }
         }
@@ -301,6 +304,11 @@ private fun Dashboard(
             modifier = Modifier.weight(1f).fillMaxHeight(),
         ) {
             MediaCard(media, actions, Modifier.weight(1f).fillMaxWidth())
+            val tpmsSettings by TpmsManager
+                .get(LocalContext.current)
+                .settings
+                .collectAsStateWithLifecycle()
+            if (tpmsSettings.enabled) TpmsCard(Modifier.weight(0.9f).fillMaxWidth()) { actions.show(Screen.TPMS) }
             WidgetSlot(
                 slot = LauncherPrefs.Slot.SIDE,
                 appWidgetId = slots[LauncherPrefs.Slot.SIDE] ?: LauncherPrefs.NO_WIDGET,
@@ -621,6 +629,14 @@ private fun AppGrid(
                         Modifier.size(72.dp).clip(CircleShape).background(CarColors.Accent),
                         contentAlignment = Alignment.Center,
                     ) { Icon(Icons.Default.Settings, null, tint = CarColors.OnAccent, modifier = Modifier.size(40.dp)) }
+                }
+            }
+            item(key = "tpms") {
+                GridTile(stringResource(R.string.tpms_title), onClick = { actions.show(Screen.TPMS) }) {
+                    Box(
+                        Modifier.size(72.dp).clip(CircleShape).background(CarColors.SurfaceHigh),
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(painterResource(R.drawable.ic_tyre), null, tint = CarColors.Accent, modifier = Modifier.size(40.dp)) }
                 }
             }
             items(apps, key = { it.key }) { app ->

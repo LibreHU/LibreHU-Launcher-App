@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- USB-serial adapters used by USB TPMS receivers (list of the original apps). -->
+<resources>
+    <!-- FTDI FT232R / FT231X -->
+    <usb-device vendor-id="1027" product-id="24577" />
+    <usb-device vendor-id="1027" product-id="24597" />
+    <!-- Arduino -->
+    <usb-device vendor-id="9025" />
+    <!-- VOTI / CDC -->
+    <usb-device vendor-id="5824" product-id="1155" />
+    <!-- Silicon Labs CP210x -->
+    <usb-device vendor-id="4292" product-id="60000" />
+    <!-- Prolific PL2303 -->
+    <usb-device vendor-id="1659" product-id="8963" />
+    <!-- WCH CH340 -->
+    <usb-device vendor-id="6790" product-id="29987" />
+</resources>

@@ -11,6 +11,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   suivant, second emplacement de widget avec ajout du widget de [LibreHU FM](https://github.com/LibreHU/LibreHU-FM-App)
   en un geste.
 - **Toutes les applis** : grille ; appui long pour épingler, retirer ou réordonner dans le rail.
+- **Pneus (TPMS)** : récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte
+  sur le tableau de bord, écran détaillé (pression, température, batterie, ID), appairage, permutation, seuils et
+  notification d'alerte. Protocole : [docs/tpms.md](docs/tpms.md).
 - Barres système masquées (balayer depuis le bord pour les afficher).
 
 ## Branches
