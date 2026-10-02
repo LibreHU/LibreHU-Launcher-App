@@ -23,6 +23,11 @@
     <!-- LibreHU-service API (volume). Install LibreHU-service first so that this permission is granted. -->
     <uses-permission android:name="org.librehu.permission.HEADUNIT" />
 
+    <!-- USB TPMS receiver (USB-serial adapter). -->
+    <uses-feature
+        android:name="android.hardware.usb.host"
+        android:required="false" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -45,6 +50,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- USB TPMS receivers: same USB-serial adapters as the original TPMS apps. -->
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/tpms_device_filter" />
         </activity>
 
         <!-- Effective light / dark theme for the other LibreHU apps (read only, no private data). -->

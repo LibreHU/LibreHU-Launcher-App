@@ -11,6 +11,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // usb-serial-for-android (USB TPMS receiver).
+        maven("https://jitpack.io")
     }
 }
 
