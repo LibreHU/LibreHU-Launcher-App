@@ -35,8 +35,7 @@
     <string name="theme_system_wide_denied">Refusé : installer le lanceur en app privilégiée (MODIFY_DAY_NIGHT_MODE). Les applis LibreHU suivent quand même le lanceur.</string>
     <string name="accent">Couleur d\'accent</string>
     <string name="wallpaper">Fond d\'écran</string>
-    <string name="wallpaper_pick">Choisir une image</string>
-    <string name="wallpaper_remove">Retirer</string>
+    <string name="wallpaper_pick">Image / GIF</string>
     <string name="wallpaper_error">Impossible de lire cette image.</string>
     <string name="reset">Réinitialiser</string>
     <string name="reset_all">Réinitialiser le lanceur</string>
@@ -82,4 +81,15 @@
     <string name="tpms_show_spare">Roue de secours</string>
     <string name="tpms_alarms">Notifications d\'alerte</string>
     <string name="tpms_on_dashboard">Carte sur le tableau de bord</string>
+    <string name="wallpaper_none">Aucun</string>
+    <string name="wallpaper_aurora">Aurore</string>
+    <string name="wallpaper_stars">Étoiles</string>
+    <string name="wallpaper_waves">Vagues</string>
+    <string name="wallpaper_video">Vidéo</string>
+    <string name="wallpaper_system">Fond Android / animé</string>
+    <string name="wallpaper_live_choose">Choisir le fond d\'écran Android…</string>
+    <string name="wallpaper_hint">Aurore, étoiles et vagues suivent la couleur d\'accent. Les GIF / WebP animés et les vidéos (MP4) tournent en boucle, sans son, et se mettent en pause quand le launcher est masqué. « Fond Android / animé » affiche le fond d\'écran du système, y compris les applis de fonds d\'écran animés (live wallpaper).</string>
+    <string name="wallpaper_video_error">Impossible de lire cette vidéo (trop lourde ou format non pris en charge).</string>
+    <string name="wallpaper_live_error">Aucun sélecteur de fond d\'écran sur ce système.</string>
+    <string name="tpms_widget_description">Pression et température des quatre pneus</string>
 </resources>

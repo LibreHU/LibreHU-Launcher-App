@@ -44,6 +44,7 @@ import org.librehu.launcher.R
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeMode
 import org.librehu.launcher.data.ThemeStore
+import org.librehu.launcher.data.WallpaperKind
 
 /** Launcher settings: appearance (mode, accent, wallpaper, system-wide theme) and reset. */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
@@ -113,10 +114,24 @@ fun SettingsScreen(
         }
 
         Section(stringResource(R.string.wallpaper))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Choice(stringResource(R.string.wallpaper_pick), false, actions.pickWallpaper)
-            if (s.hasWallpaper) Choice(stringResource(R.string.wallpaper_remove), false, actions.clearWallpaper)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            val w = s.wallpaper
+            Choice(stringResource(R.string.wallpaper_none), w == WallpaperKind.NONE) { actions.setWallpaper(WallpaperKind.NONE) }
+            Choice(stringResource(R.string.wallpaper_aurora), w == WallpaperKind.AURORA) { actions.setWallpaper(WallpaperKind.AURORA) }
+            Choice(stringResource(R.string.wallpaper_stars), w == WallpaperKind.STARS) { actions.setWallpaper(WallpaperKind.STARS) }
+            Choice(stringResource(R.string.wallpaper_waves), w == WallpaperKind.WAVES) { actions.setWallpaper(WallpaperKind.WAVES) }
+            Choice(
+                stringResource(R.string.wallpaper_pick),
+                w == WallpaperKind.IMAGE || w == WallpaperKind.ANIMATED,
+                actions.pickImage,
+            )
+            Choice(stringResource(R.string.wallpaper_video), w == WallpaperKind.VIDEO, actions.pickVideo)
+            Choice(stringResource(R.string.wallpaper_system), w == WallpaperKind.SYSTEM) { actions.setWallpaper(WallpaperKind.SYSTEM) }
         }
+        if (s.wallpaper == WallpaperKind.SYSTEM) {
+            Choice(stringResource(R.string.wallpaper_live_choose), false, actions.chooseLiveWallpaper)
+        }
+        Text(stringResource(R.string.wallpaper_hint), color = CarColors.TextDim, fontSize = 15.sp)
 
         Section(stringResource(R.string.reset))
         Choice(stringResource(R.string.reset_all), false) { confirmReset = true }
