@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LibreHU Launcher</string>
+    <string name="home">Dashboard</string>
+    <string name="all_apps">All apps</string>
+    <string name="volume_up">Volume up</string>
+    <string name="volume_down">Volume down</string>
+    <string name="add_widget">Add a widget</string>
+    <string name="add_radio_widget">Add the radio widget</string>
+    <string name="edit_widget">Widget</string>
+    <string name="replace">Replace</string>
+    <string name="remove">Remove</string>
+    <string name="cancel">Cancel</string>
+    <string name="main_slot_hint">Tap here to place a widget (navigation, weather…).</string>
+    <string name="media_access">Tap to allow notification access: it lets the launcher show and control what is playing.</string>
+    <string name="nothing_playing">Nothing playing</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="play_pause">Play / pause</string>
+    <string name="pin_hint">Long press an app to pin it to the side rail.</string>
+    <string name="pin">Pin to the rail</string>
+    <string name="unpin">Unpin</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lanceur LibreHU</string>
+    <string name="home">Tableau de bord</string>
+    <string name="all_apps">Toutes les applis</string>
+    <string name="volume_up">Volume +</string>
+    <string name="volume_down">Volume −</string>
+    <string name="add_widget">Ajouter un widget</string>
+    <string name="add_radio_widget">Ajouter le widget radio</string>
+    <string name="edit_widget">Widget</string>
+    <string name="replace">Remplacer</string>
+    <string name="remove">Retirer</string>
+    <string name="cancel">Annuler</string>
+    <string name="main_slot_hint">Touchez ici pour placer un widget (navigation, météo…).</string>
+    <string name="media_access">Touchez pour autoriser l\'accès aux notifications : il permet d\'afficher et de piloter le média en cours.</string>
+    <string name="nothing_playing">Aucune lecture en cours</string>
+    <string name="previous">Précédent</string>
+    <string name="next">Suivant</string>
+    <string name="play_pause">Lecture / pause</string>
+    <string name="pin_hint">Appui long sur une appli pour l\'épingler au rail latéral.</string>
+    <string name="pin">Épingler au rail</string>
+    <string name="unpin">Désépingler</string>
+    <string name="move_up">Monter</string>
+    <string name="move_down">Descendre</string>
+</resources>
