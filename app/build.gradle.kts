@@ -36,6 +36,8 @@ android {
 
     buildFeatures {
         compose = true
+        // LibreHU-service API (app/src/main/aidl, copied from LibreHU/LibreHU-service).
+        aidl = true
     }
 
     lint {

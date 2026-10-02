@@ -15,7 +15,19 @@ interface HeadUnitBridge {
     fun release() {}
 
     companion object {
-        fun create(context: Context): HeadUnitBridge = AndroidVolume(context)
+        fun create(context: Context): HeadUnitBridge =
+            if (isInstalled(context, "org.librehu.service")) LibreHuVolume(context) else AndroidVolume(context)
+
+        private fun isInstalled(
+            context: Context,
+            pkg: String,
+        ): Boolean =
+            try {
+                context.packageManager.getPackageInfo(pkg, 0)
+                true
+            } catch (_: Exception) {
+                false
+            }
     }
 }
 

@@ -15,6 +15,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 
 ## Branches
 
+Cette branche : **`librehu-service`** (installer LibreHU-service avant le lanceur).
+
+
 | Branche | Volume du rail |
 |---|---|
 | `main` | volume média Android |
