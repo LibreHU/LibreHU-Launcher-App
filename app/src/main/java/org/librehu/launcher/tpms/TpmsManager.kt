@@ -20,9 +20,15 @@ import com.hoho.android.usbserial.driver.ProbeTable
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
 import com.hoho.android.usbserial.util.SerialInputOutputManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import org.librehu.launcher.R
 
 enum class PressureUnit { KPA, BAR, PSI }
@@ -116,6 +122,7 @@ class TpmsManager private constructor(
         }
 
     private var started = false
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     fun start() {
         if (started) return
@@ -127,6 +134,12 @@ class TpmsManager private constructor(
                 addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
             }
         ContextCompat.registerReceiver(context, usbReceiver, filter, ContextCompat.RECEIVER_EXPORTED)
+        // Redraw the widgets when what they show changes (not on every frame: the reading time is left out).
+        scope.launch {
+            combine(_state, _settings) { st, s ->
+                st.copy(tyres = st.tyres.mapValues { it.value.copy(time = 0) }, message = "") to s
+            }.distinctUntilChanged().collect { (st, s) -> TpmsWidget.updateAll(context, st, s) }
+        }
         connect()
     }
 

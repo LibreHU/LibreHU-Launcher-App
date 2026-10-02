@@ -1,13 +1,18 @@
 package org.librehu.launcher
 
 import android.app.Activity
+import android.app.WallpaperManager
 import android.appwidget.AppWidgetManager
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.hardware.usb.UsbManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -18,14 +23,21 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.librehu.launcher.data.AppsRepository
 import org.librehu.launcher.data.LauncherPrefs
 import org.librehu.launcher.data.MediaRepository
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeStore
+import org.librehu.launcher.data.WallpaperKind
 import org.librehu.launcher.data.WidgetHost
 import org.librehu.launcher.headunit.HeadUnitBridge
 import org.librehu.launcher.tpms.TpmsManager
+import org.librehu.launcher.tpms.TpmsWidget
 import org.librehu.launcher.ui.CarTheme
 import org.librehu.launcher.ui.LauncherActions
 import org.librehu.launcher.ui.LauncherScreen
@@ -51,9 +63,14 @@ class MainActivity : ComponentActivity() {
             if (result.resultCode == Activity.RESULT_OK) configureOrSave(slot, id) else cancelPending()
         }
 
-    private val pickWallpaper =
+    private val pickImage =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            if (uri != null && !theme.setWallpaper(uri)) Toast.makeText(this, R.string.wallpaper_error, Toast.LENGTH_SHORT).show()
+            if (uri != null) importWallpaper(R.string.wallpaper_error) { theme.setImage(uri) }
+        }
+
+    private val pickVideo =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) importWallpaper(R.string.wallpaper_video_error) { theme.setVideo(uri) }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,7 +85,14 @@ class MainActivity : ComponentActivity() {
         themeController.start(lifecycleScope)
         TpmsManager.get(this).start()
         apps.start()
+        lifecycleScope.launch {
+            theme.settings
+                .map { it.wallpaper == WallpaperKind.SYSTEM }
+                .distinctUntilChanged()
+                .collect(::showSystemWallpaper)
+        }
         hideSystemBars()
+        if (intent?.action == TpmsWidget.ACTION_SHOW_TPMS) screen.value = Screen.TPMS
 
         onBackPressedDispatcher.addCallback(
             this,
@@ -107,8 +131,10 @@ class MainActivity : ComponentActivity() {
                     startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
                 },
                 setTheme = theme::update,
-                pickWallpaper = { pickWallpaper.launch("image/*") },
-                clearWallpaper = theme::clearWallpaper,
+                pickImage = { pickImage.launch("image/*") },
+                pickVideo = { pickVideo.launch("video/*") },
+                setWallpaper = theme::setWallpaperKind,
+                chooseLiveWallpaper = ::chooseLiveWallpaper,
                 resetAll = {
                     prefs.reset().forEach(widgets::delete)
                     theme.reset()
@@ -140,6 +166,8 @@ class MainActivity : ComponentActivity() {
         if (intent.hasCategory(Intent.CATEGORY_HOME)) screen.value = Screen.HOME
         // USB TPMS receiver plugged in (device filter): permission granted, connect.
         if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED) TpmsManager.get(this).connect()
+        // TPMS widget tapped.
+        if (intent.action == TpmsWidget.ACTION_SHOW_TPMS) screen.value = Screen.TPMS
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -210,6 +238,45 @@ class MainActivity : ComponentActivity() {
     private fun cancelPending() {
         pending?.let { widgets.delete(it.second) }
         pending = null
+    }
+
+    // --- Wallpaper -----------------------------------------------------------------------------------------------
+
+    private fun importWallpaper(
+        error: Int,
+        work: () -> Boolean,
+    ) {
+        lifecycleScope.launch {
+            val ok = withContext(Dispatchers.IO) { runCatching(work).getOrDefault(false) }
+            if (!ok) Toast.makeText(this@MainActivity, error, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /** Lets the Android wallpaper (static or live) show through the launcher window, like Launcher3 does. */
+    private fun showSystemWallpaper(show: Boolean) {
+        if (show) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+            window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+            window.setBackgroundDrawable(ColorDrawable(Color.BLACK))
+        }
+    }
+
+    private fun chooseLiveWallpaper() {
+        val choices =
+            listOf(
+                Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER),
+                Intent.createChooser(Intent(Intent.ACTION_SET_WALLPAPER), getString(R.string.wallpaper_live_choose)),
+            )
+        for (intent in choices) {
+            try {
+                startActivity(intent)
+                return
+            } catch (_: ActivityNotFoundException) {
+            }
+        }
+        Toast.makeText(this, R.string.wallpaper_live_error, Toast.LENGTH_LONG).show()
     }
 
     private fun hideSystemBars() {

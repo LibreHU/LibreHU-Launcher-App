@@ -13,7 +13,13 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Toutes les applis** : grille ; appui long pour épingler, retirer ou réordonner dans le rail.
 - **Pneus (TPMS)** : récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte
   sur le tableau de bord, écran détaillé (pression, température, batterie, ID), appairage, permutation, seuils et
-  notification d'alerte. Protocole : [docs/tpms.md](docs/tpms.md).
+  notification d'alerte, **widget « Pneus »** (4 pneus autour de la voiture, rouge en alerte, ouvre l'écran TPMS)
+  utilisable dans les emplacements du launcher ou sur n'importe quel autre écran d'accueil. Protocole :
+  [docs/tpms.md](docs/tpms.md).
+- **Fonds d'écran** (Paramètres) : aucun, animations intégrées à la couleur d'accent (aurore, étoiles, vagues),
+  image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
+  focus audio), ou **fond Android / live wallpaper** affiché derrière le launcher (`FLAG_SHOW_WALLPAPER`). Les
+  animations se mettent en pause dès que le launcher n'est plus au premier plan.
 - Barres système masquées (balayer depuis le bord pour les afficher).
 
 ## Branches
