@@ -4,8 +4,10 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -14,9 +16,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import org.librehu.launcher.data.AppsRepository
 import org.librehu.launcher.data.LauncherPrefs
 import org.librehu.launcher.data.MediaRepository
+import org.librehu.launcher.data.ThemeController
+import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.data.WidgetHost
 import org.librehu.launcher.headunit.HeadUnitBridge
 import org.librehu.launcher.ui.CarTheme
@@ -31,6 +36,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var media: MediaRepository
     private lateinit var widgets: WidgetHost
     private lateinit var headUnit: HeadUnitBridge
+    private lateinit var theme: ThemeStore
+    private lateinit var themeController: ThemeController
     private val screen = mutableStateOf(Screen.HOME)
 
     /** Widget being added: (slot, appWidgetId). */
@@ -42,6 +49,11 @@ class MainActivity : ComponentActivity() {
             if (result.resultCode == Activity.RESULT_OK) configureOrSave(slot, id) else cancelPending()
         }
 
+    private val pickWallpaper =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null && !theme.setWallpaper(uri)) Toast.makeText(this, R.string.wallpaper_error, Toast.LENGTH_SHORT).show()
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         apps = AppsRepository(this)
@@ -49,6 +61,9 @@ class MainActivity : ComponentActivity() {
         media = MediaRepository(this)
         widgets = WidgetHost(this)
         headUnit = HeadUnitBridge.create(this)
+        theme = ThemeStore(this)
+        themeController = ThemeController(applicationContext, theme, headUnit.headlights)
+        themeController.start(lifecycleScope)
         apps.start()
         hideSystemBars()
 
@@ -80,10 +95,26 @@ class MainActivity : ComponentActivity() {
                     widgets.delete(prefs.slots.value[slot] ?: LauncherPrefs.NO_WIDGET)
                     prefs.setSlot(slot, LauncherPrefs.NO_WIDGET)
                 },
+                uninstall = { pkg -> startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:$pkg"))) },
+                forceStop = { pkg ->
+                    val full = headUnit.forceStop(pkg)
+                    Toast.makeText(this, if (full) R.string.force_stopped else R.string.force_stop_partial, Toast.LENGTH_LONG).show()
+                },
+                appInfo = { pkg ->
+                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
+                },
+                setTheme = theme::update,
+                pickWallpaper = { pickWallpaper.launch("image/*") },
+                clearWallpaper = theme::clearWallpaper,
+                resetAll = {
+                    prefs.reset().forEach(widgets::delete)
+                    theme.reset()
+                    screen.value = Screen.HOME
+                },
             )
         setContent {
             CarTheme {
-                LauncherScreen(apps, prefs, media, widgets, screen.value, actions)
+                LauncherScreen(apps, prefs, media, widgets, theme, themeController, screen.value, actions)
             }
         }
     }
