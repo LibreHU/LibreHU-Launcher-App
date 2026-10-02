@@ -8,20 +8,48 @@ import android.os.IBinder
 import android.os.RemoteException
 import android.util.Log
 import android.widget.Toast
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import org.librehu.service.ILibreHuCallback
 import org.librehu.service.ILibreHuService
 
 /**
- * Head unit volume through LibreHU-service (https://github.com/LibreHU/LibreHU-service): master volume of the
- * audio processor (BD37534), shown in a short toast.
+ * LibreHU-service (https://github.com/LibreHU/LibreHU-service): master volume of the audio processor and
+ * headlight state from the MCU (vehicle flags) for the automatic dark mode. Force stop: plain Android (privileged
+ * install).
  */
-class LibreHuVolume(
+class LibreHuHeadUnit(
     private val context: Context,
-) : HeadUnitBridge {
+) : AndroidHeadUnit(context) {
     @Volatile
     private var service: ILibreHuService? = null
     private var bound = false
-    private val fallback = AndroidVolume(context)
     private var toast: Toast? = null
+
+    private val _headlights = MutableStateFlow<Boolean?>(null)
+    override val headlights: StateFlow<Boolean?> = _headlights
+
+    private val callback =
+        object : ILibreHuCallback.Stub() {
+            override fun onVehicleFlags(flags: Int) = updateFlags(flags)
+
+            override fun onAudioChanged() {}
+
+            override fun onMcuFrame(
+                cmd: Int,
+                data: ByteArray?,
+                fromMcu: Boolean,
+            ) {}
+
+            override fun onKey(
+                channel: Int,
+                values: IntArray?,
+                released: Boolean,
+                learning: Boolean,
+            ) {}
+
+            override fun onCanData(data: ByteArray?) {}
+        }
 
     private val connection =
         object : ServiceConnection {
@@ -29,11 +57,19 @@ class LibreHuVolume(
                 name: ComponentName?,
                 binder: IBinder?,
             ) {
-                service = binder?.let { ILibreHuService.Stub.asInterface(it) }
+                val s = binder?.let { ILibreHuService.Stub.asInterface(it) } ?: return
+                service = s
+                try {
+                    s.registerCallback(callback)
+                    updateFlags(s.vehicleFlags)
+                } catch (e: RemoteException) {
+                    Log.w(TAG, "LibreHU-service: ${e.message}")
+                }
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
                 service = null
+                _headlights.value = null
             }
         }
 
@@ -47,6 +83,11 @@ class LibreHuVolume(
             }
     }
 
+    /** Headlights are known only while the MCU link is up. */
+    private fun updateFlags(flags: Int) {
+        _headlights.value = if (flags and FLAG_MCU_ONLINE != 0) flags and FLAG_HEADLIGHT != 0 else null
+    }
+
     override fun volumeUp() = step(+1)
 
     override fun volumeDown() = step(-1)
@@ -54,7 +95,7 @@ class LibreHuVolume(
     private fun step(delta: Int) {
         val s = service
         if (s == null) {
-            if (delta > 0) fallback.volumeUp() else fallback.volumeDown()
+            if (delta > 0) super.volumeUp() else super.volumeDown()
             return
         }
         try {
@@ -68,6 +109,10 @@ class LibreHuVolume(
     }
 
     override fun release() {
+        try {
+            service?.unregisterCallback(callback)
+        } catch (_: RemoteException) {
+        }
         if (bound) {
             try {
                 context.unbindService(connection)
@@ -81,5 +126,7 @@ class LibreHuVolume(
         const val TAG = "LibreHU-Launcher"
         const val PACKAGE = "org.librehu.service"
         const val ACTION_BIND = "org.librehu.service.BIND"
+        const val FLAG_MCU_ONLINE = 1 shl 0
+        const val FLAG_HEADLIGHT = 1 shl 3
     }
 }

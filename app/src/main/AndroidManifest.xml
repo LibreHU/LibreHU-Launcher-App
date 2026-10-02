@@ -6,6 +6,15 @@
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <!-- Privileged install: real force stop, system-wide light / dark mode. -->
+    <uses-permission
+        android:name="android.permission.FORCE_STOP_PACKAGES"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.MODIFY_DAY_NIGHT_MODE"
+        tools:ignore="ProtectedPermissions" />
     <!-- Privileged install: place widgets without asking the user each time. -->
     <uses-permission
         android:name="android.permission.BIND_APPWIDGET"
@@ -24,6 +33,7 @@
         <activity
             android:name=".MainActivity"
             android:clearTaskOnLaunch="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|keyboardHidden|keyboard|navigation"
             android:exported="true"
             android:launchMode="singleTask"
             android:resizeableActivity="true"
@@ -36,6 +46,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Effective light / dark theme for the other LibreHU apps (read only, no private data). -->
+        <provider
+            android:name=".data.ThemeProvider"
+            android:authorities="org.librehu.launcher.theme"
+            android:exported="true" />
 
         <service
             android:name=".data.MediaListenerService"
