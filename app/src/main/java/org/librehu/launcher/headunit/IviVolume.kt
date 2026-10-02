@@ -56,11 +56,11 @@ class IviVolume(
         }
         val current = callInt(TX_GET_PARAM, PARAM_VOLUME) ?: return
         val max = callInt(TX_GET_PARAM_MAX, PARAM_VOLUME) ?: return
-        call(TX_SET_PARAM) {
+        call(TX_SET_PARAM, args = {
             it.writeInt(PARAM_VOLUME)
             it.writeInt((current + delta).coerceIn(0, max))
-        }
-        call(TX_SHOW_VOLUME_BAR) {}
+        })
+        call(TX_SHOW_VOLUME_BAR, args = {})
     }
 
     override fun release() {
