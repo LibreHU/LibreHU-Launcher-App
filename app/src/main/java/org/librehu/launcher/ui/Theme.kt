@@ -77,15 +77,15 @@ data class CarPalette(
  * (light / dark, headlights, accent).
  */
 object CarColors {
-    var palette by mutableStateOf(CarPalette.of(true, Accent.BLUE))
+    var palette: CarPalette by mutableStateOf(CarPalette.of(true, org.librehu.launcher.ui.Accent.BLUE))
 
-    val Background get() = palette.background
-    val Surface get() = palette.surface
-    val SurfaceHigh get() = palette.surfaceHigh
-    val Accent get() = palette.accent
-    val OnAccent get() = palette.onAccent
-    val Text get() = palette.text
-    val TextDim get() = palette.textDim
+    val Background: Color get() = palette.background
+    val Surface: Color get() = palette.surface
+    val SurfaceHigh: Color get() = palette.surfaceHigh
+    val Accent: Color get() = palette.accent
+    val OnAccent: Color get() = palette.onAccent
+    val Text: Color get() = palette.text
+    val TextDim: Color get() = palette.textDim
 }
 
 @Composable
