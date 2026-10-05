@@ -23,6 +23,28 @@
     <!-- LibreHU-service API (volume). Install LibreHU-service first so that this permission is granted. -->
     <uses-permission android:name="org.librehu.permission.HEADUNIT" />
 
+    <!-- SOS (sos/SosActivity): calls through the Bluetooth phone, position for the rescue. CALL_PRIVILEGED
+         (privileged install) also calls emergency numbers directly, ACTION_CALL cannot. -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission
+        android:name="android.permission.CALL_PRIVILEGED"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Spectrum wallpaper following the music (Visualizer on the output mix). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
+
     <!-- USB TPMS receiver (USB-serial adapter). -->
     <uses-feature
         android:name="android.hardware.usb.host"
@@ -58,6 +80,61 @@
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/tpms_device_filter" />
         </activity>
+
+        <!-- Standby clock: from the home screen, the rail clock, or org.librehu.action.STANDBY_CLOCK (key mapping). -->
+        <activity
+            android:name=".standby.StandbyActivity"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|keyboardHidden|keyboard|navigation"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="org.librehu.launcher.standby"
+            android:theme="@style/Theme.LibreHU.Car">
+            <intent-filter>
+                <action android:name="org.librehu.action.STANDBY_CLOCK" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- The standby clock as Android's screen saver. -->
+        <service
+            android:name=".standby.StandbyDream"
+            android:exported="true"
+            android:label="@string/standby_title"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+
+        <!-- SOS screen: rail / dashboard button, widget, or org.librehu.action.SOS (key mapping). -->
+        <activity
+            android:name=".sos.SosActivity"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|keyboardHidden|keyboard|navigation"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="org.librehu.launcher.sos"
+            android:theme="@style/Theme.LibreHU.Car">
+            <intent-filter>
+                <action android:name="org.librehu.action.SOS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- SOS button widget. -->
+        <receiver
+            android:name=".sos.SosWidget"
+            android:exported="true"
+            android:label="@string/sos">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/sos_widget_info" />
+        </receiver>
 
         <!-- Effective light / dark theme for the other LibreHU apps (read only, no private data). -->
         <provider

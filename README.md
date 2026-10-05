@@ -20,6 +20,22 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
   focus audio), ou **fond Android / live wallpaper** affiché derrière le launcher (`FLAG_SHOW_WALLPAPER`). Les
   animations se mettent en pause dès que le launcher n'est plus au premier plan.
+- **Fond « Spectre »** : vagues lumineuses du fond animé « Music visualization » d'AOSP (Apache 2.0), dans l'esprit de
+  [Neospectro](https://github.com/danielnavarrowo/Neospectro) (réécrit en OpenGL ES 2, pas de code repris : le dépôt
+  Neospectro n'a pas de licence). 7 palettes dont la couleur d'accent ; option **« suivre la musique »** (spectre du
+  son joué via le `Visualizer` d'Android, autorisation micro, rien n'est enregistré).
+- **Barre de raccourcis à gauche ou en bas** (Paramètres → Personnalisation).
+- **Horloge de veille** : grande horloge numérique ou analogique sur fond noir, date, titre en cours, couleur
+  d'accent, luminosité réduite, léger décalage chaque minute (marquage de l'écran), pause de la lecture et reprise à
+  la sortie. Déclenchée après N minutes sans toucher l'accueil, en touchant l'heure de la barre, par l'action
+  `org.librehu.action.STANDBY_CLOCK` (touche remappée) ou comme **économiseur d'écran Android** (DreamService). Voir
+  [docs/standby.md](docs/standby.md).
+- **SOS** : bouton d'urgence (barre, tableau de bord et/ou widget, appui long), compte à rebours annulable puis appel
+  du numéro d'urgence (112 par défaut), contacts d'urgence, position GPS (décimal + degrés-minutes-secondes) et
+  informations pour les secours (nom, infos médicales, véhicule) ; action `org.librehu.action.SOS`. Voir
+  [docs/sos.md](docs/sos.md).
+- **Assistant de premier démarrage** : apparence et barre, accès Android (accueil par défaut, notifications,
+  position / appels), horloge de veille, SOS ; relançable depuis Paramètres → Général.
 - Barres système masquées (balayer depuis le bord pour les afficher).
 
 ## Branches
