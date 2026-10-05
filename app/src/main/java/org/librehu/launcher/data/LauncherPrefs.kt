@@ -21,6 +21,11 @@ class LauncherPrefs(
     private val _slots = MutableStateFlow(Slot.entries.associateWith { prefs.getInt(it.key, NO_WIDGET) })
     val slots: StateFlow<Map<Slot, Int>> = _slots.asStateFlow()
 
+    /** First start assistant done (or skipped). */
+    var setupDone: Boolean
+        get() = prefs.getBoolean("setup_done", false)
+        set(value) = prefs.edit().putBoolean("setup_done", value).apply()
+
     fun togglePin(key: String) {
         val list = _pins.value.toMutableList()
         if (!list.remove(key)) list += key

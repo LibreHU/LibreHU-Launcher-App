@@ -36,9 +36,31 @@ enum class WallpaperKind {
     AURORA,
     STARS,
     WAVES,
+
+    /** Spectrum waves (AOSP "Music visualization" wallpaper), optionally following the music. */
+    SPECTRUM,
     ;
 
-    val builtIn get() = this == AURORA || this == STARS || this == WAVES
+    val builtIn get() = this == AURORA || this == STARS || this == WAVES || this == SPECTRUM
+}
+
+/** Where the shortcut rail sits. */
+enum class RailPosition { LEFT, BOTTOM }
+
+/** Colours of the spectrum wallpaper: edge, middle and centre of the waves. */
+enum class SpectrumPalette(
+    val edge: Long,
+    val middle: Long,
+    val center: Long,
+) {
+    /** Accent colour of the launcher (colours filled in at runtime). */
+    ACCENT(0, 0, 0),
+    ICE(0xFF0303FF, 0xFF7B7BFF, 0xFFF1F1FF),
+    FIRE(0xFFFF0000, 0xFFFF8000, 0xFFFFFF00),
+    LIME(0xFF00C853, 0xFF90EE90, 0xFFFFFFFF),
+    MAGENTA(0xFFFF00FF, 0xFFFF70F5, 0xFFFFF0FE),
+    CYAN(0xFF00B8D4, 0xFF63FFFF, 0xFFEBFCFC),
+    VIOLET(0xFF8000FF, 0xFFB366FF, 0xFFFFFFFF),
 }
 
 data class ThemeSettings(
@@ -47,6 +69,10 @@ data class ThemeSettings(
     /** Also switch the whole system (other apps) to light / dark. Needs MODIFY_DAY_NIGHT_MODE (privileged). */
     val systemWide: Boolean = true,
     val wallpaper: WallpaperKind = WallpaperKind.NONE,
+    val rail: RailPosition = RailPosition.LEFT,
+    val spectrumPalette: SpectrumPalette = SpectrumPalette.ACCENT,
+    /** Spectrum follows the sound being played (Visualizer, needs RECORD_AUDIO). */
+    val spectrumAudio: Boolean = false,
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -78,6 +104,9 @@ class ThemeStore(
             .putString("accent", s.accent.name)
             .putBoolean("system_wide", s.systemWide)
             .putString("wallpaper", s.wallpaper.name)
+            .putString("rail", s.rail.name)
+            .putString("spectrum_palette", s.spectrumPalette.name)
+            .putBoolean("spectrum_audio", s.spectrumAudio)
             .apply()
         _settings.value = s
     }
@@ -237,6 +266,10 @@ class ThemeStore(
             accent = runCatching { Accent.valueOf(prefs.getString("accent", null)!!) }.getOrDefault(Accent.BLUE),
             systemWide = prefs.getBoolean("system_wide", true),
             wallpaper = kind,
+            rail = runCatching { RailPosition.valueOf(prefs.getString("rail", null)!!) }.getOrDefault(RailPosition.LEFT),
+            spectrumPalette =
+                runCatching { SpectrumPalette.valueOf(prefs.getString("spectrum_palette", null)!!) }.getOrDefault(SpectrumPalette.ACCENT),
+            spectrumAudio = prefs.getBoolean("spectrum_audio", false),
         )
     }
 
