@@ -11,6 +11,8 @@ import android.graphics.drawable.ColorDrawable
 import android.hardware.usb.UsbManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.WindowManager
 import android.widget.Toast
@@ -36,6 +38,10 @@ import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.data.WallpaperKind
 import org.librehu.launcher.data.WidgetHost
 import org.librehu.launcher.headunit.HeadUnitBridge
+import org.librehu.launcher.sos.SosActivity
+import org.librehu.launcher.sos.SosStore
+import org.librehu.launcher.standby.StandbyActivity
+import org.librehu.launcher.standby.StandbyStore
 import org.librehu.launcher.tpms.TpmsManager
 import org.librehu.launcher.tpms.TpmsWidget
 import org.librehu.launcher.ui.CarTheme
@@ -68,6 +74,14 @@ class MainActivity : ComponentActivity() {
             if (uri != null) importWallpaper(R.string.wallpaper_error) { theme.setImage(uri) }
         }
 
+    private val askPermissions =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
+
+    private val main = Handler(Looper.getMainLooper())
+
+    /** Standby clock after a while without touching the home screen. */
+    private val idle = Runnable { if (screen.value != Screen.SETUP) StandbyActivity.show(this) }
+
     private val pickVideo =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) importWallpaper(R.string.wallpaper_video_error) { theme.setVideo(uri) }
@@ -93,6 +107,7 @@ class MainActivity : ComponentActivity() {
         }
         hideSystemBars()
         if (intent?.action == TpmsWidget.ACTION_SHOW_TPMS) screen.value = Screen.TPMS
+        if (!prefs.setupDone) screen.value = Screen.SETUP
 
         onBackPressedDispatcher.addCallback(
             this,
@@ -138,6 +153,18 @@ class MainActivity : ComponentActivity() {
                 resetAll = {
                     prefs.reset().forEach(widgets::delete)
                     theme.reset()
+                    StandbyStore.get(this).reset()
+                    SosStore.get(this).reset()
+                    screen.value = Screen.SETUP
+                },
+                standby = { StandbyActivity.show(this) },
+                sos = { startActivity(Intent(this, SosActivity::class.java)) },
+                sosTest = { startActivity(Intent(this, SosActivity::class.java).putExtra(SosActivity.EXTRA_TEST, true)) },
+                requestPermissions = { askPermissions.launch(it) },
+                openHomeSettings = { openSettings(Settings.ACTION_HOME_SETTINGS) },
+                openDreamSettings = { openSettings(Settings.ACTION_DREAM_SETTINGS) },
+                finishSetup = {
+                    prefs.setupDone = true
                     screen.value = Screen.HOME
                 },
             )
@@ -168,6 +195,38 @@ class MainActivity : ComponentActivity() {
         if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED) TpmsManager.get(this).connect()
         // TPMS widget tapped.
         if (intent.action == TpmsWidget.ACTION_SHOW_TPMS) screen.value = Screen.TPMS
+    }
+
+    override fun onResume() {
+        super.onResume()
+        scheduleIdle()
+    }
+
+    override fun onPause() {
+        main.removeCallbacks(idle)
+        super.onPause()
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        scheduleIdle()
+    }
+
+    private fun scheduleIdle() {
+        main.removeCallbacks(idle)
+        val minutes =
+            StandbyStore
+                .get(this)
+                .settings.value.idleMinutes
+        if (minutes > 0) main.postDelayed(idle, minutes * 60_000L)
+    }
+
+    private fun openSettings(action: String) {
+        try {
+            startActivity(Intent(action))
+        } catch (_: ActivityNotFoundException) {
+            startActivity(Intent(Settings.ACTION_SETTINGS))
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

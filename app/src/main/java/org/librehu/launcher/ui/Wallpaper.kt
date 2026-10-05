@@ -103,6 +103,10 @@ fun Wallpaper(theme: ThemeStore) {
         WallpaperKind.WAVES -> {
             Waves()
         }
+
+        WallpaperKind.SPECTRUM -> {
+            Spectrum(s.spectrumPalette, s.spectrumAudio)
+        }
     }
 }
 
@@ -111,7 +115,7 @@ private fun Scrim() = Box(Modifier.fillMaxSize().background(CarColors.Background
 
 /** Runs [onResume] / [onPause] with the activity (both also run once on entering / leaving the composition). */
 @Composable
-private fun WhileResumed(
+internal fun WhileResumed(
     key: Any?,
     onResume: () -> Unit,
     onPause: () -> Unit,

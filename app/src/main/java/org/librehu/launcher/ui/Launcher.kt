@@ -2,6 +2,7 @@ package org.librehu.launcher.ui
 
 import android.appwidget.AppWidgetProviderInfo
 import android.content.ComponentName
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -61,6 +63,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -82,16 +85,20 @@ import org.librehu.launcher.data.LauncherApp
 import org.librehu.launcher.data.LauncherPrefs
 import org.librehu.launcher.data.MediaRepository
 import org.librehu.launcher.data.NowPlaying
+import org.librehu.launcher.data.RailPosition
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeSettings
 import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.data.WallpaperKind
 import org.librehu.launcher.data.WidgetHost
+import org.librehu.launcher.sos.SosActivity
+import org.librehu.launcher.sos.SosSettings
+import org.librehu.launcher.sos.SosStore
 import org.librehu.launcher.tpms.TpmsManager
 import java.text.DateFormat
 import java.util.Date
 
-enum class Screen { HOME, APPS, SETTINGS, TPMS }
+enum class Screen { HOME, APPS, SETTINGS, TPMS, SETUP }
 
 class LauncherActions(
     val launch: (ComponentName) -> Unit,
@@ -116,6 +123,18 @@ class LauncherActions(
     val setWallpaper: (WallpaperKind) -> Unit,
     val chooseLiveWallpaper: () -> Unit,
     val resetAll: () -> Unit,
+    /** Standby clock now. */
+    val standby: () -> Unit,
+    /** SOS screen (countdown before the emergency call). */
+    val sos: () -> Unit,
+    /** SOS screen without the countdown (settings). */
+    val sosTest: () -> Unit,
+    val requestPermissions: (Array<String>) -> Unit,
+    /** Android screens: default home app, screen saver. */
+    val openHomeSettings: () -> Unit,
+    val openDreamSettings: () -> Unit,
+    /** First start assistant: [finishSetup] marks it done. */
+    val finishSetup: () -> Unit,
 )
 
 /** Car dashboard: shortcut rail on the left, dashboard or app grid on the right. */
@@ -132,24 +151,53 @@ fun LauncherScreen(
 ) {
     val apps by appsRepo.apps.collectAsStateWithLifecycle()
     val pins by prefs.pins.collectAsStateWithLifecycle()
+    val look by theme.settings.collectAsStateWithLifecycle()
+    val sos by SosStore
+        .get(LocalContext.current)
+        .settings
+        .collectAsStateWithLifecycle()
     var menuFor by remember { mutableStateOf<LauncherApp?>(null) }
     val byKey = apps.associateBy { it.key }
+    val pinned = pins.mapNotNull { byKey[it] }
+    val content: @Composable () -> Unit = {
+        when (screen) {
+            Screen.HOME -> Dashboard(prefs, media, widgets, actions, sos)
+            Screen.APPS -> AppGrid(apps, pins, actions) { menuFor = it }
+            Screen.SETTINGS -> SettingsScreen(theme, themeController, actions)
+            Screen.TPMS -> TpmsScreen()
+            Screen.SETUP -> Unit
+        }
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         Wallpaper(theme)
-        Row(modifier = Modifier.fillMaxSize()) {
-            Rail(pins.mapNotNull { byKey[it] }, screen, actions) { menuFor = it }
-            Box(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .padding(top = 12.dp, end = 12.dp, bottom = 12.dp),
-            ) {
-                when (screen) {
-                    Screen.HOME -> Dashboard(prefs, media, widgets, actions)
-                    Screen.APPS -> AppGrid(apps, pins, actions) { menuFor = it }
-                    Screen.SETTINGS -> SettingsScreen(theme, themeController, actions)
-                    Screen.TPMS -> TpmsScreen()
+        when {
+            screen == Screen.SETUP -> {
+                SetupScreen(theme, themeController, actions)
+            }
+
+            look.rail == RailPosition.BOTTOM -> {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(top = 12.dp, start = 12.dp, end = 12.dp),
+                    ) { content() }
+                    BottomRail(pinned, screen, actions, sos) { menuFor = it }
+                }
+            }
+
+            else -> {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    Rail(pinned, screen, actions, sos) { menuFor = it }
+                    Box(
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(top = 12.dp, end = 12.dp, bottom = 12.dp),
+                    ) { content() }
                 }
             }
         }
@@ -164,6 +212,7 @@ private fun Rail(
     pinned: List<LauncherApp>,
     screen: Screen,
     actions: LauncherActions,
+    sos: SosSettings,
     onMenu: (LauncherApp) -> Unit,
 ) {
     Column(
@@ -188,16 +237,81 @@ private fun Rail(
             }
         }
         RailButton(Icons.Default.Apps, R.string.all_apps, selected = screen == Screen.APPS) { actions.show(Screen.APPS) }
+        if (sos.onRail) SosButton(sos.longPress, 56, actions.sos)
         Row {
             SmallRailButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
             SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
         }
-        Clock()
+        Clock(actions.standby)
     }
 }
 
+/** The rail laid out along the bottom edge (Settings → Customisation). */
 @Composable
-private fun Clock() {
+private fun BottomRail(
+    pinned: List<LauncherApp>,
+    screen: Screen,
+    actions: LauncherActions,
+    sos: SosSettings,
+    onMenu: (LauncherApp) -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(96.dp)
+                .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        RailButton(Icons.Default.Dashboard, R.string.home, selected = screen == Screen.HOME) { actions.show(Screen.HOME) }
+        LazyRow(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            items(pinned, key = { it.key }) { app ->
+                AppIcon(app, size = 64, onLongClick = { onMenu(app) }) {
+                    actions.launch(app.component)
+                }
+            }
+        }
+        RailButton(Icons.Default.Apps, R.string.all_apps, selected = screen == Screen.APPS) { actions.show(Screen.APPS) }
+        if (sos.onRail) SosButton(sos.longPress, 56, actions.sos)
+        SmallRailButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
+        SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
+        Clock(actions.standby)
+    }
+}
+
+/** Red SOS button; with [longPress], a short touch only says to hold it. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun SosButton(
+    longPress: Boolean,
+    size: Int,
+    onSos: () -> Unit,
+) {
+    val context = LocalContext.current
+    Box(
+        modifier =
+            Modifier
+                .size(size.dp)
+                .clip(CircleShape)
+                .background(SosActivity.SOS_RED)
+                .combinedClickable(
+                    onClick = { if (longPress) Toast.makeText(context, R.string.sos_hold, Toast.LENGTH_SHORT).show() else onSos() },
+                    onLongClick = onSos,
+                ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(stringResource(R.string.sos), color = Color.White, fontSize = (size / 3.5).sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+/** Rail clock; a touch shows the standby clock. */
+@Composable
+private fun Clock(onClick: () -> Unit) {
     val context = LocalContext.current
     var now by remember { mutableStateOf(Date()) }
     LaunchedEffect(Unit) {
@@ -213,6 +327,11 @@ private fun Clock() {
         color = CarColors.Text,
         fontSize = 22.sp,
         fontWeight = FontWeight.Medium,
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 6.dp, vertical = 4.dp),
     )
 }
 
@@ -281,6 +400,7 @@ private fun Dashboard(
     media: MediaRepository,
     widgets: WidgetHost,
     actions: LauncherActions,
+    sos: SosSettings,
 ) {
     val slots by prefs.slots.collectAsStateWithLifecycle()
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
@@ -301,6 +421,7 @@ private fun Dashboard(
                 .settings
                 .collectAsStateWithLifecycle()
             if (tpmsSettings.enabled) TpmsCard(Modifier.weight(0.9f).fillMaxWidth()) { actions.show(Screen.TPMS) }
+            if (sos.onDashboard) SosCard(sos, actions, Modifier.weight(0.6f).fillMaxWidth())
             WidgetSlot(
                 slot = LauncherPrefs.Slot.SIDE,
                 appWidgetId = slots[LauncherPrefs.Slot.SIDE] ?: LauncherPrefs.NO_WIDGET,
@@ -314,6 +435,41 @@ private fun Dashboard(
                     stringResource(if (fm != null) R.string.add_radio_widget else R.string.add_widget),
                 ) { if (fm != null) actions.addWidget(LauncherPrefs.Slot.SIDE, fm) else pick() }
             }
+        }
+    }
+}
+
+/** Dashboard SOS card: the button and who will be called. */
+@Composable
+private fun SosCard(
+    sos: SosSettings,
+    actions: LauncherActions,
+    modifier: Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(28.dp))
+                .background(CarColors.Surface)
+                .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SosButton(sos.longPress, 72, actions.sos)
+        Spacer(Modifier.width(16.dp))
+        Column {
+            Text(
+                stringResource(R.string.sos_card_title, sos.number),
+                color = CarColors.Text,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                stringResource(if (sos.longPress) R.string.sos_hold else R.string.sos_tap),
+                color = CarColors.TextDim,
+                fontSize = 15.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
