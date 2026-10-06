@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.librehu.launcher.R
+import org.librehu.launcher.data.DrawerSort
 import org.librehu.launcher.data.RailPosition
 import org.librehu.launcher.data.SpectrumPalette
 import org.librehu.launcher.data.ThemeController
@@ -176,6 +177,42 @@ fun LookSettings(
         }
         SettingSwitch(stringResource(R.string.bar_power), stringResource(R.string.bar_power_hint), s.showPower) { on ->
             actions.setTheme { it.copy(showPower = on) }
+        }
+        SettingSwitch(stringResource(R.string.bar_volume), stringResource(R.string.bar_volume_hint), s.showVolume) { on ->
+            actions.setTheme { it.copy(showVolume = on) }
+        }
+
+        SettingSection(stringResource(R.string.drawer_title))
+        SettingChoices(
+            listOf(
+                56 to stringResource(R.string.drawer_small),
+                72 to stringResource(R.string.drawer_medium),
+                92 to stringResource(R.string.drawer_large),
+            ),
+            s.drawerIconSize,
+        ) { v -> actions.setTheme { it.copy(drawerIconSize = v) } }
+        SettingChoices(
+            listOf(
+                DrawerSort.NAME to stringResource(R.string.drawer_sort_name),
+                DrawerSort.NAME_DESC to stringResource(R.string.drawer_sort_name_desc),
+                DrawerSort.PINNED_FIRST to stringResource(R.string.drawer_sort_pinned),
+            ),
+            s.drawerSort,
+        ) { v -> actions.setTheme { it.copy(drawerSort = v) } }
+        SettingSwitch(
+            stringResource(R.string.drawer_labels),
+            null,
+            s.drawerLabels,
+        ) { on -> actions.setTheme { it.copy(drawerLabels = on) } }
+        SettingSwitch(stringResource(R.string.drawer_search_switch), null, s.drawerSearch) { on ->
+            actions.setTheme { it.copy(drawerSearch = on) }
+        }
+        if (s.hiddenApps.isNotEmpty()) {
+            SettingSwitch(
+                stringResource(R.string.drawer_hidden_count, s.hiddenApps.size),
+                stringResource(R.string.drawer_hidden_hint),
+                true,
+            ) { on -> if (!on) actions.setTheme { it.copy(hiddenApps = emptySet()) } }
         }
     }
 

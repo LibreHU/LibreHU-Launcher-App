@@ -22,7 +22,7 @@
     <string name="unpin">Désépingler</string>
     <string name="move_up">Monter</string>
     <string name="move_down">Descendre</string>
-    <string name="settings">Paramètres</string>
+    <string name="settings">Paramètres du launcher</string>
     <string name="theme">Thème</string>
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>
@@ -236,4 +236,27 @@
     <string name="spectrum_status_listening">À l\'écoute… (lancez de la musique)</string>
     <string name="spectrum_status_silent">De la musique joue mais le visualiseur ne reçoit que du silence : le chemin audio de cet autoradio (sortie ou effet) n\'est pas vu par le visualiseur d\'Android</string>
     <string name="spectrum_status_sound">Son reçu : les vagues suivent la musique</string>
+    <string name="bar_volume">Boutons de volume</string>
+    <string name="bar_volume_hint">Volume - / + sur la barre (à masquer si la voiture a ses propres touches)</string>
+    <string name="drawer_title">Tiroir d\'applis</string>
+    <string name="drawer_small">Petites icônes</string>
+    <string name="drawer_medium">Icônes moyennes</string>
+    <string name="drawer_large">Grandes icônes</string>
+    <string name="drawer_sort_name">A → Z</string>
+    <string name="drawer_sort_name_desc">Z → A</string>
+    <string name="drawer_sort_pinned">Épinglées d\'abord</string>
+    <string name="drawer_labels">Noms sous les icônes</string>
+    <string name="drawer_search_switch">Champ de recherche</string>
+    <string name="drawer_search">Rechercher une appli</string>
+    <string name="drawer_hide">Masquer du tiroir</string>
+    <string name="drawer_unhide">Afficher dans le tiroir</string>
+    <string name="drawer_show_hidden">Masquées (%1$d)</string>
+    <string name="drawer_hidden_count">%1$d applis masquées</string>
+    <string name="drawer_hidden_hint">Appui long sur une appli pour la masquer ou l\'afficher ; désactiver pour toutes les réafficher</string>
+    <string name="cc_brightness_grant">Autoriser le launcher à régler la luminosité</string>
+    <string name="cc_volume">Volume</string>
+    <string name="cc_wifi">Wi-Fi</string>
+    <string name="cc_bluetooth">Bluetooth</string>
+    <string name="cc_android_settings">Paramètres Android</string>
+    <string name="phone_no_service">Pas de service</string>
 </resources>

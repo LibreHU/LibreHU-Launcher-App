@@ -22,7 +22,7 @@
     <string name="unpin">Unpin</string>
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
-    <string name="settings">Settings</string>
+    <string name="settings">Launcher settings</string>
     <string name="theme">Theme</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
@@ -236,4 +236,27 @@
     <string name="spectrum_status_listening">Listening… (play some music)</string>
     <string name="spectrum_status_silent">Music is playing but the visualizer only gets silence: the audio path of this head unit (output or effect) is not seen by Android\'s visualizer</string>
     <string name="spectrum_status_sound">Sound received: the waves follow the music</string>
+    <string name="bar_volume">Volume buttons</string>
+    <string name="bar_volume_hint">Volume - / + on the rail (hide them when the car has its own keys)</string>
+    <string name="drawer_title">App drawer</string>
+    <string name="drawer_small">Small icons</string>
+    <string name="drawer_medium">Medium icons</string>
+    <string name="drawer_large">Large icons</string>
+    <string name="drawer_sort_name">A → Z</string>
+    <string name="drawer_sort_name_desc">Z → A</string>
+    <string name="drawer_sort_pinned">Pinned first</string>
+    <string name="drawer_labels">App names under the icons</string>
+    <string name="drawer_search_switch">Search field</string>
+    <string name="drawer_search">Search an app</string>
+    <string name="drawer_hide">Hide from the drawer</string>
+    <string name="drawer_unhide">Show in the drawer</string>
+    <string name="drawer_show_hidden">Hidden (%1$d)</string>
+    <string name="drawer_hidden_count">%1$d hidden apps</string>
+    <string name="drawer_hidden_hint">Long press on an app to hide or show it; turn off to show them all again</string>
+    <string name="cc_brightness_grant">Allow the launcher to change the brightness</string>
+    <string name="cc_volume">Volume</string>
+    <string name="cc_wifi">Wi-Fi</string>
+    <string name="cc_bluetooth">Bluetooth</string>
+    <string name="cc_android_settings">Android settings</string>
+    <string name="phone_no_service">No service</string>
 </resources>
