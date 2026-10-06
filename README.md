@@ -52,6 +52,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   barre masquables.
 - **Téléphone** : « Pas de service » quand le réseau est perdu ; charge déduite (téléphone sur l'USB de l'autoradio,
   ou batterie qui remonte) : le profil HFP ne transmet ni l'état de charge ni le type de réseau (2G…5G).
+- **Icônes LibreHU aux couleurs du thème** : les applis LibreHU déclarent une icône monochrome (meta-data
+  `org.librehu.themed_icon`), que le launcher dessine sur la couleur d'accent ; elle suit le thème clair / sombre et
+  la couleur en direct (désactivable). Les autres applis gardent leur icône.
 - Actions `org.librehu.action.POWER_MENU` et `org.librehu.action.ALL_APPS` (touches de façade de LibreHU-service).
 - Barres système masquées (balayer depuis le bord pour les afficher).
 

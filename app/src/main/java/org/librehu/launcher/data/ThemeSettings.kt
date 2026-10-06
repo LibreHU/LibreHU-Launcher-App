@@ -88,6 +88,8 @@ data class ThemeSettings(
     val drawerSort: DrawerSort = DrawerSort.NAME,
     val drawerSearch: Boolean = true,
     val hiddenApps: Set<String> = emptySet(),
+    /** LibreHU apps' icons drawn in the theme colours (their single-colour icon on the accent colour). */
+    val themedIcons: Boolean = true,
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -131,6 +133,7 @@ class ThemeStore(
             .putString("drawer_sort", s.drawerSort.name)
             .putBoolean("drawer_search", s.drawerSearch)
             .putStringSet("hidden_apps", s.hiddenApps)
+            .putBoolean("themed_icons", s.themedIcons)
             .apply()
         _settings.value = s
     }
@@ -303,6 +306,7 @@ class ThemeStore(
             drawerSort = runCatching { DrawerSort.valueOf(prefs.getString("drawer_sort", null)!!) }.getOrDefault(DrawerSort.NAME),
             drawerSearch = prefs.getBoolean("drawer_search", true),
             hiddenApps = prefs.getStringSet("hidden_apps", emptySet()).orEmpty().toSet(),
+            themedIcons = prefs.getBoolean("themed_icons", true),
         )
     }
 

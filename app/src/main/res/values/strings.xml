@@ -259,4 +259,6 @@
     <string name="cc_bluetooth">Bluetooth</string>
     <string name="cc_android_settings">Android settings</string>
     <string name="phone_no_service">No service</string>
+    <string name="themed_icons">LibreHU icons in the theme colours</string>
+    <string name="themed_icons_hint">The icons of the LibreHU apps (service, dialer, radio, widgets, buttons, ViPER4Android) follow the accent colour and the light / dark theme</string>
 </resources>
