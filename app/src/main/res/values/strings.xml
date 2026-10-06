@@ -284,4 +284,11 @@
     <string name="tpms_sound_once">Once</string>
     <string name="tpms_refresh">Refresh rate</string>
     <string name="tpms_refresh_hint">Readings shown at most every… (alarms are checked at each reading). With the Bluetooth sensors, a long period scans in short bursts to save power.</string>
+    <string name="tpms_car">Car picture</string>
+    <string name="tpms_car_hint">Import your car seen from above (PNG with a transparent background is best, nose at the top). The wheels are drawn on its sides: set the axles so that they fall on the car\'s wheels.</string>
+    <string name="tpms_car_import">Import a picture</string>
+    <string name="tpms_car_default">Drawn car</string>
+    <string name="tpms_car_failed">Cannot read this picture</string>
+    <string name="tpms_front_axle">Front axle (from the nose)</string>
+    <string name="tpms_rear_axle">Rear axle (from the nose)</string>
 </resources>

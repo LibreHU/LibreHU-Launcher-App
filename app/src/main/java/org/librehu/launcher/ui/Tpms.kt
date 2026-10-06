@@ -1,5 +1,8 @@
 package org.librehu.launcher.ui
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -33,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,15 +45,22 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.librehu.launcher.R
 import org.librehu.launcher.tpms.PressureUnit
 import org.librehu.launcher.tpms.TpmsManager
@@ -75,6 +86,7 @@ fun TpmsCard(
     val tpms = TpmsManager.get(LocalContext.current)
     val st by tpms.state.collectAsStateWithLifecycle()
     val s by tpms.settings.collectAsStateWithLifecycle()
+    val car by tpms.carImage.collectAsStateWithLifecycle()
     Column(
         modifier =
             modifier
@@ -107,6 +119,9 @@ fun TpmsCard(
                 TyrePos.entries.associateWith { tyreColor(st.tyres[it], s) },
                 st.tyres.filterValues { it.alarms(s).isNotEmpty() }.keys,
                 Modifier.width(64.dp).fillMaxHeight(0.95f),
+                image = car?.asImageBitmap(),
+                frontAxle = s.frontAxle,
+                rearAxle = s.rearAxle,
             )
             Column(
                 Modifier.weight(1f).fillMaxHeight(),
@@ -163,6 +178,9 @@ private fun CarTopView(
     alarms: Set<TyrePos>,
     modifier: Modifier,
     spare: Boolean = false,
+    image: ImageBitmap? = null,
+    frontAxle: Int = 22,
+    rearAxle: Int = 76,
 ) {
     val body = CarColors.SurfaceHigh
     val line = CarColors.TextDim
@@ -174,6 +192,10 @@ private fun CarTopView(
         animationSpec = infiniteRepeatable(tween(600), RepeatMode.Reverse),
         label = "blink",
     )
+    if (image != null) {
+        ImportedCar(image, wheels, alarms, blink, frontAxle, rearAxle, modifier)
+        return
+    }
     Canvas(modifier) {
         val w = size.width
         val h = size.height
@@ -275,6 +297,50 @@ private fun CarTopView(
     }
 }
 
+/** The user's picture of the car, fitted in the box, with the wheels on its edges at the axle positions. */
+@Composable
+private fun ImportedCar(
+    image: ImageBitmap,
+    wheels: Map<TyrePos, Color>,
+    alarms: Set<TyrePos>,
+    blink: Float,
+    frontAxle: Int,
+    rearAxle: Int,
+    modifier: Modifier,
+) {
+    val outline = CarColors.Surface
+    val dim = CarColors.TextDim
+    Canvas(modifier) {
+        val scale = minOf(size.width * 0.8f / image.width, size.height / image.height)
+        val iw = image.width * scale
+        val ih = image.height * scale
+        val left = (size.width - iw) / 2
+        val top = (size.height - ih) / 2
+        drawImage(
+            image,
+            dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
+            dstSize = IntSize(iw.roundToInt().coerceAtLeast(1), ih.roundToInt().coerceAtLeast(1)),
+        )
+        val ww = (iw * 0.16f).coerceAtLeast(8f)
+        val wh = (ih * 0.12f).coerceAtLeast(14f)
+
+        fun wheel(
+            pos: TyrePos,
+            cx: Float,
+            axle: Int,
+        ) {
+            val c = wheels[pos] ?: dim
+            val o = Offset(cx - ww / 2, top + ih * axle / 100f - wh / 2)
+            drawRoundRect(c.copy(alpha = c.alpha * if (pos in alarms) blink else 1f), o, Size(ww, wh), CornerRadius(ww * 0.35f))
+            drawRoundRect(outline, o, Size(ww, wh), CornerRadius(ww * 0.35f), style = Stroke(2f))
+        }
+        wheel(TyrePos.FL, left, frontAxle)
+        wheel(TyrePos.FR, left + iw, frontAxle)
+        wheel(TyrePos.RL, left, rearAxle)
+        wheel(TyrePos.RR, left + iw, rearAxle)
+    }
+}
+
 /** Where the pressure stands between the low and high thresholds (green zone). */
 @Composable
 private fun PressureBar(
@@ -306,6 +372,18 @@ fun TpmsScreen() {
     val tpms = TpmsManager.get(LocalContext.current)
     val st by tpms.state.collectAsStateWithLifecycle()
     val s by tpms.settings.collectAsStateWithLifecycle()
+    val car by tpms.carImage.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val pickCar =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) {
+                scope.launch {
+                    val ok = withContext(Dispatchers.IO) { tpms.setCarImage(uri) }
+                    if (!ok) Toast.makeText(context, R.string.tpms_car_failed, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     var swapFirst by remember { mutableStateOf<TyrePos?>(null) }
     var tab by remember { mutableStateOf(if (s.bleEnabled && !st.connected) TpmsTab.BLE else TpmsTab.USB) }
     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -346,6 +424,9 @@ fun TpmsScreen() {
                     st.tyres.filterValues { it.alarms(s).isNotEmpty() }.keys,
                     Modifier.width(150.dp).fillMaxHeight(0.95f).padding(horizontal = 8.dp),
                     spare = s.showSpare,
+                    image = car?.asImageBitmap(),
+                    frontAxle = s.frontAxle,
+                    rearAxle = s.rearAxle,
                 )
                 Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceEvenly) {
                     TyreTile(TyrePos.FR, st.tyres[TyrePos.FR], st.ids[TyrePos.FR], s, st.pairing == TyrePos.FR, swapFirst == TyrePos.FR)
@@ -469,6 +550,20 @@ fun TpmsScreen() {
                             stringResource(R.string.tpms_on_dashboard),
                             s.enabled,
                         ) { tpms.updateSettings { it.copy(enabled = !it.enabled) } }
+                    }
+                    Section(stringResource(R.string.tpms_car))
+                    Hint(stringResource(R.string.tpms_car_hint))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Pill(stringResource(R.string.tpms_car_import), false) { pickCar.launch("image/*") }
+                        if (car != null) Pill(stringResource(R.string.tpms_car_default), false) { tpms.clearCarImage() }
+                    }
+                    if (car != null) {
+                        Threshold(stringResource(R.string.tpms_front_axle), s.frontAxle, 5f..50f, "${s.frontAxle} %") { v ->
+                            tpms.updateSettings { it.copy(frontAxle = v.coerceIn(5, 50)) }
+                        }
+                        Threshold(stringResource(R.string.tpms_rear_axle), s.rearAxle, 50f..95f, "${s.rearAxle} %") { v ->
+                            tpms.updateSettings { it.copy(rearAxle = v.coerceIn(50, 95)) }
+                        }
                     }
                     Section(stringResource(R.string.tpms_sound))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

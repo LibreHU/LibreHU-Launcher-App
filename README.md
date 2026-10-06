@@ -57,7 +57,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   côte ; un toucher change de vue. Aux couleurs du thème.
 - **TPMS** : alerte sonore (bips sur le haut-parleur média, répétition réglable, bouton « Couper »), fréquence
   d'actualisation, et **capteurs Bluetooth LE** sans récepteur (formats ZEEPIN / TP630 et « BR » / SYTPMS) : onglet
-  « Capteurs Bluetooth » pour les voir et les placer sur chaque pneu.
+  « Capteurs Bluetooth » pour les voir et les placer sur chaque pneu. Voiture vue de dessus dessinée, roues aux
+  couleurs de l'état des pneus (clignotent en alerte), ou **image de sa propre voiture** (PNG importé, essieux
+  réglables), aussi dans le widget.
 - **Icônes LibreHU aux couleurs du thème** : les applis LibreHU déclarent une icône monochrome (meta-data
   `org.librehu.themed_icon`), que le launcher dessine sur la couleur d'accent ; elle suit le thème clair / sombre et
   la couleur en direct (désactivable). Les autres applis gardent leur icône.

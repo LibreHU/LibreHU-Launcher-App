@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.view.View
 import android.widget.RemoteViews
 import org.librehu.launcher.MainActivity
@@ -81,7 +82,19 @@ class TpmsWidget : AppWidgetProvider() {
                 )
                 setTextColor(R.id.tpms_title, text)
                 setInt(R.id.tpms_icon, "setColorFilter", accent)
-                setInt(R.id.tpms_car, "setColorFilter", dim)
+                val car = TpmsManager.get(context).carImage.value
+                if (car != null) {
+                    // Small copy: widget updates go through a binder transaction.
+                    val h = 200
+                    setImageViewBitmap(
+                        R.id.tpms_car,
+                        Bitmap.createScaledBitmap(car, (car.width * h / car.height).coerceAtLeast(1), h, true),
+                    )
+                    setInt(R.id.tpms_car, "setColorFilter", 0)
+                } else {
+                    setImageViewResource(R.id.tpms_car, R.drawable.widget_car)
+                    setInt(R.id.tpms_car, "setColorFilter", dim)
+                }
                 setTextViewText(
                     R.id.tpms_status,
                     context.getString(if (st.connected) R.string.tpms_connected else R.string.tpms_disconnected),
