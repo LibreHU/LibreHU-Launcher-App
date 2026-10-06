@@ -43,6 +43,7 @@ import org.librehu.launcher.lock.LockStore
 import org.librehu.launcher.power.PowerActions
 import org.librehu.launcher.sos.SosActivity
 import org.librehu.launcher.sos.SosStore
+import org.librehu.launcher.speed.SpeedWidget
 import org.librehu.launcher.standby.StandbyActivity
 import org.librehu.launcher.standby.StandbyStore
 import org.librehu.launcher.status.GpsStatusWatcher
@@ -107,6 +108,7 @@ class MainActivity : ComponentActivity() {
         themeController = ThemeController(applicationContext, theme, headUnit.headlights)
         themeController.start(lifecycleScope)
         TpmsManager.get(this).start()
+        SpeedWidget.ensureRunning(this)
         apps.start()
         lifecycleScope.launch {
             theme.settings
