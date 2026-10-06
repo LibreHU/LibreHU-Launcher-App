@@ -108,6 +108,21 @@ class LibreHuHeadUnit(
         }
     }
 
+    /** API 5: the service asks its MCU for a power cycle of the SoC (command 0E). */
+    override val canResetSoc: Boolean get() = runCatching { (service?.apiVersion ?: 0) >= 5 }.getOrDefault(false)
+
+    override fun resetSoc(): Boolean {
+        val s = service ?: return false
+        return try {
+            if (s.apiVersion < 5) return false
+            s.resetSoc()
+            true
+        } catch (e: RemoteException) {
+            Log.w(TAG, "resetSoc: ${e.message}")
+            false
+        }
+    }
+
     override fun release() {
         try {
             service?.unregisterCallback(callback)

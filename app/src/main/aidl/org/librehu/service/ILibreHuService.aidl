@@ -1,6 +1,9 @@
 package org.librehu.service;
 
+import android.os.Bundle;
+
 import org.librehu.service.ILibreHuCallback;
+import org.librehu.service.bt.ILibreHuBluetooth;
 
 /**
  * Public API of LibreHU-service (bind with action org.librehu.service.BIND, package org.librehu.service,
@@ -57,4 +60,26 @@ interface ILibreHuService {
     /** Radio antenna power (GPIO 110 + MCU 0x43), requested by the radio app while it plays. Cut at ACC off. */
     void setRadioAntenna(boolean on);
     boolean isRadioAntennaOn();
+
+    // --- API 3 ---
+
+    /** Bluetooth (hands-free, music, phone book): see org.librehu.service.bt.ILibreHuBluetooth. */
+    ILibreHuBluetooth getBluetooth();
+
+    // --- API 4 ---
+
+    /**
+     * Last OBD-II values of the ELM327 adapter: keys = org.librehu.core.obd.ObdPid names (RPM, SPEED,
+     * COOLANT_TEMP…) plus "BATTERY" (adapter voltage), values = doubles. Empty when not connected.
+     */
+    Bundle getObdValues();
+    /** 0 off, 1 connecting, 2 initialising, 3 connected, 4 error. */
+    int getObdState();
+    /** Name of the MCU protocol profile in use. */
+    String getMcuProtocol();
+
+    // --- API 5 ---
+
+    /** Restarts the head unit through the MCU (power cycle of the SoC, MCU command 0E): works even when Android hangs. */
+    void resetSoc();
 }
