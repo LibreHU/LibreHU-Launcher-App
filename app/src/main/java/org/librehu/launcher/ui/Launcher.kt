@@ -301,7 +301,7 @@ private fun Rail(
                 SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
             }
         }
-        if (look.showPhoneStatus) PhoneStatusView(compact = true)
+        if (look.showPhoneStatus) PhoneStatusView(compact = true, label = look.phoneLabel, batteryPercent = look.phoneBatteryPercent)
         if (look.showGps || look.showPower) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (look.showGps) GpsStatusView { actions.requestPermissions(GPS_PERMISSIONS) }
@@ -349,7 +349,7 @@ private fun BottomRail(
             SmallRailButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
             SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
         }
-        if (look.showPhoneStatus) PhoneStatusView(compact = false)
+        if (look.showPhoneStatus) PhoneStatusView(compact = false, label = look.phoneLabel, batteryPercent = look.phoneBatteryPercent)
         if (look.showGps) GpsStatusView { actions.requestPermissions(GPS_PERMISSIONS) }
         if (look.showPower) SmallRailButton(Icons.Default.PowerSettingsNew, R.string.power_title) { powerMenu.value = true }
         Clock(onClick = { controlCenter.value = true }, onLongClick = actions.standby)

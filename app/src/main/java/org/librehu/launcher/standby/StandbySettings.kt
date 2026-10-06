@@ -19,6 +19,8 @@ data class StandbySettings(
     val showSeconds: Boolean = false,
     val showDate: Boolean = true,
     val showMedia: Boolean = true,
+    /** Phone status (signal, battery, operator / name) above the clock. */
+    val showPhone: Boolean = false,
     /** Accent colour instead of white. */
     val accentColor: Boolean = false,
     /** Screen brightness while shown (0..1), or [KEEP_BRIGHTNESS]. */
@@ -51,6 +53,7 @@ class StandbyStore private constructor(
             .putBoolean("seconds", s.showSeconds)
             .putBoolean("date", s.showDate)
             .putBoolean("media", s.showMedia)
+            .putBoolean("phone", s.showPhone)
             .putBoolean("accent", s.accentColor)
             .putFloat("brightness", s.brightness)
             .putBoolean("pause_media", s.pauseMedia)
@@ -72,6 +75,7 @@ class StandbyStore private constructor(
             showSeconds = prefs.getBoolean("seconds", d.showSeconds),
             showDate = prefs.getBoolean("date", d.showDate),
             showMedia = prefs.getBoolean("media", d.showMedia),
+            showPhone = prefs.getBoolean("phone", d.showPhone),
             accentColor = prefs.getBoolean("accent", d.accentColor),
             brightness = prefs.getFloat("brightness", d.brightness),
             pauseMedia = prefs.getBoolean("pause_media", d.pauseMedia),

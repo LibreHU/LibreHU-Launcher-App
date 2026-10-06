@@ -306,4 +306,12 @@
     <string name="backup_failed">Export failed</string>
     <string name="backup_imported">Settings imported: the launcher restarts</string>
     <string name="backup_import_failed">Import failed: %1$s</string>
+    <string name="phone_label_operator">Operator</string>
+    <string name="phone_label_name">Phone name</string>
+    <string name="phone_label_both">Both</string>
+    <string name="phone_label_none">No text</string>
+    <string name="phone_percent">Phone battery in %</string>
+    <string name="phone_percent_hint">The hands-free profile gives 6 levels only: steps of 20 %.</string>
+    <string name="standby_phone">Phone status</string>
+    <string name="standby_phone_hint">Signal, battery and operator / name of the Bluetooth phone above the clock (same text as the bar).</string>
 </resources>
