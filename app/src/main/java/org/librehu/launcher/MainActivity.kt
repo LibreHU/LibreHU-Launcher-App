@@ -89,6 +89,43 @@ class MainActivity : ComponentActivity() {
 
     private val main = Handler(Looper.getMainLooper())
 
+    private val exportSettings =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+            if (uri == null) return@registerForActivityResult
+            lifecycleScope.launch {
+                val ok =
+                    withContext(Dispatchers.IO) {
+                        org.librehu.launcher.data.SettingsBackup
+                            .export(this@MainActivity, uri)
+                    }
+                Toast.makeText(this@MainActivity, if (ok) R.string.backup_exported else R.string.backup_failed, Toast.LENGTH_LONG).show()
+            }
+        }
+
+    private val importSettings =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri == null) return@registerForActivityResult
+            lifecycleScope.launch {
+                val error =
+                    withContext(Dispatchers.IO) {
+                        org.librehu.launcher.data.SettingsBackup
+                            .import(this@MainActivity, uri)
+                    }
+                if (error != null) {
+                    Toast.makeText(this@MainActivity, getString(R.string.backup_import_failed, error), Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(this@MainActivity, R.string.backup_imported, Toast.LENGTH_LONG).show()
+                    // Everything is loaded at start: restart the launcher.
+                    main.postDelayed({
+                        packageManager.getLaunchIntentForPackage(packageName)?.let {
+                            startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+                        }
+                        android.os.Process.killProcess(android.os.Process.myPid())
+                    }, 800)
+                }
+            }
+        }
+
     /** Standby clock after a while without touching the home screen. */
     private val idle = Runnable { if (screen.value != Screen.SETUP) StandbyActivity.show(this) }
 
@@ -139,6 +176,13 @@ class MainActivity : ComponentActivity() {
                 show = { screen.value = it },
                 volumeUp = headUnit::volumeUp,
                 volumeDown = headUnit::volumeDown,
+                volume = headUnit::volume,
+                setVolume = headUnit::setVolume,
+                exportSettings = {
+                    val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmm", java.util.Locale.US).format(java.util.Date())
+                    exportSettings.launch("librehu-launcher-$stamp.json")
+                },
+                importSettings = { importSettings.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
                 mediaToggle = media::togglePlay,
                 mediaNext = media::next,
                 mediaPrevious = media::previous,

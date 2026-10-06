@@ -6,8 +6,10 @@ import android.content.Intent
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.provider.Settings
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +42,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material.icons.filled.WifiTethering
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -93,12 +96,17 @@ fun ControlCenter(
     var bt by remember { mutableStateOf(btOn()) }
     var canWrite by remember { mutableStateOf(Settings.System.canWrite(context)) }
     var brightness by remember { mutableFloatStateOf(readBrightness(context).toFloat()) }
+    var hotspot by remember { mutableStateOf(Hotspot.isOn(context)) }
+    var volume by remember { mutableStateOf(actions.volume()) }
+    var draggingVolume by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         while (true) {
             now = Date()
             wifi = wifiOn(context)
             bt = btOn()
             canWrite = Settings.System.canWrite(context)
+            hotspot = Hotspot.isOn(context)
+            if (!draggingVolume) volume = actions.volume()
             delay(1000)
         }
     }
@@ -107,6 +115,13 @@ fun ControlCenter(
         onDismiss()
         then()
     }
+
+    /** Long press on a tile or a slider: the matching Android settings page. */
+    fun openSettings(action: String) =
+        close {
+            runCatching { context.startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                .onFailure { context.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(
@@ -175,22 +190,73 @@ fun ControlCenter(
                     Icon(Icons.Default.BrightnessHigh, null, tint = CarColors.TextDim, modifier = Modifier.size(28.dp))
                 }
 
-                // Volume.
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.cc_volume), color = CarColors.Text, fontSize = 18.sp, modifier = Modifier.weight(1f))
-                    RoundButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
-                    RoundButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
+                // Volume (head unit volume: LibreHU-service's audio chip, else Android's media volume).
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.VolumeDown,
+                        stringResource(R.string.volume_down),
+                        tint = CarColors.TextDim,
+                        modifier =
+                            Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .combinedClickable(
+                                    onClick = actions.volumeDown,
+                                    onLongClick = { openSettings(Settings.ACTION_SOUND_SETTINGS) },
+                                ).padding(6.dp),
+                    )
+                    Slider(
+                        value = volume.first.toFloat(),
+                        onValueChange = {
+                            draggingVolume = true
+                            volume = it.toInt() to volume.second
+                            actions.setVolume(it.toInt())
+                        },
+                        onValueChangeFinished = { draggingVolume = false },
+                        valueRange = 0f..volume.second.coerceAtLeast(1).toFloat(),
+                        modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                        colors = SliderDefaults.colors(thumbColor = CarColors.Accent, activeTrackColor = CarColors.Accent),
+                    )
+                    Text("${volume.first}", color = CarColors.TextDim, fontSize = 16.sp, modifier = Modifier.width(32.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.VolumeUp,
+                        stringResource(R.string.volume_up),
+                        tint = CarColors.TextDim,
+                        modifier =
+                            Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .combinedClickable(
+                                    onClick = actions.volumeUp,
+                                    onLongClick = { openSettings(Settings.ACTION_SOUND_SETTINGS) },
+                                ).padding(6.dp),
+                    )
                 }
 
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    CcTile(if (wifi) Icons.Default.Wifi else Icons.Default.WifiOff, stringResource(R.string.cc_wifi), wifi) {
+                    CcTile(
+                        if (wifi) Icons.Default.Wifi else Icons.Default.WifiOff,
+                        stringResource(R.string.cc_wifi),
+                        wifi,
+                        onLongClick = { openSettings(Settings.ACTION_WIFI_SETTINGS) },
+                    ) {
                         setWifi(context, !wifi)
                         wifi = !wifi
+                    }
+                    CcTile(
+                        Icons.Default.WifiTethering,
+                        stringResource(R.string.cc_hotspot),
+                        hotspot,
+                        onLongClick = { close { Hotspot.openSettings(context) } },
+                    ) {
+                        // Needs a privileged install (TETHER_PRIVILEGED): otherwise Android's hotspot page opens.
+                        if (Hotspot.set(context, !hotspot)) hotspot = !hotspot else close { Hotspot.openSettings(context) }
                     }
                     CcTile(
                         if (bt) Icons.Default.Bluetooth else Icons.Default.BluetoothDisabled,
                         stringResource(R.string.cc_bluetooth),
                         bt,
+                        onLongClick = { openSettings(Settings.ACTION_BLUETOOTH_SETTINGS) },
                     ) {
                         setBluetooth(!bt)
                         bt = !bt
@@ -203,7 +269,7 @@ fun ControlCenter(
                                 ThemeMode.AUTO -> R.string.theme_auto
                             },
                         )
-                    CcTile(Icons.Default.Brightness4, themeLabel, dark) {
+                    CcTile(Icons.Default.Brightness4, themeLabel, dark, onLongClick = { openSettings(Settings.ACTION_DISPLAY_SETTINGS) }) {
                         val next =
                             when (look.mode) {
                                 ThemeMode.AUTO -> ThemeMode.DARK
@@ -212,8 +278,18 @@ fun ControlCenter(
                             }
                         actions.setTheme { it.copy(mode = next) }
                     }
-                    CcTile(Icons.Default.AccessTime, stringResource(R.string.standby_title), false) { close(actions.standby) }
-                    CcTile(Icons.Default.Lock, stringResource(R.string.power_lock), false) { close { actions.power(PowerChoice.LOCK) } }
+                    CcTile(
+                        Icons.Default.AccessTime,
+                        stringResource(R.string.standby_title),
+                        false,
+                        onLongClick = { openSettings(Settings.ACTION_DATE_SETTINGS) },
+                    ) { close(actions.standby) }
+                    CcTile(
+                        Icons.Default.Lock,
+                        stringResource(R.string.power_lock),
+                        false,
+                        onLongClick = { openSettings(Settings.ACTION_SECURITY_SETTINGS) },
+                    ) { close { actions.power(PowerChoice.LOCK) } }
                     CcTile(Icons.Default.PowerSettingsNew, stringResource(R.string.power_title), false) { onPowerMenu() }
                     CcTile(Icons.Default.Tune, stringResource(R.string.settings), false) { close { actions.show(Screen.SETTINGS) } }
                     CcTile(Icons.Default.Settings, stringResource(R.string.cc_android_settings), false) {
@@ -225,11 +301,13 @@ fun ControlCenter(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CcTile(
     icon: ImageVector,
     label: String,
     on: Boolean,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     Column(
@@ -238,7 +316,7 @@ private fun CcTile(
                 .width(132.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(if (on) CarColors.Accent else CarColors.SurfaceHigh)
-                .clickable(onClick = onClick)
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(vertical = 16.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -252,22 +330,6 @@ private fun CcTile(
             textAlign = TextAlign.Center,
         )
     }
-}
-
-@Composable
-private fun RoundButton(
-    icon: ImageVector,
-    label: Int,
-    onClick: () -> Unit,
-) {
-    Box(
-        Modifier
-            .size(56.dp)
-            .clip(CircleShape)
-            .background(CarColors.SurfaceHigh)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) { Icon(icon, stringResource(label), tint = CarColors.Text, modifier = Modifier.size(30.dp)) }
 }
 
 @Suppress("DEPRECATION")
@@ -305,5 +367,72 @@ private fun writeBrightness(
         val cr = context.contentResolver
         Settings.System.putInt(cr, Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL)
         Settings.System.putInt(cr, Settings.System.SCREEN_BRIGHTNESS, value.coerceIn(10, 255))
+    }
+}
+
+/**
+ * Wi-Fi hotspot (connection sharing). State through the hidden WifiManager.isWifiApEnabled; switching through
+ * IConnectivityManager.startTethering / stopTethering (Android 9: callerPkg). On Android 9 Android lets an app with
+ * "Modify system settings" (already asked for the brightness) do it, unless the ROM requires tethering provisioning;
+ * when it refuses, the hotspot settings page opens instead.
+ */
+private object Hotspot {
+    private const val TETHERING_WIFI = 0
+
+    fun isOn(context: Context): Boolean =
+        runCatching {
+            val wm = context.applicationContext.getSystemService(WifiManager::class.java)
+            wm.javaClass.getMethod("isWifiApEnabled").invoke(wm) as Boolean
+        }.getOrDefault(false)
+
+    private fun service(): Any {
+        val binder =
+            Class
+                .forName("android.os.ServiceManager")
+                .getMethod("getService", String::class.java)
+                .invoke(null, Context.CONNECTIVITY_SERVICE) as android.os.IBinder
+        return Class
+            .forName("android.net.IConnectivityManager\$Stub")
+            .getMethod("asInterface", android.os.IBinder::class.java)
+            .invoke(null, binder)!!
+    }
+
+    fun set(
+        context: Context,
+        on: Boolean,
+    ): Boolean =
+        runCatching {
+            val icm = service()
+            val pkg = context.packageName
+            if (on) {
+                val receiver = android.os.ResultReceiver(android.os.Handler(android.os.Looper.getMainLooper()))
+                icm.javaClass
+                    .getMethod(
+                        "startTethering",
+                        Int::class.javaPrimitiveType,
+                        android.os.ResultReceiver::class.java,
+                        Boolean::class.javaPrimitiveType,
+                        String::class.java,
+                    ).invoke(icm, TETHERING_WIFI, receiver, false, pkg)
+            } else {
+                icm.javaClass
+                    .getMethod("stopTethering", Int::class.javaPrimitiveType, String::class.java)
+                    .invoke(icm, TETHERING_WIFI, pkg)
+            }
+            true
+        }.getOrElse {
+            android.util.Log.i("LibreHU-Launcher", "hotspot: ${it.cause ?: it}")
+            false
+        }
+
+    fun openSettings(context: Context) {
+        val intents =
+            listOf(
+                Intent().setClassName("com.android.settings", "com.android.settings.TetherSettings"),
+                Intent(Settings.ACTION_WIRELESS_SETTINGS),
+            )
+        for (i in intents) {
+            if (runCatching { context.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return
+        }
     }
 }

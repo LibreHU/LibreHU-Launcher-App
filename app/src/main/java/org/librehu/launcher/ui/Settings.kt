@@ -522,6 +522,12 @@ private fun GeneralSettings(actions: LauncherActions) {
         SettingChoice(stringResource(R.string.setup_rerun), false) { actions.show(Screen.SETUP) }
         SettingChoice(stringResource(R.string.setup_default_home), false, actions.openHomeSettings)
     }
+    SettingSection(stringResource(R.string.backup_title))
+    SettingHint(stringResource(R.string.backup_hint))
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        SettingChoice(stringResource(R.string.backup_export), false, actions.exportSettings)
+        SettingChoice(stringResource(R.string.backup_import), false, actions.importSettings)
+    }
     SettingSection(stringResource(R.string.reset))
     SettingChoice(stringResource(R.string.reset_all), false) { confirmReset = true }
     if (confirmReset) {
