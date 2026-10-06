@@ -38,15 +38,20 @@ import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.data.WallpaperKind
 import org.librehu.launcher.data.WidgetHost
 import org.librehu.launcher.headunit.HeadUnitBridge
+import org.librehu.launcher.lock.LockActivity
+import org.librehu.launcher.lock.LockStore
+import org.librehu.launcher.power.PowerActions
 import org.librehu.launcher.sos.SosActivity
 import org.librehu.launcher.sos.SosStore
 import org.librehu.launcher.standby.StandbyActivity
 import org.librehu.launcher.standby.StandbyStore
+import org.librehu.launcher.status.GpsStatusWatcher
 import org.librehu.launcher.tpms.TpmsManager
 import org.librehu.launcher.tpms.TpmsWidget
 import org.librehu.launcher.ui.CarTheme
 import org.librehu.launcher.ui.LauncherActions
 import org.librehu.launcher.ui.LauncherScreen
+import org.librehu.launcher.ui.PowerChoice
 import org.librehu.launcher.ui.Screen
 
 /** Home screen: dashboard (widgets + now playing), app grid, and the shortcut rail. */
@@ -75,7 +80,10 @@ class MainActivity : ComponentActivity() {
         }
 
     private val askPermissions =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            // Location just granted: the GPS status starts listening.
+            GpsStatusWatcher.get(this).restart()
+        }
 
     private val main = Handler(Looper.getMainLooper())
 
@@ -155,6 +163,7 @@ class MainActivity : ComponentActivity() {
                     theme.reset()
                     StandbyStore.get(this).reset()
                     SosStore.get(this).reset()
+                    LockStore.get(this).reset()
                     screen.value = Screen.SETUP
                 },
                 standby = { StandbyActivity.show(this) },
@@ -167,6 +176,8 @@ class MainActivity : ComponentActivity() {
                     prefs.setupDone = true
                     screen.value = Screen.HOME
                 },
+                power = ::power,
+                canResetSoc = headUnit.canResetSoc,
             )
         setContent {
             CarTheme {
@@ -199,7 +210,37 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Home pressed while locked: the lock screen comes back over the launcher.
+        if (LockStore.get(this).locked) LockActivity.show(this)
         scheduleIdle()
+    }
+
+    private fun power(choice: PowerChoice) {
+        val ok =
+            when (choice) {
+                PowerChoice.LOCK -> {
+                    LockActivity.lock(this)
+                    true
+                }
+
+                PowerChoice.STANDBY -> {
+                    StandbyActivity.show(this)
+                    true
+                }
+
+                PowerChoice.REBOOT -> {
+                    PowerActions.reboot(this)
+                }
+
+                PowerChoice.SHUTDOWN -> {
+                    PowerActions.shutdown(this)
+                }
+
+                PowerChoice.MCU_RESET -> {
+                    headUnit.resetSoc()
+                }
+            }
+        if (!ok) Toast.makeText(this, R.string.power_failed, Toast.LENGTH_LONG).show()
     }
 
     override fun onPause() {

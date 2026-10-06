@@ -73,6 +73,10 @@ data class ThemeSettings(
     val spectrumPalette: SpectrumPalette = SpectrumPalette.ACCENT,
     /** Spectrum follows the sound being played (Visualizer, needs RECORD_AUDIO). */
     val spectrumAudio: Boolean = false,
+    /** Next to the clock: phone of the car (signal, battery, operator), GPS of the head unit, power button. */
+    val showPhoneStatus: Boolean = true,
+    val showGps: Boolean = true,
+    val showPower: Boolean = true,
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -107,6 +111,9 @@ class ThemeStore(
             .putString("rail", s.rail.name)
             .putString("spectrum_palette", s.spectrumPalette.name)
             .putBoolean("spectrum_audio", s.spectrumAudio)
+            .putBoolean("show_phone", s.showPhoneStatus)
+            .putBoolean("show_gps", s.showGps)
+            .putBoolean("show_power", s.showPower)
             .apply()
         _settings.value = s
     }
@@ -270,6 +277,9 @@ class ThemeStore(
             spectrumPalette =
                 runCatching { SpectrumPalette.valueOf(prefs.getString("spectrum_palette", null)!!) }.getOrDefault(SpectrumPalette.ACCENT),
             spectrumAudio = prefs.getBoolean("spectrum_audio", false),
+            showPhoneStatus = prefs.getBoolean("show_phone", true),
+            showGps = prefs.getBoolean("show_gps", true),
+            showPower = prefs.getBoolean("show_power", true),
         )
     }
 
