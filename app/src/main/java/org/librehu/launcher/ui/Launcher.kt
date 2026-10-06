@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Settings
@@ -57,6 +58,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -135,6 +137,10 @@ class LauncherActions(
     val openDreamSettings: () -> Unit,
     /** First start assistant: [finishSetup] marks it done. */
     val finishSetup: () -> Unit,
+    /** Power menu choice (confirmed for restart / shut down). */
+    val power: (PowerChoice) -> Unit,
+    /** The head unit can restart through its MCU (asked when the menu opens: the bridge binds late). */
+    val canResetSoc: () -> Boolean,
 )
 
 /** Car dashboard: shortcut rail on the left, dashboard or app grid on the right. */
@@ -157,6 +163,7 @@ fun LauncherScreen(
         .settings
         .collectAsStateWithLifecycle()
     var menuFor by remember { mutableStateOf<LauncherApp?>(null) }
+    var confirmPower by remember { mutableStateOf<PowerChoice?>(null) }
     val byKey = apps.associateBy { it.key }
     val pinned = pins.mapNotNull { byKey[it] }
     val content: @Composable () -> Unit = {
@@ -184,13 +191,13 @@ fun LauncherScreen(
                                 .fillMaxWidth()
                                 .padding(top = 12.dp, start = 12.dp, end = 12.dp),
                     ) { content() }
-                    BottomRail(pinned, screen, actions, sos) { menuFor = it }
+                    BottomRail(pinned, screen, actions, sos, look) { menuFor = it }
                 }
             }
 
             else -> {
                 Row(modifier = Modifier.fillMaxSize()) {
-                    Rail(pinned, screen, actions, sos) { menuFor = it }
+                    Rail(pinned, screen, actions, sos, look) { menuFor = it }
                     Box(
                         modifier =
                             Modifier
@@ -203,6 +210,36 @@ fun LauncherScreen(
         }
     }
     menuFor?.let { app -> AppMenu(app, app.key in pins, actions) { menuFor = null } }
+    if (powerMenu.value) {
+        PowerMenu(actions.canResetSoc(), onDismiss = { powerMenu.value = false }) { choice ->
+            powerMenu.value = false
+            if (choice == PowerChoice.LOCK || choice == PowerChoice.STANDBY) actions.power(choice) else confirmPower = choice
+        }
+    }
+    confirmPower?.let { choice ->
+        AlertDialog(
+            onDismissRequest = { confirmPower = null },
+            title = {
+                Text(
+                    stringResource(
+                        when (choice) {
+                            PowerChoice.SHUTDOWN -> R.string.power_shutdown
+                            PowerChoice.MCU_RESET -> R.string.power_mcu_reset
+                            else -> R.string.power_reboot
+                        },
+                    ),
+                )
+            },
+            text = { Text(stringResource(if (choice == PowerChoice.MCU_RESET) R.string.power_mcu_confirm else R.string.power_confirm)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmPower = null
+                    actions.power(choice)
+                }) { Text(stringResource(R.string.power_do)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmPower = null }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
 }
 
 // --- Rail --------------------------------------------------------------------------------------------------------
@@ -213,6 +250,7 @@ private fun Rail(
     screen: Screen,
     actions: LauncherActions,
     sos: SosSettings,
+    look: ThemeSettings,
     onMenu: (LauncherApp) -> Unit,
 ) {
     Column(
@@ -242,6 +280,13 @@ private fun Rail(
             SmallRailButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
             SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
         }
+        if (look.showPhoneStatus) PhoneStatusView(compact = true)
+        if (look.showGps || look.showPower) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (look.showGps) GpsStatusView { actions.requestPermissions(GPS_PERMISSIONS) }
+                if (look.showPower) SmallRailButton(Icons.Default.PowerSettingsNew, R.string.power_title) { powerMenu.value = true }
+            }
+        }
         Clock(actions.standby)
     }
 }
@@ -253,6 +298,7 @@ private fun BottomRail(
     screen: Screen,
     actions: LauncherActions,
     sos: SosSettings,
+    look: ThemeSettings,
     onMenu: (LauncherApp) -> Unit,
 ) {
     Row(
@@ -280,9 +326,15 @@ private fun BottomRail(
         if (sos.onRail) SosButton(sos.longPress, 56, actions.sos)
         SmallRailButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
         SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
+        if (look.showPhoneStatus) PhoneStatusView(compact = false)
+        if (look.showGps) GpsStatusView { actions.requestPermissions(GPS_PERMISSIONS) }
+        if (look.showPower) SmallRailButton(Icons.Default.PowerSettingsNew, R.string.power_title) { powerMenu.value = true }
         Clock(actions.standby)
     }
 }
+
+/** Power menu visible (opened from the rail). */
+private val powerMenu = mutableStateOf(false)
 
 /** Red SOS button; with [longPress], a short touch only says to hold it. */
 @OptIn(ExperimentalFoundationApi::class)
@@ -529,7 +581,9 @@ private fun WidgetSlot(
     ) {
         val hostView = remember(appWidgetId) { if (appWidgetId >= 0) widgets.createView(appWidgetId) else null }
         if (hostView != null) {
-            AndroidView(factory = { hostView }, modifier = Modifier.fillMaxSize())
+            // AndroidView only calls its factory once: without key(), a replaced widget kept showing the old view
+            // until the screen was rebuilt (opening the app drawer).
+            key(appWidgetId) { AndroidView(factory = { hostView }, modifier = Modifier.fillMaxSize()) }
             Box(
                 modifier =
                     Modifier

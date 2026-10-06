@@ -61,12 +61,16 @@ fun Spectrum(
             }
         renderer.setColors(edge, middle, center, background)
     }
-    val capture = remember { SpectrumAudio(renderer) }
+    val capture = remember { SpectrumAudio(renderer, context) }
     WhileResumed(
         audio,
         onResume = {
             view.onResume()
-            if (audio && capture.allowed(context)) capture.start() else capture.stop()
+            when {
+                audio && capture.allowed(context) -> capture.start()
+                audio -> capture.stop(SpectrumAudio.Kind.NO_PERMISSION)
+                else -> capture.stop()
+            }
         },
         onPause = {
             capture.stop()
@@ -288,7 +292,20 @@ class SpectrumRenderer(
  */
 class SpectrumAudio(
     private val renderer: SpectrumRenderer,
+    context: Context,
 ) {
+    enum class Kind { OFF, NO_PERMISSION, ERROR, LISTENING, SILENT, SOUND }
+
+    /** What the visualizer gets, for the settings ("follow the music" does nothing otherwise). */
+    data class Status(
+        val kind: Kind = Kind.OFF,
+        val detail: String = "",
+    )
+
+    private val audioManager = context.applicationContext.getSystemService(android.media.AudioManager::class.java)
+    private var listeningSince = 0L
+    private var lastSoundAt = 0L
+
     private var visualizer: Visualizer? = null
     private val smooth = FloatArray(SpectrumRenderer.COLUMNS / 2)
     private val out = FloatArray(SpectrumRenderer.COLUMNS)
@@ -321,15 +338,23 @@ class SpectrumAudio(
                         false,
                         true,
                     )
-                    enabled = true
+                    val code = setEnabled(true)
+                    if (code != Visualizer.SUCCESS) throw IllegalStateException("setEnabled: $code")
                 }
             } catch (e: Exception) {
                 Log.w("LibreHU-Launcher", "Visualizer: ${e.message}")
+                _status.value = Status(Kind.ERROR, e.message ?: e.javaClass.simpleName)
                 null
             }
+        if (visualizer != null) {
+            listeningSince = android.os.SystemClock.uptimeMillis()
+            lastSoundAt = 0
+            _status.value = Status(Kind.LISTENING)
+        }
     }
 
-    fun stop() {
+    fun stop(kind: Kind = Kind.OFF) {
+        _status.value = Status(kind)
         visualizer?.let {
             runCatching {
                 it.enabled = false
@@ -357,6 +382,14 @@ class SpectrumAudio(
             smooth[j] = if (target > old) old + (target - old) * ATTACK else old + (target - old) * DECAY
             if (mag > 0f) any = true
         }
+        val now = android.os.SystemClock.uptimeMillis()
+        if (any) {
+            lastSoundAt = now
+            if (_status.value.kind != Kind.SOUND) _status.value = Status(Kind.SOUND)
+        } else if (now - maxOf(lastSoundAt, listeningSince) > SILENT_AFTER_MS && audioManager?.isMusicActive == true) {
+            // Music plays but the output mix gives zeros: the visualizer does not see this output.
+            if (_status.value.kind != Kind.SILENT) _status.value = Status(Kind.SILENT)
+        }
         if (!any) return
         for (j in 0 until half) {
             out[half - 1 - j] = smooth[j]
@@ -365,9 +398,12 @@ class SpectrumAudio(
         renderer.setLevels(out)
     }
 
-    private companion object {
-        const val MAX_HEIGHT = 170f
-        const val ATTACK = 0.5f
-        const val DECAY = 0.12f
+    companion object {
+        private val _status = kotlinx.coroutines.flow.MutableStateFlow(Status())
+        val status: kotlinx.coroutines.flow.StateFlow<Status> = _status
+        private const val SILENT_AFTER_MS = 5000L
+        private const val MAX_HEIGHT = 170f
+        private const val ATTACK = 0.5f
+        private const val DECAY = 0.12f
     }
 }

@@ -45,6 +45,19 @@
         android:name="android.hardware.microphone"
         android:required="false" />
 
+    <!-- Phone of the car (HFP client: operator, signal, battery). -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- Power menu: privileged install, else root. -->
+    <uses-permission
+        android:name="android.permission.REBOOT"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.SHUTDOWN"
+        tools:ignore="ProtectedPermissions" />
+
     <!-- USB TPMS receiver (USB-serial adapter). -->
     <uses-feature
         android:name="android.hardware.usb.host"
@@ -92,6 +105,21 @@
             android:theme="@style/Theme.LibreHU.Car">
             <intent-filter>
                 <action android:name="org.librehu.action.STANDBY_CLOCK" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Lock screen: power menu, or org.librehu.action.LOCK (front panel touch keys, key mapping). -->
+        <activity
+            android:name=".lock.LockActivity"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|keyboardHidden|keyboard|navigation"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="org.librehu.launcher.lock"
+            android:theme="@style/Theme.LibreHU.Car">
+            <intent-filter>
+                <action android:name="org.librehu.action.LOCK" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

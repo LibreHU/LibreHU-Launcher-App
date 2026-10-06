@@ -23,6 +23,12 @@ interface HeadUnitBridge {
     /** Force stops [packageName]; false when only background processes could be killed. */
     fun forceStop(packageName: String): Boolean
 
+    /** The head unit can restart through its MCU (power cycle of the SoC, works when Android hangs). */
+    val canResetSoc: Boolean get() = false
+
+    /** Restart through the MCU; false when not possible. */
+    fun resetSoc(): Boolean = false
+
     fun release() {}
 
     companion object {
