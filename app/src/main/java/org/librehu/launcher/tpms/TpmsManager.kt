@@ -9,6 +9,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -42,7 +44,19 @@ data class TpmsSettings(
     val fahrenheit: Boolean = false,
     val showSpare: Boolean = false,
     val alarms: Boolean = true,
-)
+    /** Beeps on a new alarm, again every [soundRepeatSec] s while it lasts (0 = once). */
+    val alarmSound: Boolean = true,
+    val soundRepeatSec: Int = 30,
+    /** Readings shown at most every [refreshSec] s per tyre (alarms are checked at once); BLE scan rhythm. */
+    val refreshSec: Int = 5,
+    /** Bluetooth LE sensors (no USB receiver needed). */
+    val bleEnabled: Boolean = false,
+) {
+    companion object {
+        val REFRESH_CHOICES = listOf(1, 5, 15, 30, 60)
+        val REPEAT_CHOICES = listOf(0, 10, 30, 60)
+    }
+}
 
 data class TpmsState(
     val connected: Boolean = false,
@@ -52,6 +66,13 @@ data class TpmsState(
     /** Position being paired, null when not pairing. */
     val pairing: TyrePos? = null,
     val message: String = "",
+    /** BLE sensors heard lately, by id. */
+    val bleSeen: Map<String, BleTpmsReading> = emptyMap(),
+    /** BLE sensor assigned to each tyre. */
+    val bleIds: Map<TyrePos, String> = emptyMap(),
+    val bleError: String = "",
+    /** Alarm sound silenced until the alarms change. */
+    val silenced: Boolean = false,
 )
 
 /** Alarm of one tyre, from the readings and the thresholds. */
@@ -79,8 +100,26 @@ class TpmsManager private constructor(
     private var io: SerialInputOutputManager? = null
     private val parser = TpmsParser { f -> main.post { onFrame(TpmsProtocol.decode(f)) } }
     private val alarmed = mutableSetOf<TyrePos>()
+    private val lastShown = HashMap<TyrePos, Long>()
+    private val pending = HashMap<TyrePos, TyreReading>()
+    private val ble = TpmsBleScanner(::onBleReading) { e -> _state.value = _state.value.copy(bleError = e) }
+    private val flush =
+        Runnable {
+            val now = System.currentTimeMillis()
+            pending.values.toList().forEach { publish(it, now) }
+            pending.clear()
+        }
+    private val beepAgain =
+        object : Runnable {
+            override fun run() {
+                val s = _settings.value
+                if (alarmed.isEmpty() || !s.alarmSound || s.soundRepeatSec <= 0 || _state.value.silenced) return
+                beep()
+                main.postDelayed(this, s.soundRepeatSec * 1000L)
+            }
+        }
 
-    private val _state = MutableStateFlow(TpmsState())
+    private val _state = MutableStateFlow(TpmsState(bleIds = loadBleIds()))
     val state: StateFlow<TpmsState> = _state.asStateFlow()
 
     private val _settings = MutableStateFlow(loadSettings())
@@ -141,6 +180,109 @@ class TpmsManager private constructor(
             }.distinctUntilChanged().collect { (st, s) -> TpmsWidget.updateAll(context, st, s) }
         }
         connect()
+        if (_settings.value.bleEnabled) ble.start(_settings.value.refreshSec)
+    }
+
+    // --- Bluetooth LE sensors -------------------------------------------------------------------------------------
+
+    private fun onBleReading(r: BleTpmsReading) {
+        val s = _state.value
+        _state.value = s.copy(bleSeen = s.bleSeen + (r.id to r), bleError = "")
+        val pos =
+            s.bleIds.entries
+                .firstOrNull { it.value == r.id }
+                ?.key ?: return
+        accept(
+            TyreReading(
+                pos = pos,
+                kpa = r.kpa,
+                celsius = r.celsius,
+                leak = r.alarm,
+                pressureWarning = false,
+                noSignal = false,
+                battery = r.batteryVolts,
+                time = r.time,
+            ),
+        )
+    }
+
+    /** Puts BLE sensor [id] on [pos] (null id: no sensor there). */
+    fun assignBle(
+        pos: TyrePos,
+        id: String?,
+    ) {
+        val ids =
+            _state.value.bleIds
+                .filterValues { it != id }
+                .toMutableMap()
+        if (id == null) ids.remove(pos) else ids[pos] = id
+        prefs
+            .edit()
+            .apply {
+                TyrePos.entries.forEach { p -> ids[p]?.let { putString("ble_${p.name}", it) } ?: remove("ble_${p.name}") }
+            }.apply()
+        _state.value = _state.value.copy(bleIds = ids, tyres = _state.value.tyres - pos)
+        _state.value.bleSeen[id]?.let { onBleReading(it) }
+    }
+
+    fun forgetSeen() {
+        _state.value = _state.value.copy(bleSeen = emptyMap())
+    }
+
+    private fun loadBleIds(): Map<TyrePos, String> =
+        TyrePos.entries
+            .mapNotNull { p ->
+                prefs.getString("ble_${p.name}", null)?.let {
+                    p to it
+                }
+            }.toMap()
+
+    // --- Readings, alarms --------------------------------------------------------------------------------------------
+
+    /** Alarm checked at once; shown at most every [TpmsSettings.refreshSec] per tyre. */
+    private fun accept(r: TyreReading) {
+        checkAlarm(r)
+        val now = System.currentTimeMillis()
+        val every = _settings.value.refreshSec * 1000L
+        val last = lastShown[r.pos] ?: 0
+        if (now - last >= every) {
+            pending.remove(r.pos)
+            publish(r, now)
+        } else {
+            pending[r.pos] = r
+            main.removeCallbacks(flush)
+            main.postDelayed(flush, every - (now - last))
+        }
+    }
+
+    private fun publish(
+        r: TyreReading,
+        now: Long,
+    ) {
+        lastShown[r.pos] = now
+        _state.value = _state.value.copy(tyres = _state.value.tyres + (r.pos to r))
+    }
+
+    /** Stops the alarm sound until the alarms change. */
+    fun silence() {
+        main.removeCallbacks(beepAgain)
+        _state.value = _state.value.copy(silenced = true)
+    }
+
+    /** Three beeps on the media stream (the one the car speakers always play). */
+    fun beep() {
+        Thread {
+            try {
+                val tg = ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME)
+                repeat(3) {
+                    tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 250)
+                    Thread.sleep(400)
+                }
+                tg.release()
+            } catch (e: Exception) {
+                Log.w(TAG, "TPMS beep: ${e.message}")
+            }
+        }.start()
     }
 
     /** Opens the first USB-serial adapter found (asks the permission if needed). */
@@ -216,7 +358,8 @@ class TpmsManager private constructor(
     }
 
     fun updateSettings(transform: (TpmsSettings) -> TpmsSettings) {
-        val s = transform(_settings.value)
+        val old = _settings.value
+        val s = transform(old)
         prefs
             .edit()
             .putBoolean("enabled", s.enabled)
@@ -227,8 +370,15 @@ class TpmsManager private constructor(
             .putBoolean("fahrenheit", s.fahrenheit)
             .putBoolean("spare", s.showSpare)
             .putBoolean("alarms", s.alarms)
+            .putBoolean("alarm_sound", s.alarmSound)
+            .putInt("sound_repeat", s.soundRepeatSec)
+            .putInt("refresh", s.refreshSec)
+            .putBoolean("ble", s.bleEnabled)
             .apply()
         _settings.value = s
+        if (started && (s.bleEnabled != old.bleEnabled || s.refreshSec != old.refreshSec)) {
+            if (s.bleEnabled) ble.start(s.refreshSec) else ble.stop()
+        }
     }
 
     private fun write(bytes: ByteArray) {
@@ -243,8 +393,7 @@ class TpmsManager private constructor(
         val s = _state.value
         when (f) {
             is TpmsFrame.Tyre -> {
-                _state.value = s.copy(tyres = s.tyres + (f.reading.pos to f.reading))
-                checkAlarm(f.reading)
+                accept(f.reading)
             }
 
             is TpmsFrame.Paired -> {
@@ -264,11 +413,24 @@ class TpmsManager private constructor(
         val s = _settings.value
         val alarms = r.alarms(s)
         if (alarms.isEmpty()) {
-            if (alarmed.remove(r.pos)) nm().cancel(NOTIFICATION_BASE + r.pos.ordinal)
+            if (alarmed.remove(r.pos)) {
+                nm().cancel(NOTIFICATION_BASE + r.pos.ordinal)
+                if (alarmed.isEmpty()) {
+                    main.removeCallbacks(beepAgain)
+                    _state.value = _state.value.copy(silenced = false)
+                }
+            }
             return
         }
         if (!s.alarms || r.pos in alarmed) return
         alarmed += r.pos
+        // New alarm: sound again even if silenced before.
+        _state.value = _state.value.copy(silenced = false)
+        if (s.alarmSound) {
+            beep()
+            main.removeCallbacks(beepAgain)
+            if (s.soundRepeatSec > 0) main.postDelayed(beepAgain, s.soundRepeatSec * 1000L)
+        }
         nm().notify(
             NOTIFICATION_BASE + r.pos.ordinal,
             NotificationCompat
@@ -302,6 +464,10 @@ class TpmsManager private constructor(
             fahrenheit = prefs.getBoolean("fahrenheit", d.fahrenheit),
             showSpare = prefs.getBoolean("spare", d.showSpare),
             alarms = prefs.getBoolean("alarms", d.alarms),
+            alarmSound = prefs.getBoolean("alarm_sound", d.alarmSound),
+            soundRepeatSec = prefs.getInt("sound_repeat", d.soundRepeatSec),
+            refreshSec = prefs.getInt("refresh", d.refreshSec),
+            bleEnabled = prefs.getBoolean("ble", d.bleEnabled),
         )
     }
 
