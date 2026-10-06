@@ -61,6 +61,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -72,6 +73,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -182,6 +184,7 @@ fun LauncherScreen(
             Screen.SETUP -> Unit
         }
     }
+    SideEffect { themedIcons.value = look.themedIcons }
     Box(modifier = Modifier.fillMaxSize()) {
         Wallpaper(theme)
         when {
@@ -452,6 +455,9 @@ private fun SmallRailButton(
     }
 }
 
+/** LibreHU apps' icons in the theme colours (Settings → Customisation). */
+private val themedIcons = mutableStateOf(true)
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AppIcon(
@@ -460,15 +466,34 @@ private fun AppIcon(
     onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
-    Image(
-        app.icon,
-        contentDescription = app.label,
-        modifier =
-            Modifier
-                .size(size.dp)
-                .clip(CircleShape)
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
-    )
+    val modifier =
+        Modifier
+            .size(size.dp)
+            .clip(CircleShape)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+    AppIconImage(app, size, modifier)
+}
+
+/** The app icon, or for LibreHU apps their glyph on the accent colour (follows the theme live). */
+@Composable
+private fun AppIconImage(
+    app: LauncherApp,
+    size: Int,
+    modifier: Modifier,
+) {
+    val glyph = app.glyph
+    if (glyph != null && themedIcons.value) {
+        Box(modifier.background(CarColors.Accent), contentAlignment = Alignment.Center) {
+            Image(
+                glyph,
+                contentDescription = app.label,
+                colorFilter = ColorFilter.tint(CarColors.OnAccent),
+                modifier = Modifier.size((size * app.glyphScale).dp),
+            )
+        }
+    } else {
+        Image(app.icon, contentDescription = app.label, modifier = modifier)
+    }
 }
 
 // --- Dashboard ---------------------------------------------------------------------------------------------------
@@ -994,7 +1019,7 @@ private fun AppMenu(
     var confirmUninstall by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = { Image(app.icon, null, modifier = Modifier.size(56.dp).clip(CircleShape)) },
+        icon = { AppIconImage(app, 56, Modifier.size(56.dp).clip(CircleShape)) },
         title = { Text(app.label) },
         text = {
             Column {

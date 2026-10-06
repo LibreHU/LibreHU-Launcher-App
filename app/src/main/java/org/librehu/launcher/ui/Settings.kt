@@ -182,6 +182,10 @@ fun LookSettings(
             actions.setTheme { it.copy(showVolume = on) }
         }
 
+        SettingSwitch(stringResource(R.string.themed_icons), stringResource(R.string.themed_icons_hint), s.themedIcons) { on ->
+            actions.setTheme { it.copy(themedIcons = on) }
+        }
+
         SettingSection(stringResource(R.string.drawer_title))
         SettingChoices(
             listOf(
