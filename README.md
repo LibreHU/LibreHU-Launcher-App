@@ -36,6 +36,14 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   [docs/sos.md](docs/sos.md).
 - **Assistant de premier démarrage** : apparence et barre, accès Android (accueil par défaut, notifications,
   position / appels), horloge de veille, SOS ; relançable depuis Paramètres → Général.
+- **État près de l'horloge** : téléphone connecté en Bluetooth (barres de réseau, batterie, opérateur, lus sur le
+  profil mains libres HFP) et **GPS de l'autoradio** (gris éteint, jaune en recherche avec le nombre de satellites
+  visibles, vert position acquise avec les satellites utilisés). Désactivables (Paramètres → Personnalisation).
+- **Bouton marche/arrêt** : verrouiller, horloge de veille, redémarrer, éteindre (installation privilégiée ou root),
+  redémarrer **via le MCU** (branches `ivi` : `ISystem.reboot()` ; `librehu-service` : API 5 `resetSoc()`).
+- **Écran de verrouillage** : horloge ou écran noir, glisser ou code ; action `org.librehu.action.LOCK` pour une
+  touche (bouton power de la façade tactile, remappage), la même touche déverrouille sans code ; revient par-dessus
+  l'accueil tant qu'il n'est pas déverrouillé.
 - Barres système masquées (balayer depuis le bord pour les afficher).
 
 ## Branches

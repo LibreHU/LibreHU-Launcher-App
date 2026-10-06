@@ -57,6 +57,8 @@ import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeMode
 import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.data.WallpaperKind
+import org.librehu.launcher.lock.LockLook
+import org.librehu.launcher.lock.LockStore
 import org.librehu.launcher.sos.SosContact
 import org.librehu.launcher.sos.SosSettings
 import org.librehu.launcher.sos.SosStore
@@ -70,6 +72,7 @@ private enum class SettingsTab(
     LOOK(R.string.settings_look),
     STANDBY(R.string.standby_title),
     SOS(R.string.sos_settings),
+    LOCK(R.string.lock_title),
     GENERAL(R.string.settings_general),
 }
 
@@ -97,6 +100,7 @@ fun SettingsScreen(
             SettingsTab.LOOK -> LookSettings(theme, controller, actions)
             SettingsTab.STANDBY -> StandbySettingsPage(actions)
             SettingsTab.SOS -> SosSettingsPage(actions)
+            SettingsTab.LOCK -> LockSettingsPage(actions)
             SettingsTab.GENERAL -> GeneralSettings(actions)
         }
         Spacer(Modifier.height(8.dp))
@@ -162,6 +166,18 @@ fun LookSettings(
         listOf(RailPosition.LEFT to stringResource(R.string.rail_left), RailPosition.BOTTOM to stringResource(R.string.rail_bottom)),
         s.rail,
     ) { r -> actions.setTheme { it.copy(rail = r) } }
+    if (full) {
+        SettingSwitch(stringResource(R.string.bar_phone), stringResource(R.string.bar_phone_hint), s.showPhoneStatus) { on ->
+            actions.setTheme { it.copy(showPhoneStatus = on) }
+        }
+        SettingSwitch(stringResource(R.string.bar_gps), stringResource(R.string.bar_gps_hint), s.showGps) { on ->
+            if (on) actions.requestPermissions(GPS_PERMISSIONS)
+            actions.setTheme { it.copy(showGps = on) }
+        }
+        SettingSwitch(stringResource(R.string.bar_power), stringResource(R.string.bar_power_hint), s.showPower) { on ->
+            actions.setTheme { it.copy(showPower = on) }
+        }
+    }
 
     SettingSection(stringResource(R.string.wallpaper))
     val w = s.wallpaper
@@ -200,6 +216,10 @@ fun LookSettings(
             if (on) actions.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO))
             actions.setTheme { it.copy(spectrumAudio = on) }
         }
+        if (s.spectrumAudio) {
+            val status by SpectrumAudio.status.collectAsStateWithLifecycle()
+            SettingHint(spectrumStatus(status))
+        }
         SettingHint(stringResource(R.string.spectrum_credits))
     }
     if (full) SettingHint(stringResource(R.string.wallpaper_hint))
@@ -218,6 +238,49 @@ private fun spectrumName(p: SpectrumPalette): String =
             SpectrumPalette.VIOLET -> R.string.spectrum_violet
         },
     )
+
+@Composable
+private fun spectrumStatus(st: SpectrumAudio.Status): String =
+    when (st.kind) {
+        SpectrumAudio.Kind.OFF -> stringResource(R.string.spectrum_status_off)
+        SpectrumAudio.Kind.NO_PERMISSION -> stringResource(R.string.spectrum_status_permission)
+        SpectrumAudio.Kind.ERROR -> stringResource(R.string.spectrum_status_error, st.detail)
+        SpectrumAudio.Kind.LISTENING -> stringResource(R.string.spectrum_status_listening)
+        SpectrumAudio.Kind.SILENT -> stringResource(R.string.spectrum_status_silent)
+        SpectrumAudio.Kind.SOUND -> stringResource(R.string.spectrum_status_sound)
+    }
+
+// --- Lock screen -------------------------------------------------------------------------------------------------
+
+@Composable
+fun LockSettingsPage(actions: LauncherActions) {
+    val store = LockStore.get(LocalContext.current)
+    val s by store.settings.collectAsStateWithLifecycle()
+    var pin by remember { mutableStateOf(s.pin) }
+    SettingHint(stringResource(R.string.lock_hint))
+    SettingSection(stringResource(R.string.lock_look))
+    SettingChoices(
+        listOf(LockLook.CLOCK to stringResource(R.string.lock_look_clock), LockLook.BLACK to stringResource(R.string.lock_look_black)),
+        s.look,
+    ) { l -> store.update { it.copy(look = l) } }
+    SettingSection(stringResource(R.string.lock_pin))
+    SettingText(stringResource(R.string.lock_pin_label), pin, KeyboardType.NumberPassword) { v ->
+        pin = v.filter { it.isDigit() }.take(8)
+        store.update { it.copy(pin = pin) }
+    }
+    SettingHint(stringResource(R.string.lock_pin_hint))
+    SettingSwitch(stringResource(R.string.lock_toggle), stringResource(R.string.lock_toggle_hint), s.toggle) { on ->
+        store.update {
+            it.copy(toggle = on)
+        }
+    }
+    SettingSwitch(stringResource(R.string.standby_pause), stringResource(R.string.standby_pause_hint), s.pauseMedia) { on ->
+        store.update { it.copy(pauseMedia = on) }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        SettingChoice(stringResource(R.string.lock_now), false) { actions.power(PowerChoice.LOCK) }
+    }
+}
 
 // --- Standby clock -----------------------------------------------------------------------------------------------
 
