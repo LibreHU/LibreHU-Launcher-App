@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.media.AudioManager
@@ -278,29 +279,74 @@ class TpmsManager private constructor(
 
     /**
      * Uses the picture at [uri] as the car (nose at the top), scaled down to [CAR_MAX_PX] and saved as PNG so that
-     * transparency is kept. Blocking (decodes), call it off the main thread.
+     * transparency is kept. The file is read once (some pickers hand out a stream that cannot be opened twice), then
+     * decoded with ImageDecoder (PNG, JPEG, WebP, HEIF…) or BitmapFactory. Returns null when done, else the reason.
+     * Blocking, call it off the main thread.
      */
-    fun setCarImage(uri: Uri): Boolean {
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) } ?: return false
-        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return false
-        var sample = 1
-        while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= CAR_MAX_PX) sample *= 2
-        val decoded =
-            context.contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
-            } ?: return false
+    fun setCarImage(uri: Uri): String? {
+        val bytes =
+            try {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    val out = java.io.ByteArrayOutputStream()
+                    val buf = ByteArray(64 * 1024)
+                    while (true) {
+                        val n = input.read(buf)
+                        if (n < 0) break
+                        out.write(buf, 0, n)
+                        if (out.size() > CAR_MAX_BYTES) return "file too large"
+                    }
+                    out.toByteArray()
+                } ?: return "file not readable"
+            } catch (e: Exception) {
+                Log.w(TAG, "car picture $uri: $e")
+                return e.message ?: e.javaClass.simpleName
+            }
+        if (bytes.isEmpty()) return "empty file"
+        val decoded = decodeCar(bytes) ?: return "unknown image format"
         val scale = minOf(1f, CAR_MAX_PX.toFloat() / maxOf(decoded.width, decoded.height))
         val bmp =
             if (scale < 1f) {
-                Bitmap.createScaledBitmap(decoded, (decoded.width * scale).toInt(), (decoded.height * scale).toInt(), true)
+                Bitmap.createScaledBitmap(
+                    decoded,
+                    (decoded.width * scale).toInt().coerceAtLeast(1),
+                    (decoded.height * scale).toInt().coerceAtLeast(1),
+                    true,
+                )
             } else {
                 decoded
             }
-        carFile.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        try {
+            carFile.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        } catch (e: Exception) {
+            Log.w(TAG, "car picture save: $e")
+            return e.message ?: "save failed"
+        }
         _carImage.value = bmp
         main.post { TpmsWidget.refresh(context) }
-        return true
+        return null
+    }
+
+    private fun decodeCar(bytes: ByteArray): Bitmap? {
+        try {
+            val src = ImageDecoder.createSource(java.nio.ByteBuffer.wrap(bytes))
+            return ImageDecoder.decodeBitmap(src) { decoder, info, _ ->
+                // Software bitmap: it is compressed to PNG and drawn in the widget.
+                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                val big = maxOf(info.size.width, info.size.height)
+                if (big > CAR_MAX_PX * 2) {
+                    val k = CAR_MAX_PX * 2f / big
+                    decoder.setTargetSize((info.size.width * k).toInt().coerceAtLeast(1), (info.size.height * k).toInt().coerceAtLeast(1))
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "car picture ImageDecoder: $e")
+        }
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        var sample = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= CAR_MAX_PX) sample *= 2
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
     }
 
     fun clearCarImage() {
@@ -529,6 +575,7 @@ class TpmsManager private constructor(
         private const val HEARTBEAT_MS = 2000L
         private const val WRITE_TIMEOUT_MS = 200
         private const val CAR_MAX_PX = 800
+        private const val CAR_MAX_BYTES = 40 * 1024 * 1024
 
         @Volatile
         private var instance: TpmsManager? = null
