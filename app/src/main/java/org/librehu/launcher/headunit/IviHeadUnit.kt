@@ -66,6 +66,11 @@ class IviHeadUnit(
     override fun forceStop(packageName: String): Boolean =
         if (system.call(TX_CLOSE_APP, { it.writeString(packageName) })) true else super.forceStop(packageName)
 
+    /** ivi-services' ISystem.reboot(): mute, power off the modules, then MCU reset of the SoC (PowerUtil.reboot()). */
+    override val canResetSoc: Boolean get() = system.connected
+
+    override fun resetSoc(): Boolean = system.call(TX_REBOOT, {})
+
     override fun release() {
         main.removeCallbacks(poll)
         audio.release()
@@ -158,6 +163,7 @@ class IviHeadUnit(
         const val PARAM_VOLUME = 10
         const val TX_GET_HEADLIGHT = 14
         const val TX_CLOSE_APP = 15
+        const val TX_REBOOT = 9
         const val HEADLIGHT_POLL_MS = 3000L
     }
 }
