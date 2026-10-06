@@ -108,6 +108,29 @@ class LibreHuHeadUnit(
         }
     }
 
+    /** Master volume of the audio processor (the slider of the control center). */
+    override fun volume(): Pair<Int, Int> {
+        val s = service ?: return super.volume()
+        return try {
+            s.volume to s.maxVolume
+        } catch (e: RemoteException) {
+            super.volume()
+        }
+    }
+
+    override fun setVolume(step: Int) {
+        val s = service
+        if (s == null) {
+            super.setVolume(step)
+            return
+        }
+        try {
+            s.setVolume(step.coerceIn(0, s.maxVolume))
+        } catch (e: RemoteException) {
+            Log.w(TAG, "volume: ${e.message}")
+        }
+    }
+
     /** API 5: the service asks its MCU for a power cycle of the SoC (command 0E). */
     override val canResetSoc: Boolean get() = runCatching { (service?.apiVersion ?: 0) >= 5 }.getOrDefault(false)
 
