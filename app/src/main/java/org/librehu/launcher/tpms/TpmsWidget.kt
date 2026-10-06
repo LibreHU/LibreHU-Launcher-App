@@ -82,7 +82,7 @@ class TpmsWidget : AppWidgetProvider() {
                 )
                 setTextColor(R.id.tpms_title, text)
                 setInt(R.id.tpms_icon, "setColorFilter", accent)
-                val car = TpmsManager.get(context).carImage.value
+                val car = TpmsManager.get(context).carImageFor(dark)
                 if (car != null) {
                     // Small copy: widget updates go through a binder transaction.
                     val h = 200

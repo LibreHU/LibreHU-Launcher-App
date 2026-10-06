@@ -288,7 +288,22 @@
     <string name="tpms_car_hint">Import your car seen from above (PNG with a transparent background is best, nose at the top). The wheels are drawn on its sides: set the axles so that they fall on the car\'s wheels.</string>
     <string name="tpms_car_import">Import a picture</string>
     <string name="tpms_car_default">Drawn car</string>
+    <string name="tpms_car_import_dark">Picture for dark mode</string>
+    <string name="tpms_car_remove_dark">Remove dark-mode picture</string>
+    <string name="tpms_car_invert">Without its own picture, the picture of the other mode is shown:</string>
+    <string name="tpms_car_invert_none">As is</string>
+    <string name="tpms_car_invert_light">Inverted in light mode</string>
+    <string name="tpms_car_invert_dark">Inverted in dark mode</string>
     <string name="tpms_car_failed">Cannot read this picture</string>
     <string name="tpms_front_axle">Front axle (from the nose)</string>
     <string name="tpms_rear_axle">Rear axle (from the nose)</string>
+    <string name="cc_hotspot">Hotspot</string>
+    <string name="backup_title">Backup</string>
+    <string name="backup_hint">All the launcher settings (look, rail, standby clock, SOS, lock, TPMS and its car picture, wallpaper up to 8 MB) in one file. Widgets are not included: add them again after a restore.</string>
+    <string name="backup_export">Export</string>
+    <string name="backup_import">Import</string>
+    <string name="backup_exported">Settings exported</string>
+    <string name="backup_failed">Export failed</string>
+    <string name="backup_imported">Settings imported: the launcher restarts</string>
+    <string name="backup_import_failed">Import failed: %1$s</string>
 </resources>

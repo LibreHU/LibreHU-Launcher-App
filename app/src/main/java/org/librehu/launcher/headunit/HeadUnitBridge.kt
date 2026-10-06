@@ -17,6 +17,11 @@ interface HeadUnitBridge {
 
     fun volumeDown()
 
+    /** Current volume step and its maximum (control center slider). */
+    fun volume(): Pair<Int, Int>
+
+    fun setVolume(step: Int)
+
     /** Headlights on / off, or null when the head unit does not report them (time of day is used instead). */
     val headlights: StateFlow<Boolean?> get() = NO_HEADLIGHTS
 
@@ -48,6 +53,11 @@ open class AndroidHeadUnit(
     override fun volumeUp() = audio.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
 
     override fun volumeDown() = audio.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
+
+    override fun volume(): Pair<Int, Int> =
+        audio.getStreamVolume(AudioManager.STREAM_MUSIC) to audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+
+    override fun setVolume(step: Int) = audio.setStreamVolume(AudioManager.STREAM_MUSIC, step, AudioManager.FLAG_SHOW_UI)
 
     override fun forceStop(packageName: String): Boolean {
         // ActivityManager.forceStopPackage is a hidden API guarded by FORCE_STOP_PACKAGES (signature|privileged).

@@ -75,9 +75,25 @@ class MediaRepository(
     val current: MediaController?
         get() = controllers.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING } ?: controllers.firstOrNull()
 
+    // Last toggle: some players (YouTube, Tidal over Bluetooth) report their new state late or not at all, so a
+    // second press within a few seconds would send the same command again ("press twice to resume").
+    private var toggledAt = 0L
+    private var toggledToPlay = false
+    private var reportedAtToggle = false
+    private var toggledSession: android.media.session.MediaSession.Token? = null
+
     fun togglePlay() {
         val c = current ?: return
-        if (c.playbackState?.state == PlaybackState.STATE_PLAYING) {
+        val reported = c.playbackState?.state == PlaybackState.STATE_PLAYING
+        val now = android.os.SystemClock.uptimeMillis()
+        val stale = toggledSession == c.sessionToken && now - toggledAt < TOGGLE_TRUST_MS && reported == reportedAtToggle
+        // Not updated since the last toggle: the player is where that toggle sent it.
+        val playing = if (stale) toggledToPlay else reported
+        toggledAt = now
+        toggledSession = c.sessionToken
+        reportedAtToggle = reported
+        toggledToPlay = !playing
+        if (playing) {
             c.transportControls.pause()
         } else {
             // prepare() first: the Bluetooth player takes the audio focus with it; without the focus Android 9's A2DP
@@ -135,3 +151,5 @@ class MediaRepository(
             }
     }
 }
+
+private const val TOGGLE_TRUST_MS = 4000L

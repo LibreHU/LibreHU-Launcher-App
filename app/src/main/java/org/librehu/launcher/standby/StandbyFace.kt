@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,16 +84,32 @@ fun StandbyFace(
             val np = nowPlaying
             if (s.showMedia && np != null && np.playing) {
                 Spacer(Modifier.height(28.dp))
+                // Centred under the clock: the text only takes its own width (a fixed width left it aligned left).
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                     Icon(Icons.Default.MusicNote, null, tint = color, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        listOf(np.title, np.subtitle).filter { it.isNotBlank() }.joinToString("  ·  "),
+                        np.title.ifBlank { np.subtitle },
                         color = dim,
-                        fontSize = 20.sp,
+                        fontSize = 22.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.width(560.dp),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.widthIn(max = 560.dp),
+                    )
+                    // Same width as the icon on the other side: the title stays centred on the clock.
+                    Spacer(Modifier.width(34.dp))
+                }
+                if (np.title.isNotBlank() && np.subtitle.isNotBlank()) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        np.subtitle,
+                        color = dim,
+                        fontSize = 18.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.widthIn(max = 600.dp),
                     )
                 }
             }

@@ -74,6 +74,6 @@ class ThemeProvider : ContentProvider() {
         }
 
         /** LibreHU apps with widgets to redraw on theme changes. */
-        private val LIBREHU_PACKAGES = listOf("org.librehu.fm", "org.librehu.widgets")
+        private val LIBREHU_PACKAGES = listOf("org.librehu.fm", "org.librehu.widgets", "org.librehu.dialer", "org.librehu.btnremap")
     }
 }
