@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/speed_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:id="@+id/speed_gps"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/speed_gps_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/speed_gps"
+            android:textColor="#FF8AB4F8"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/speed_gps_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-light"
+            android:includeFontPadding="false"
+            android:text="—"
+            android:textColor="#FFE8EAED"
+            android:textSize="64sp" />
+
+        <TextView
+            android:id="@+id/speed_gps_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/speed_unit"
+            android:textColor="#FF9AA0A6"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/speed_divider"
+        android:layout_width="1dp"
+        android:layout_height="64dp"
+        android:layout_marginHorizontal="8dp"
+        android:background="#FF9AA0A6"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/speed_obd"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/speed_obd_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/speed_obd"
+            android:textColor="#FF8AB4F8"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/speed_obd_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-light"
+            android:includeFontPadding="false"
+            android:text="—"
+            android:textColor="#FFE8EAED"
+            android:textSize="64sp" />
+
+        <TextView
+            android:id="@+id/speed_obd_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/speed_unit"
+            android:textColor="#FF9AA0A6"
+            android:textSize="14sp" />
+    </LinearLayout>
+</LinearLayout>

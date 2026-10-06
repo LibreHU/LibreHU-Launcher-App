@@ -6,6 +6,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import org.librehu.launcher.speed.SpeedWidget
 import org.librehu.launcher.tpms.TpmsWidget
 
 /**
@@ -69,6 +70,7 @@ class ThemeProvider : ContentProvider() {
             context.sendBroadcast(ThemeStore.themeIntent(dark, accent))
             for (pkg in LIBREHU_PACKAGES) context.sendBroadcast(ThemeStore.themeIntent(dark, accent).setPackage(pkg))
             TpmsWidget.refresh(context)
+            SpeedWidget.refresh(context)
         }
 
         /** LibreHU apps with widgets to redraw on theme changes. */

@@ -261,4 +261,27 @@
     <string name="phone_no_service">Pas de service</string>
     <string name="themed_icons">Icônes LibreHU aux couleurs du thème</string>
     <string name="themed_icons_hint">Les icônes des applis LibreHU (service, téléphone, radio, widgets, boutons, ViPER4Android) suivent la couleur d\'accent et le thème clair / sombre</string>
+    <string name="speed_widget_title">Vitesse</string>
+    <string name="speed_widget_description">Vitesse GPS, vitesse OBD (LibreHU-service + ELM327) ou les deux ; toucher pour changer de vue</string>
+    <string name="speed_gps">GPS</string>
+    <string name="speed_obd">OBD</string>
+    <string name="speed_unit">km/h</string>
+    <string name="speed_gps_permission">GPS (autorisation ?)</string>
+    <string name="tpms_tab_usb">Récepteur USB</string>
+    <string name="tpms_tab_ble">Capteurs Bluetooth</string>
+    <string name="tpms_tab_settings">Réglages</string>
+    <string name="tpms_ble_title">Capteurs Bluetooth LE</string>
+    <string name="tpms_ble_hint">Capteurs en bouchon de valve qui émettent en Bluetooth LE (ZEEPIN, TP630 et compatibles, capteurs « BR » de l\'appli SYTPMS) : pas besoin de récepteur. Activer, gonfler ou rouler pour les réveiller, puis placer chaque capteur sur son pneu. Demande le Bluetooth, l\'autorisation de localisation et la localisation activée.</string>
+    <string name="tpms_ble_enable">Utiliser les capteurs Bluetooth</string>
+    <string name="tpms_ble_clear">Vider la liste</string>
+    <string name="tpms_ble_none">Aucun capteur entendu pour l\'instant (ils émettent quand la pression change ou que la roue tourne, sinon toutes les quelques minutes).</string>
+    <string name="tpms_ble_status">Capteurs Bluetooth : %1$d placés</string>
+    <string name="tpms_silence">Couper l\'alarme</string>
+    <string name="tpms_sound">Alerte sonore</string>
+    <string name="tpms_sound_on">Bip en cas d\'alerte</string>
+    <string name="tpms_sound_test">Tester</string>
+    <string name="tpms_sound_repeat">Répéter tant que l\'alerte dure</string>
+    <string name="tpms_sound_once">Une fois</string>
+    <string name="tpms_refresh">Fréquence d\'actualisation</string>
+    <string name="tpms_refresh_hint">Valeurs affichées au plus toutes les… (les alertes sont vérifiées à chaque mesure). Avec les capteurs Bluetooth, une période longue scanne par courtes rafales pour économiser l\'énergie.</string>
 </resources>

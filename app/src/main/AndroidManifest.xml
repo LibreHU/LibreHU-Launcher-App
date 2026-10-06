@@ -56,6 +56,11 @@
     <uses-permission
         android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
+    <!-- Bluetooth LE tyre sensors (TPMS): scan only, never located. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
@@ -191,6 +196,19 @@
             android:exported="true" />
 
         <!-- Tyre pressure widget (launcher slots or any home screen). -->
+        <!-- Speed widget: GPS, OBD (LibreHU-service) or both; a touch changes the view. -->
+        <receiver
+            android:name=".speed.SpeedWidget"
+            android:exported="true"
+            android:label="@string/speed_widget_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/speed_widget_info" />
+        </receiver>
+
         <receiver
             android:name=".tpms.TpmsWidget"
             android:exported="true"

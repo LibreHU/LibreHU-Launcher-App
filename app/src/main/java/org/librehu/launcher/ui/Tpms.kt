@@ -42,6 +42,7 @@ import org.librehu.launcher.R
 import org.librehu.launcher.tpms.PressureUnit
 import org.librehu.launcher.tpms.TpmsManager
 import org.librehu.launcher.tpms.TpmsSettings
+import org.librehu.launcher.tpms.TpmsState
 import org.librehu.launcher.tpms.TyrePos
 import org.librehu.launcher.tpms.TyreReading
 import org.librehu.launcher.tpms.alarms
@@ -138,6 +139,7 @@ fun TpmsScreen() {
     val st by tpms.state.collectAsStateWithLifecycle()
     val s by tpms.settings.collectAsStateWithLifecycle()
     var swapFirst by remember { mutableStateOf<TyrePos?>(null) }
+    var tab by remember { mutableStateOf(if (s.bleEnabled && !st.connected) TpmsTab.BLE else TpmsTab.USB) }
     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         // Car view.
         Column(
@@ -150,10 +152,18 @@ fun TpmsScreen() {
         ) {
             Text(stringResource(R.string.tpms_title), color = CarColors.Text, fontSize = 24.sp, fontWeight = FontWeight.Medium)
             Text(
-                if (st.connected) stringResource(R.string.tpms_receiver, st.device) else stringResource(R.string.tpms_plug_hint),
-                color = if (st.connected) CarColors.TextDim else AlarmRed,
+                when {
+                    st.connected -> stringResource(R.string.tpms_receiver, st.device)
+                    s.bleEnabled -> stringResource(R.string.tpms_ble_status, st.bleIds.size)
+                    else -> stringResource(R.string.tpms_plug_hint)
+                },
+                color = if (st.connected || s.bleEnabled) CarColors.TextDim else AlarmRed,
                 fontSize = 14.sp,
             )
+            if (st.tyres.values.any { it.alarms(s).isNotEmpty() } && s.alarmSound && !st.silenced) {
+                Spacer(Modifier.height(6.dp))
+                Pill(stringResource(R.string.tpms_silence), true) { tpms.silence() }
+            }
             if (st.message.isNotEmpty()) Text(st.message, color = CarColors.Accent, fontSize = 14.sp)
             Spacer(Modifier.height(12.dp))
             Row(Modifier.weight(1f).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -189,83 +199,185 @@ fun TpmsScreen() {
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Section(stringResource(R.string.tpms_pairing))
-            Hint(stringResource(R.string.tpms_pairing_hint))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TyrePos.entries.filter { it != TyrePos.SPARE || s.showSpare }.forEach { p ->
-                    Pill(stringResource(TpmsManager.posLabel(p)), st.pairing == p) {
-                        if (st.pairing ==
-                            p
-                        ) {
-                            tpms.stopPairing()
-                        } else {
-                            tpms.pair(p)
+                TpmsTab.entries.forEach { t -> Pill(stringResource(t.label), tab == t) { tab = t } }
+            }
+            when (tab) {
+                TpmsTab.USB -> {
+                    Section(stringResource(R.string.tpms_pairing))
+                    Hint(stringResource(R.string.tpms_pairing_hint))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TyrePos.entries.filter { it != TyrePos.SPARE || s.showSpare }.forEach { p ->
+                            Pill(stringResource(TpmsManager.posLabel(p)), st.pairing == p) {
+                                if (st.pairing ==
+                                    p
+                                ) {
+                                    tpms.stopPairing()
+                                } else {
+                                    tpms.pair(p)
+                                }
+                            }
+                        }
+                        Pill(stringResource(R.string.tpms_query_ids), false) { tpms.queryIds() }
+                    }
+                    Section(stringResource(R.string.tpms_swap))
+                    Hint(stringResource(R.string.tpms_swap_hint))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TyrePos.entries.filter { it != TyrePos.SPARE || s.showSpare }.forEach { p ->
+                            Pill(stringResource(TpmsManager.posLabel(p)), swapFirst == p) {
+                                val first = swapFirst
+                                swapFirst =
+                                    when {
+                                        first == null -> {
+                                            p
+                                        }
+
+                                        first == p -> {
+                                            null
+                                        }
+
+                                        else -> {
+                                            tpms.swap(first, p)
+                                            null
+                                        }
+                                    }
+                            }
                         }
                     }
                 }
-                Pill(stringResource(R.string.tpms_query_ids), false) { tpms.queryIds() }
-            }
-            Section(stringResource(R.string.tpms_swap))
-            Hint(stringResource(R.string.tpms_swap_hint))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TyrePos.entries.filter { it != TyrePos.SPARE || s.showSpare }.forEach { p ->
-                    Pill(stringResource(TpmsManager.posLabel(p)), swapFirst == p) {
-                        val first = swapFirst
-                        swapFirst =
-                            when {
-                                first == null -> {
-                                    p
-                                }
 
-                                first == p -> {
-                                    null
-                                }
+                TpmsTab.BLE -> {
+                    BleSensors(tpms, st, s)
+                }
 
-                                else -> {
-                                    tpms.swap(first, p)
-                                    null
-                                }
+                TpmsTab.SETTINGS -> {
+                    Section(stringResource(R.string.tpms_thresholds))
+                    Threshold(
+                        stringResource(R.string.tpms_low_threshold),
+                        s.lowKpa,
+                        100f..300f,
+                        TpmsManager.formatPressure(s.lowKpa, s.unit),
+                    ) { v ->
+                        tpms.updateSettings { it.copy(lowKpa = v) }
+                    }
+                    Threshold(
+                        stringResource(R.string.tpms_high_threshold),
+                        s.highKpa,
+                        200f..450f,
+                        TpmsManager.formatPressure(s.highKpa, s.unit),
+                    ) { v ->
+                        tpms.updateSettings { it.copy(highKpa = v) }
+                    }
+                    Threshold(
+                        stringResource(R.string.tpms_hot_threshold),
+                        s.highCelsius,
+                        50f..100f,
+                        TpmsManager.formatTemp(s.highCelsius, s.fahrenheit),
+                    ) { v ->
+                        tpms.updateSettings { it.copy(highCelsius = v) }
+                    }
+                    Section(stringResource(R.string.tpms_display))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        PressureUnit.entries.forEach { u ->
+                            Pill(u.name.lowercase().replace("kpa", "kPa"), s.unit == u) { tpms.updateSettings { it.copy(unit = u) } }
+                        }
+                        Pill("°C", !s.fahrenheit) { tpms.updateSettings { it.copy(fahrenheit = false) } }
+                        Pill("°F", s.fahrenheit) { tpms.updateSettings { it.copy(fahrenheit = true) } }
+                    }
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Pill(
+                            stringResource(R.string.tpms_show_spare),
+                            s.showSpare,
+                        ) { tpms.updateSettings { it.copy(showSpare = !it.showSpare) } }
+                        Pill(stringResource(R.string.tpms_alarms), s.alarms) { tpms.updateSettings { it.copy(alarms = !it.alarms) } }
+                        Pill(
+                            stringResource(R.string.tpms_on_dashboard),
+                            s.enabled,
+                        ) { tpms.updateSettings { it.copy(enabled = !it.enabled) } }
+                    }
+                    Section(stringResource(R.string.tpms_sound))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Pill(
+                            stringResource(R.string.tpms_sound_on),
+                            s.alarmSound,
+                        ) { tpms.updateSettings { it.copy(alarmSound = !it.alarmSound) } }
+                        Pill(stringResource(R.string.tpms_sound_test), false) { tpms.beep() }
+                    }
+                    Hint(stringResource(R.string.tpms_sound_repeat))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TpmsSettings.REPEAT_CHOICES.forEach { r ->
+                            Pill(if (r == 0) stringResource(R.string.tpms_sound_once) else "$r s", s.soundRepeatSec == r) {
+                                tpms.updateSettings { it.copy(soundRepeatSec = r) }
                             }
+                        }
+                    }
+                    Section(stringResource(R.string.tpms_refresh))
+                    Hint(stringResource(R.string.tpms_refresh_hint))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TpmsSettings.REFRESH_CHOICES.forEach { r ->
+                            Pill(if (r < 60) "$r s" else "1 min", s.refreshSec == r) { tpms.updateSettings { it.copy(refreshSec = r) } }
+                        }
                     }
                 }
             }
-            Section(stringResource(R.string.tpms_thresholds))
-            Threshold(
-                stringResource(R.string.tpms_low_threshold),
-                s.lowKpa,
-                100f..300f,
-                TpmsManager.formatPressure(s.lowKpa, s.unit),
-            ) { v ->
-                tpms.updateSettings { it.copy(lowKpa = v) }
-            }
-            Threshold(
-                stringResource(R.string.tpms_high_threshold),
-                s.highKpa,
-                200f..450f,
-                TpmsManager.formatPressure(s.highKpa, s.unit),
-            ) { v ->
-                tpms.updateSettings { it.copy(highKpa = v) }
-            }
-            Threshold(
-                stringResource(R.string.tpms_hot_threshold),
-                s.highCelsius,
-                50f..100f,
-                TpmsManager.formatTemp(s.highCelsius, s.fahrenheit),
-            ) { v ->
-                tpms.updateSettings { it.copy(highCelsius = v) }
-            }
-            Section(stringResource(R.string.tpms_display))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                PressureUnit.entries.forEach { u ->
-                    Pill(u.name.lowercase().replace("kpa", "kPa"), s.unit == u) { tpms.updateSettings { it.copy(unit = u) } }
+        }
+    }
+}
+
+private enum class TpmsTab(
+    val label: Int,
+) {
+    USB(R.string.tpms_tab_usb),
+    BLE(R.string.tpms_tab_ble),
+    SETTINGS(R.string.tpms_tab_settings),
+}
+
+/** Bluetooth LE sensors: on / off, sensors heard (format, values, signal), assignment to a tyre. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun BleSensors(
+    tpms: TpmsManager,
+    st: TpmsState,
+    s: TpmsSettings,
+) {
+    Section(stringResource(R.string.tpms_ble_title))
+    Hint(stringResource(R.string.tpms_ble_hint))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Pill(stringResource(R.string.tpms_ble_enable), s.bleEnabled) { tpms.updateSettings { it.copy(bleEnabled = !it.bleEnabled) } }
+        if (st.bleSeen.isNotEmpty()) Pill(stringResource(R.string.tpms_ble_clear), false) { tpms.forgetSeen() }
+    }
+    if (st.bleError.isNotEmpty() && s.bleEnabled) Text(st.bleError, color = AlarmRed, fontSize = 14.sp)
+    if (!s.bleEnabled) return
+    if (st.bleSeen.isEmpty()) Hint(stringResource(R.string.tpms_ble_none))
+    val positions = TyrePos.entries.filter { it != TyrePos.SPARE || s.showSpare }
+    for (r in st.bleSeen.values.sortedByDescending { it.rssi }) {
+        val assigned =
+            st.bleIds.entries
+                .firstOrNull { it.value == r.id }
+                ?.key
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(CarColors.SurfaceHigh)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text("${r.format.name} · ${r.id}", color = CarColors.Text, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            val battery = r.batteryVolts?.let { "%.1f V".format(it) } ?: r.batteryPercent?.let { "$it %" } ?: "—"
+            val age = ((System.currentTimeMillis() - r.time) / 1000).coerceAtLeast(0)
+            Text(
+                "${TpmsManager.formatPressure(
+                    r.kpa,
+                    s.unit,
+                )} · ${TpmsManager.formatTemp(r.celsius, s.fahrenheit)} · 🔋 $battery · ${r.rssi} dBm · ${age}s",
+                color = if (r.alarm) AlarmRed else CarColors.TextDim,
+                fontSize = 14.sp,
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                positions.forEach { p ->
+                    Pill(stringResource(TpmsManager.posLabel(p)), assigned == p) { tpms.assignBle(p, if (assigned == p) null else r.id) }
                 }
-                Pill("°C", !s.fahrenheit) { tpms.updateSettings { it.copy(fahrenheit = false) } }
-                Pill("°F", s.fahrenheit) { tpms.updateSettings { it.copy(fahrenheit = true) } }
-            }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Pill(stringResource(R.string.tpms_show_spare), s.showSpare) { tpms.updateSettings { it.copy(showSpare = !it.showSpare) } }
-                Pill(stringResource(R.string.tpms_alarms), s.alarms) { tpms.updateSettings { it.copy(alarms = !it.alarms) } }
-                Pill(stringResource(R.string.tpms_on_dashboard), s.enabled) { tpms.updateSettings { it.copy(enabled = !it.enabled) } }
             }
         }
     }

@@ -261,4 +261,27 @@
     <string name="phone_no_service">No service</string>
     <string name="themed_icons">LibreHU icons in the theme colours</string>
     <string name="themed_icons_hint">The icons of the LibreHU apps (service, dialer, radio, widgets, buttons, ViPER4Android) follow the accent colour and the light / dark theme</string>
+    <string name="speed_widget_title">Speed</string>
+    <string name="speed_widget_description">GPS speed, OBD speed (LibreHU-service + ELM327) or both; touch to change the view</string>
+    <string name="speed_gps">GPS</string>
+    <string name="speed_obd">OBD</string>
+    <string name="speed_unit">km/h</string>
+    <string name="speed_gps_permission">GPS (permission?)</string>
+    <string name="tpms_tab_usb">USB receiver</string>
+    <string name="tpms_tab_ble">Bluetooth sensors</string>
+    <string name="tpms_tab_settings">Settings</string>
+    <string name="tpms_ble_title">Bluetooth LE sensors</string>
+    <string name="tpms_ble_hint">Valve cap sensors that broadcast in Bluetooth LE (ZEEPIN, TP630 and alike, "BR" sensors of the SYTPMS app): no receiver needed. Turn on, inflate or roll so that they wake up, then put each sensor on its tyre. Needs Bluetooth, location permission and location on.</string>
+    <string name="tpms_ble_enable">Use Bluetooth sensors</string>
+    <string name="tpms_ble_clear">Clear the list</string>
+    <string name="tpms_ble_none">No sensor heard yet (they transmit when the pressure changes or the wheel turns, else every few minutes).</string>
+    <string name="tpms_ble_status">Bluetooth sensors: %1$d assigned</string>
+    <string name="tpms_silence">Silence the alarm</string>
+    <string name="tpms_sound">Alarm sound</string>
+    <string name="tpms_sound_on">Beep on alarm</string>
+    <string name="tpms_sound_test">Test</string>
+    <string name="tpms_sound_repeat">Repeat while the alarm lasts</string>
+    <string name="tpms_sound_once">Once</string>
+    <string name="tpms_refresh">Refresh rate</string>
+    <string name="tpms_refresh_hint">Readings shown at most every… (alarms are checked at each reading). With the Bluetooth sensors, a long period scans in short bursts to save power.</string>
 </resources>

@@ -52,6 +52,12 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   barre masquables.
 - **Téléphone** : « Pas de service » quand le réseau est perdu ; charge déduite (téléphone sur l'USB de l'autoradio,
   ou batterie qui remonte) : le profil HFP ne transmet ni l'état de charge ni le type de réseau (2G…5G).
+- **Widget « Vitesse »** (fourni par le launcher, emplacements ou tout écran d'accueil) : vitesse GPS de
+  l'autoradio, vitesse OBD (diffusion `org.librehu.action.OBD` de LibreHU-service avec un ELM327) ou les deux côte à
+  côte ; un toucher change de vue. Aux couleurs du thème.
+- **TPMS** : alerte sonore (bips sur le haut-parleur média, répétition réglable, bouton « Couper »), fréquence
+  d'actualisation, et **capteurs Bluetooth LE** sans récepteur (formats ZEEPIN / TP630 et « BR » / SYTPMS) : onglet
+  « Capteurs Bluetooth » pour les voir et les placer sur chaque pneu.
 - **Icônes LibreHU aux couleurs du thème** : les applis LibreHU déclarent une icône monochrome (meta-data
   `org.librehu.themed_icon`), que le launcher dessine sur la couleur d'accent ; elle suit le thème clair / sombre et
   la couleur en direct (désactivable). Les autres applis gardent leur icône.
