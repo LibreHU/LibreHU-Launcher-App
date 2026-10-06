@@ -333,7 +333,7 @@ private enum class TpmsTab(
 }
 
 /** Bluetooth LE sensors: on / off, sensors heard (format, values, signal), assignment to a tyre. */
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun BleSensors(
     tpms: TpmsManager,
