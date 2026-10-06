@@ -284,4 +284,11 @@
     <string name="tpms_sound_once">Une fois</string>
     <string name="tpms_refresh">Fréquence d\'actualisation</string>
     <string name="tpms_refresh_hint">Valeurs affichées au plus toutes les… (les alertes sont vérifiées à chaque mesure). Avec les capteurs Bluetooth, une période longue scanne par courtes rafales pour économiser l\'énergie.</string>
+    <string name="tpms_car">Image de la voiture</string>
+    <string name="tpms_car_hint">Importer sa voiture vue de dessus (idéalement un PNG à fond transparent, avant en haut). Les roues sont dessinées sur les côtés : régler les essieux pour qu\'elles tombent sur les roues de la voiture.</string>
+    <string name="tpms_car_import">Importer une image</string>
+    <string name="tpms_car_default">Voiture dessinée</string>
+    <string name="tpms_car_failed">Impossible de lire cette image</string>
+    <string name="tpms_front_axle">Essieu avant (depuis l\'avant)</string>
+    <string name="tpms_rear_axle">Essieu arrière (depuis l\'avant)</string>
 </resources>

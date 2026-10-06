@@ -1,10 +1,32 @@
-<!-- Car seen from above; tinted with setColorFilter. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <stroke
-        android:width="2dp"
-        android:color="#FFFFFFFF" />
-    <corners android:radius="14dp" />
-    <size
-        android:width="36dp"
-        android:height="72dp" />
-</shape>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Car seen from above (body, windscreen, roof, rear window, mirrors); tinted with setColorFilter. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="80dp"
+    android:viewportWidth="40"
+    android:viewportHeight="80">
+    <!-- Body: tapered nose, rounded tail. -->
+    <path
+        android:pathData="M20,3C31,3 34,6 34,14L34,70C34,76 30,77 20,77C10,77 6,76 6,70L6,14C6,6 9,3 20,3Z"
+        android:strokeWidth="2"
+        android:strokeColor="#FFFFFFFF" />
+    <!-- Mirrors. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M2,24h4v3h-4zM34,24h4v3h-4z" />
+    <!-- Windscreen. -->
+    <path
+        android:pathData="M10,27Q20,20 30,27L28,34Q20,31 12,34Z"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFFFF" />
+    <!-- Roof. -->
+    <path
+        android:pathData="M13,36h14v20h-14z"
+        android:strokeWidth="1"
+        android:strokeColor="#80FFFFFF" />
+    <!-- Rear window. -->
+    <path
+        android:pathData="M12,59Q20,57 28,59L29,65Q20,68 11,65Z"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFFFF" />
+</vector>
