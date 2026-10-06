@@ -44,6 +44,9 @@ enum class WallpaperKind {
     val builtIn get() = this == AURORA || this == STARS || this == WAVES || this == SPECTRUM
 }
 
+/** Order of the app drawer. */
+enum class DrawerSort { NAME, NAME_DESC, PINNED_FIRST }
+
 /** Where the shortcut rail sits. */
 enum class RailPosition { LEFT, BOTTOM }
 
@@ -77,6 +80,14 @@ data class ThemeSettings(
     val showPhoneStatus: Boolean = true,
     val showGps: Boolean = true,
     val showPower: Boolean = true,
+    /** Volume - / + buttons on the rail (hidden when the car has its own keys). */
+    val showVolume: Boolean = true,
+    /** App drawer: icon size (dp), labels, order, search field, hidden apps (keys). */
+    val drawerIconSize: Int = 72,
+    val drawerLabels: Boolean = true,
+    val drawerSort: DrawerSort = DrawerSort.NAME,
+    val drawerSearch: Boolean = true,
+    val hiddenApps: Set<String> = emptySet(),
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -114,6 +125,12 @@ class ThemeStore(
             .putBoolean("show_phone", s.showPhoneStatus)
             .putBoolean("show_gps", s.showGps)
             .putBoolean("show_power", s.showPower)
+            .putBoolean("show_volume", s.showVolume)
+            .putInt("drawer_icon", s.drawerIconSize)
+            .putBoolean("drawer_labels", s.drawerLabels)
+            .putString("drawer_sort", s.drawerSort.name)
+            .putBoolean("drawer_search", s.drawerSearch)
+            .putStringSet("hidden_apps", s.hiddenApps)
             .apply()
         _settings.value = s
     }
@@ -280,6 +297,12 @@ class ThemeStore(
             showPhoneStatus = prefs.getBoolean("show_phone", true),
             showGps = prefs.getBoolean("show_gps", true),
             showPower = prefs.getBoolean("show_power", true),
+            showVolume = prefs.getBoolean("show_volume", true),
+            drawerIconSize = prefs.getInt("drawer_icon", 72),
+            drawerLabels = prefs.getBoolean("drawer_labels", true),
+            drawerSort = runCatching { DrawerSort.valueOf(prefs.getString("drawer_sort", null)!!) }.getOrDefault(DrawerSort.NAME),
+            drawerSearch = prefs.getBoolean("drawer_search", true),
+            hiddenApps = prefs.getStringSet("hidden_apps", emptySet()).orEmpty().toSet(),
         )
     }
 

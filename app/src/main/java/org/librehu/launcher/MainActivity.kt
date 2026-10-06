@@ -53,6 +53,7 @@ import org.librehu.launcher.ui.LauncherActions
 import org.librehu.launcher.ui.LauncherScreen
 import org.librehu.launcher.ui.PowerChoice
 import org.librehu.launcher.ui.Screen
+import org.librehu.launcher.ui.showPowerMenu
 
 /** Home screen: dashboard (widgets + now playing), app grid, and the shortcut rail. */
 class MainActivity : ComponentActivity() {
@@ -115,6 +116,7 @@ class MainActivity : ComponentActivity() {
         }
         hideSystemBars()
         if (intent?.action == TpmsWidget.ACTION_SHOW_TPMS) screen.value = Screen.TPMS
+        intent?.let(::handleShortcut)
         if (!prefs.setupDone) screen.value = Screen.SETUP
 
         onBackPressedDispatcher.addCallback(
@@ -206,6 +208,15 @@ class MainActivity : ComponentActivity() {
         if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED) TpmsManager.get(this).connect()
         // TPMS widget tapped.
         if (intent.action == TpmsWidget.ACTION_SHOW_TPMS) screen.value = Screen.TPMS
+        handleShortcut(intent)
+    }
+
+    /** org.librehu.action.POWER_MENU / ALL_APPS (front panel touch keys of LibreHU-service, key mapping apps). */
+    private fun handleShortcut(intent: Intent) {
+        when (intent.action) {
+            ACTION_POWER_MENU -> showPowerMenu()
+            ACTION_ALL_APPS -> screen.value = Screen.APPS
+        }
     }
 
     override fun onResume() {
@@ -389,5 +400,7 @@ class MainActivity : ComponentActivity() {
 
     private companion object {
         const val REQUEST_CONFIGURE = 2
+        const val ACTION_POWER_MENU = "org.librehu.action.POWER_MENU"
+        const val ACTION_ALL_APPS = "org.librehu.action.ALL_APPS"
     }
 }
