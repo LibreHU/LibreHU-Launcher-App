@@ -7,10 +7,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.media.AudioManager
 import android.media.ToneGenerator
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -32,6 +35,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.librehu.launcher.R
+import java.io.File
 
 enum class PressureUnit { KPA, BAR, PSI }
 
@@ -51,6 +55,9 @@ data class TpmsSettings(
     val refreshSec: Int = 5,
     /** Bluetooth LE sensors (no USB receiver needed). */
     val bleEnabled: Boolean = false,
+    /** Imported car picture: wheel axles, in % of its height from the nose. */
+    val frontAxle: Int = 22,
+    val rearAxle: Int = 76,
 ) {
     companion object {
         val REFRESH_CHOICES = listOf(1, 5, 15, 30, 60)
@@ -123,6 +130,12 @@ class TpmsManager private constructor(
     val state: StateFlow<TpmsState> = _state.asStateFlow()
 
     private val _settings = MutableStateFlow(loadSettings())
+
+    private val carFile = File(context.filesDir, "tpms_car.png")
+    private val _carImage = MutableStateFlow(if (carFile.exists()) BitmapFactory.decodeFile(carFile.path) else null)
+
+    /** Car seen from above imported by the user (PNG, transparency kept), null = drawn car. */
+    val carImage: StateFlow<Bitmap?> = _carImage.asStateFlow()
     val settings: StateFlow<TpmsSettings> = _settings.asStateFlow()
 
     private val prober =
@@ -263,6 +276,39 @@ class TpmsManager private constructor(
         _state.value = _state.value.copy(tyres = _state.value.tyres + (r.pos to r))
     }
 
+    /**
+     * Uses the picture at [uri] as the car (nose at the top), scaled down to [CAR_MAX_PX] and saved as PNG so that
+     * transparency is kept. Blocking (decodes), call it off the main thread.
+     */
+    fun setCarImage(uri: Uri): Boolean {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) } ?: return false
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return false
+        var sample = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= CAR_MAX_PX) sample *= 2
+        val decoded =
+            context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
+            } ?: return false
+        val scale = minOf(1f, CAR_MAX_PX.toFloat() / maxOf(decoded.width, decoded.height))
+        val bmp =
+            if (scale < 1f) {
+                Bitmap.createScaledBitmap(decoded, (decoded.width * scale).toInt(), (decoded.height * scale).toInt(), true)
+            } else {
+                decoded
+            }
+        carFile.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        _carImage.value = bmp
+        main.post { TpmsWidget.refresh(context) }
+        return true
+    }
+
+    fun clearCarImage() {
+        carFile.delete()
+        _carImage.value = null
+        TpmsWidget.refresh(context)
+    }
+
     /** Stops the alarm sound until the alarms change. */
     fun silence() {
         main.removeCallbacks(beepAgain)
@@ -374,6 +420,8 @@ class TpmsManager private constructor(
             .putInt("sound_repeat", s.soundRepeatSec)
             .putInt("refresh", s.refreshSec)
             .putBoolean("ble", s.bleEnabled)
+            .putInt("front_axle", s.frontAxle)
+            .putInt("rear_axle", s.rearAxle)
             .apply()
         _settings.value = s
         if (started && (s.bleEnabled != old.bleEnabled || s.refreshSec != old.refreshSec)) {
@@ -468,6 +516,8 @@ class TpmsManager private constructor(
             soundRepeatSec = prefs.getInt("sound_repeat", d.soundRepeatSec),
             refreshSec = prefs.getInt("refresh", d.refreshSec),
             bleEnabled = prefs.getBoolean("ble", d.bleEnabled),
+            frontAxle = prefs.getInt("front_axle", d.frontAxle),
+            rearAxle = prefs.getInt("rear_axle", d.rearAxle),
         )
     }
 
@@ -478,6 +528,7 @@ class TpmsManager private constructor(
         private const val NOTIFICATION_BASE = 100
         private const val HEARTBEAT_MS = 2000L
         private const val WRITE_TIMEOUT_MS = 200
+        private const val CAR_MAX_PX = 800
 
         @Volatile
         private var instance: TpmsManager? = null
