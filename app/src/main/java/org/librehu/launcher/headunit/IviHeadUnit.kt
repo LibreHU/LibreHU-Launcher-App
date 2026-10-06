@@ -63,6 +63,30 @@ class IviHeadUnit(
         audio.call(TX_SHOW_VOLUME_BAR, {})
     }
 
+    /** ivi-services master volume (the slider of the control center). */
+    override fun volume(): Pair<Int, Int> {
+        if (!audio.connected) return super.volume()
+        var current: Int? = null
+        var max: Int? = null
+        audio.call(TX_GET_PARAM, { it.writeInt(PARAM_VOLUME) }) { current = it.readInt() }
+        audio.call(TX_GET_PARAM_MAX, { it.writeInt(PARAM_VOLUME) }) { max = it.readInt() }
+        val c = current ?: return super.volume()
+        val m = max ?: return super.volume()
+        return c to m
+    }
+
+    override fun setVolume(step: Int) {
+        if (!audio.connected) {
+            super.setVolume(step)
+            return
+        }
+        val m = volume().second
+        audio.call(TX_SET_PARAM, {
+            it.writeInt(PARAM_VOLUME)
+            it.writeInt(step.coerceIn(0, m))
+        })
+    }
+
     override fun forceStop(packageName: String): Boolean =
         if (system.call(TX_CLOSE_APP, { it.writeString(packageName) })) true else super.forceStop(packageName)
 
