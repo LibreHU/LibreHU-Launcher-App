@@ -39,7 +39,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   position / appels), horloge de veille, SOS ; relançable depuis Paramètres → Général.
 - **État près de l'horloge** : téléphone connecté en Bluetooth (barres de réseau, batterie, opérateur, lus sur le
   profil mains libres HFP) et **GPS de l'autoradio** (gris éteint, jaune en recherche avec le nombre de satellites
-  visibles, vert position acquise avec les satellites utilisés). Désactivables (Paramètres → Personnalisation).
+  visibles, vert position acquise avec les satellites utilisés). Désactivables (Paramètres → Personnalisation). Sous l'état
+  du téléphone : opérateur, nom du téléphone, les deux (deux lignes centrées) ou rien ; batterie en % en option
+  (paliers de 20 % : le profil HFP ne donne que 6 niveaux). L'horloge de veille peut aussi afficher l'état du téléphone.
 - **Bouton marche/arrêt** : verrouiller, horloge de veille, redémarrer, éteindre (installation privilégiée ou root),
   redémarrer **via le MCU** (branches `ivi` : `ISystem.reboot()` ; `librehu-service` : API 5 `resetSoc()`).
 - **Écran de verrouillage** : horloge ou écran noir, glisser ou code ; action `org.librehu.action.LOCK` pour une

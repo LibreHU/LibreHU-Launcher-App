@@ -306,4 +306,12 @@
     <string name="backup_failed">Échec de l\'export</string>
     <string name="backup_imported">Réglages importés : le launcher redémarre</string>
     <string name="backup_import_failed">Échec de l\'import : %1$s</string>
+    <string name="phone_label_operator">Opérateur</string>
+    <string name="phone_label_name">Nom du téléphone</string>
+    <string name="phone_label_both">Les deux</string>
+    <string name="phone_label_none">Pas de texte</string>
+    <string name="phone_percent">Batterie du téléphone en %</string>
+    <string name="phone_percent_hint">Le profil mains libres ne donne que 6 niveaux : paliers de 20 %.</string>
+    <string name="standby_phone">État du téléphone</string>
+    <string name="standby_phone_hint">Réseau, batterie et opérateur / nom du téléphone Bluetooth au-dessus de l\'heure (même texte que la barre).</string>
 </resources>

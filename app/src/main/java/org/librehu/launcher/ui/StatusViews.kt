@@ -41,13 +41,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.librehu.launcher.R
+import org.librehu.launcher.data.PhoneLabel
 import org.librehu.launcher.status.GpsFix
 import org.librehu.launcher.status.GpsStatusWatcher
 import org.librehu.launcher.status.PhoneStatusWatcher
 
 /** Phone of the car (Bluetooth): signal bars, battery, operator. Nothing when no phone is connected. */
 @Composable
-fun PhoneStatusView(compact: Boolean) {
+fun PhoneStatusView(
+    compact: Boolean,
+    label: PhoneLabel = PhoneLabel.OPERATOR,
+    batteryPercent: Boolean = false,
+    textSize: Int = 12,
+) {
     val context = LocalContext.current
     val watcher = PhoneStatusWatcher.get(context)
     DisposableEffect(Unit) {
@@ -70,19 +76,25 @@ fun PhoneStatusView(compact: Boolean) {
                 SignalBars(s.signal)
             }
             BatteryGauge(s.battery, s.charging)
+            if (batteryPercent && s.battery >= 0) {
+                Text("${s.battery.coerceIn(0, 5) * 20} %", color = CarColors.TextDim, fontSize = textSize.sp, maxLines = 1)
+            }
         }
         // HFP gives the operator, the signal and the service, not the network type (2G…5G).
-        val label =
-            if (noService) {
-                stringResource(R.string.phone_no_service)
-            } else {
-                s.operator.ifBlank { s.name } + if (s.roaming) " R" else ""
-            }
-        if (label.isNotBlank()) {
+        val operator = s.operator + if (s.roaming && s.operator.isNotBlank()) " R" else ""
+        val lines =
+            when {
+                noService && label != PhoneLabel.NONE -> listOf(stringResource(R.string.phone_no_service))
+                label == PhoneLabel.OPERATOR -> listOf(operator.ifBlank { s.name })
+                label == PhoneLabel.NAME -> listOf(s.name.ifBlank { operator })
+                label == PhoneLabel.BOTH -> listOf(operator, s.name)
+                else -> emptyList()
+            }.filter { it.isNotBlank() }
+        for (line in lines) {
             Text(
-                label,
+                line,
                 color = if (noService) NO_SERVICE else CarColors.TextDim,
-                fontSize = 12.sp,
+                fontSize = textSize.sp,
                 maxLines = 1,
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,

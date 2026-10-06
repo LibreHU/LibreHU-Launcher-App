@@ -50,6 +50,16 @@ enum class DrawerSort { NAME, NAME_DESC, PINNED_FIRST }
 /** Where the shortcut rail sits. */
 enum class RailPosition { LEFT, BOTTOM }
 
+/** Text under the phone status: operator, phone name, both (two centred lines) or nothing. */
+enum class PhoneLabel { OPERATOR, NAME, BOTH, NONE }
+
+/** Phone status options, also read by the standby clock (outside the launcher's ThemeStore). */
+fun phoneDisplay(context: Context): Pair<PhoneLabel, Boolean> {
+    val prefs = context.getSharedPreferences("theme", Context.MODE_PRIVATE)
+    val label = runCatching { PhoneLabel.valueOf(prefs.getString("phone_label", null)!!) }.getOrDefault(PhoneLabel.OPERATOR)
+    return label to prefs.getBoolean("phone_percent", false)
+}
+
 /** Colours of the spectrum wallpaper: edge, middle and centre of the waves. */
 enum class SpectrumPalette(
     val edge: Long,
@@ -78,6 +88,9 @@ data class ThemeSettings(
     val spectrumAudio: Boolean = false,
     /** Next to the clock: phone of the car (signal, battery, operator), GPS of the head unit, power button. */
     val showPhoneStatus: Boolean = true,
+    val phoneLabel: PhoneLabel = PhoneLabel.OPERATOR,
+    /** Phone battery as a percentage next to the gauge (HFP gives 6 levels: steps of 20 %). */
+    val phoneBatteryPercent: Boolean = false,
     val showGps: Boolean = true,
     val showPower: Boolean = true,
     /** Volume - / + buttons on the rail (hidden when the car has its own keys). */
@@ -125,6 +138,8 @@ class ThemeStore(
             .putString("spectrum_palette", s.spectrumPalette.name)
             .putBoolean("spectrum_audio", s.spectrumAudio)
             .putBoolean("show_phone", s.showPhoneStatus)
+            .putString("phone_label", s.phoneLabel.name)
+            .putBoolean("phone_percent", s.phoneBatteryPercent)
             .putBoolean("show_gps", s.showGps)
             .putBoolean("show_power", s.showPower)
             .putBoolean("show_volume", s.showVolume)
@@ -298,6 +313,8 @@ class ThemeStore(
                 runCatching { SpectrumPalette.valueOf(prefs.getString("spectrum_palette", null)!!) }.getOrDefault(SpectrumPalette.ACCENT),
             spectrumAudio = prefs.getBoolean("spectrum_audio", false),
             showPhoneStatus = prefs.getBoolean("show_phone", true),
+            phoneLabel = runCatching { PhoneLabel.valueOf(prefs.getString("phone_label", null)!!) }.getOrDefault(PhoneLabel.OPERATOR),
+            phoneBatteryPercent = prefs.getBoolean("phone_percent", false),
             showGps = prefs.getBoolean("show_gps", true),
             showPower = prefs.getBoolean("show_power", true),
             showVolume = prefs.getBoolean("show_volume", true),

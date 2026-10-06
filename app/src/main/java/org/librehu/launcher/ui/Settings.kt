@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.librehu.launcher.R
 import org.librehu.launcher.data.DrawerSort
+import org.librehu.launcher.data.PhoneLabel
 import org.librehu.launcher.data.RailPosition
 import org.librehu.launcher.data.SpectrumPalette
 import org.librehu.launcher.data.ThemeController
@@ -170,6 +171,24 @@ fun LookSettings(
     if (full) {
         SettingSwitch(stringResource(R.string.bar_phone), stringResource(R.string.bar_phone_hint), s.showPhoneStatus) { on ->
             actions.setTheme { it.copy(showPhoneStatus = on) }
+        }
+        if (s.showPhoneStatus) {
+            SettingChoices(
+                listOf(
+                    PhoneLabel.OPERATOR to stringResource(R.string.phone_label_operator),
+                    PhoneLabel.NAME to stringResource(R.string.phone_label_name),
+                    PhoneLabel.BOTH to stringResource(R.string.phone_label_both),
+                    PhoneLabel.NONE to stringResource(R.string.phone_label_none),
+                ),
+                s.phoneLabel,
+            ) { l -> actions.setTheme { it.copy(phoneLabel = l) } }
+            SettingSwitch(
+                stringResource(R.string.phone_percent),
+                stringResource(R.string.phone_percent_hint),
+                s.phoneBatteryPercent,
+            ) { on ->
+                actions.setTheme { it.copy(phoneBatteryPercent = on) }
+            }
         }
         SettingSwitch(stringResource(R.string.bar_gps), stringResource(R.string.bar_gps_hint), s.showGps) { on ->
             if (on) actions.requestPermissions(GPS_PERMISSIONS)
@@ -351,6 +370,9 @@ fun StandbySettingsPage(
     if (full) {
         SettingSwitch(stringResource(R.string.standby_media), stringResource(R.string.standby_media_hint), s.showMedia) { on ->
             store.update { it.copy(showMedia = on) }
+        }
+        SettingSwitch(stringResource(R.string.standby_phone), stringResource(R.string.standby_phone_hint), s.showPhone) { on ->
+            store.update { it.copy(showPhone = on) }
         }
         SettingSwitch(stringResource(R.string.standby_accent), null, s.accentColor) { on -> store.update { it.copy(accentColor = on) } }
         SettingSwitch(stringResource(R.string.standby_pause), stringResource(R.string.standby_pause_hint), s.pauseMedia) { on ->
