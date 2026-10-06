@@ -73,6 +73,17 @@ fun StandbyFace(
     val dim = Color(0xFF9AA0A6)
     Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
         Column(Modifier.offset(dx, dy), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (s.showPhone) {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val (label, percent) =
+                    remember {
+                        org.librehu.launcher.data
+                            .phoneDisplay(context)
+                    }
+                org.librehu.launcher.ui
+                    .PhoneStatusView(compact = false, label = label, batteryPercent = percent, textSize = 16)
+                Spacer(Modifier.height(20.dp))
+            }
             when (s.style) {
                 ClockStyle.DIGITAL -> Digital(now, s.showSeconds, color, dim)
                 ClockStyle.ANALOG -> Analog(now, s.showSeconds, color, dim)
