@@ -379,8 +379,10 @@ fun TpmsScreen() {
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) {
                 scope.launch {
-                    val ok = withContext(Dispatchers.IO) { tpms.setCarImage(uri) }
-                    if (!ok) Toast.makeText(context, R.string.tpms_car_failed, Toast.LENGTH_LONG).show()
+                    val error = withContext(Dispatchers.IO) { tpms.setCarImage(uri) }
+                    if (error != null) {
+                        Toast.makeText(context, context.getString(R.string.tpms_car_failed) + " ($error)", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
