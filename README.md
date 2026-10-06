@@ -27,7 +27,7 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Barre de raccourcis à gauche ou en bas** (Paramètres → Personnalisation).
 - **Horloge de veille** : grande horloge numérique ou analogique sur fond noir, date, titre en cours, couleur
   d'accent, luminosité réduite, léger décalage chaque minute (marquage de l'écran), pause de la lecture et reprise à
-  la sortie. Déclenchée après N minutes sans toucher l'accueil, en touchant l'heure de la barre, par l'action
+  la sortie. Déclenchée après N minutes sans toucher l'accueil, par un appui long sur l'heure de la barre, par l'action
   `org.librehu.action.STANDBY_CLOCK` (touche remappée) ou comme **économiseur d'écran Android** (DreamService). Voir
   [docs/standby.md](docs/standby.md).
 - **SOS** : bouton d'urgence (barre, tableau de bord et/ou widget, appui long), compte à rebours annulable puis appel
@@ -44,6 +44,15 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Écran de verrouillage** : horloge ou écran noir, glisser ou code ; action `org.librehu.action.LOCK` pour une
   touche (bouton power de la façade tactile, remappage), la même touche déverrouille sans code ; revient par-dessus
   l'accueil tant qu'il n'est pas déverrouillé.
+- **Centre de contrôle** (appui sur l'heure de la barre) : heure, date, état du téléphone, luminosité (autorisation
+  « Modifier les paramètres système »), volume, Wi-Fi, Bluetooth, thème, horloge de veille, verrouillage, menu
+  marche/arrêt, réglages du launcher et d'Android.
+- **Tiroir d'applis personnalisable** (Paramètres du launcher → Personnalisation) : taille des icônes, noms, tri
+  (A → Z, Z → A, épinglées d'abord), recherche, applis masquées (appui long sur une appli) ; boutons de volume de la
+  barre masquables.
+- **Téléphone** : « Pas de service » quand le réseau est perdu ; charge déduite (téléphone sur l'USB de l'autoradio,
+  ou batterie qui remonte) : le profil HFP ne transmet ni l'état de charge ni le type de réseau (2G…5G).
+- Actions `org.librehu.action.POWER_MENU` et `org.librehu.action.ALL_APPS` (touches de façade de LibreHU-service).
 - Barres système masquées (balayer depuis le bord pour les afficher).
 
 ## Branches
