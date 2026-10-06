@@ -25,7 +25,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   Neospectro n'a pas de licence). 7 palettes dont la couleur d'accent ; option **« suivre la musique »** (spectre du
   son joué via le `Visualizer` d'Android, autorisation micro, rien n'est enregistré).
 - **Barre de raccourcis à gauche ou en bas** (Paramètres → Personnalisation).
-- **Horloge de veille** : grande horloge numérique ou analogique sur fond noir, date, titre en cours, couleur
+- **Horloge de veille** : grande horloge numérique ou analogique sur fond noir, date, titre en cours (centré sous
+  l'heure, artiste en dessous), couleur
   d'accent, luminosité réduite, léger décalage chaque minute (marquage de l'écran), pause de la lecture et reprise à
   la sortie. Déclenchée après N minutes sans toucher l'accueil, par un appui long sur l'heure de la barre, par l'action
   `org.librehu.action.STANDBY_CLOCK` (touche remappée) ou comme **économiseur d'écran Android** (DreamService). Voir
@@ -45,11 +46,20 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   touche (bouton power de la façade tactile, remappage), la même touche déverrouille sans code ; revient par-dessus
   l'accueil tant qu'il n'est pas déverrouillé.
 - **Centre de contrôle** (appui sur l'heure de la barre) : heure, date, état du téléphone, luminosité (autorisation
-  « Modifier les paramètres système »), volume, Wi-Fi, Bluetooth, thème, horloge de veille, verrouillage, menu
-  marche/arrêt, réglages du launcher et d'Android.
+  « Modifier les paramètres système »), **curseur de volume** (volume de la puce sur les branches `ivi` et
+  `librehu-service`), Wi-Fi, Bluetooth, **partage de connexion** (point d'accès Wi-Fi ; l'allumer directement demande
+  une installation privilégiée, sinon la tuile ouvre l'écran Android du partage de connexion), thème, horloge de
+  veille, verrouillage, menu marche/arrêt, réglages du launcher et d'Android. **Appui long** sur une tuile ou sur le
+  volume : ouvre le réglage Android correspondant (Wi-Fi, Bluetooth, son, affichage…).
+- **Sauvegarde des paramètres** (Paramètres → Général → Sauvegarde) : export / import dans un fichier JSON des
+  réglages (thème, accueil, veille, SOS, verrouillage, TPMS) et des images importées (fond d'écran, voiture TPMS) ;
+  le launcher redémarre après l'import. La disposition des widgets n'est pas incluse (leurs identifiants changent
+  d'un appareil à l'autre).
 - **Tiroir d'applis personnalisable** (Paramètres du launcher → Personnalisation) : taille des icônes, noms, tri
   (A → Z, Z → A, épinglées d'abord), recherche, applis masquées (appui long sur une appli) ; boutons de volume de la
   barre masquables.
+- **Lecture / pause** : le dernier basculement est retenu 4 s, pour les lecteurs qui annoncent leur nouvel état en
+  retard (YouTube, Tidal en Bluetooth : il ne faut plus appuyer deux fois).
 - **Téléphone** : « Pas de service » quand le réseau est perdu ; charge déduite (téléphone sur l'USB de l'autoradio,
   ou batterie qui remonte) : le profil HFP ne transmet ni l'état de charge ni le type de réseau (2G…5G).
 - **Widget « Vitesse »** (fourni par le launcher, emplacements ou tout écran d'accueil) : vitesse GPS de
@@ -59,7 +69,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   d'actualisation, et **capteurs Bluetooth LE** sans récepteur (formats ZEEPIN / TP630 et « BR » / SYTPMS) : onglet
   « Capteurs Bluetooth » pour les voir et les placer sur chaque pneu. Voiture vue de dessus dessinée, roues aux
   couleurs de l'état des pneus (clignotent en alerte), ou **image de sa propre voiture** (PNG importé, essieux
-  réglables), aussi dans le widget.
+  réglables), aussi dans le widget ; image distincte pour le **mode sombre**, ou image unique affichée telle quelle,
+  inversée en mode clair ou inversée en mode sombre.
 - **Icônes LibreHU aux couleurs du thème** : les applis LibreHU déclarent une icône monochrome (meta-data
   `org.librehu.themed_icon`), que le launcher dessine sur la couleur d'accent ; elle suit le thème clair / sombre et
   la couleur en direct (désactivable). Les autres applis gardent leur icône.
@@ -68,7 +79,7 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 
 ## Branches
 
-| Branche | Volume du rail |
+| Branche | Volume du rail et du centre de contrôle |
 |---|---|
 | `main` | volume média Android |
 | `ivi` | Jancar **ivi-services** (`IAudio`, puce audio + barre de volume Jancar) |
