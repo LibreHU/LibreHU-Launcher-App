@@ -288,7 +288,22 @@
     <string name="tpms_car_hint">Importer sa voiture vue de dessus (idéalement un PNG à fond transparent, avant en haut). Les roues sont dessinées sur les côtés : régler les essieux pour qu\'elles tombent sur les roues de la voiture.</string>
     <string name="tpms_car_import">Importer une image</string>
     <string name="tpms_car_default">Voiture dessinée</string>
+    <string name="tpms_car_import_dark">Image pour le mode sombre</string>
+    <string name="tpms_car_remove_dark">Retirer l\'image du mode sombre</string>
+    <string name="tpms_car_invert">Sans image propre, l\'image de l\'autre mode est affichée :</string>
+    <string name="tpms_car_invert_none">Telle quelle</string>
+    <string name="tpms_car_invert_light">Inversée en mode clair</string>
+    <string name="tpms_car_invert_dark">Inversée en mode sombre</string>
     <string name="tpms_car_failed">Impossible de lire cette image</string>
     <string name="tpms_front_axle">Essieu avant (depuis l\'avant)</string>
     <string name="tpms_rear_axle">Essieu arrière (depuis l\'avant)</string>
+    <string name="cc_hotspot">Partage de connexion</string>
+    <string name="backup_title">Sauvegarde</string>
+    <string name="backup_hint">Tous les réglages du launcher (apparence, rail, horloge de veille, SOS, verrouillage, TPMS et son image de voiture, fond d\'écran jusqu\'à 8 Mo) dans un fichier. Les widgets ne sont pas inclus : les rajouter après une restauration.</string>
+    <string name="backup_export">Exporter</string>
+    <string name="backup_import">Importer</string>
+    <string name="backup_exported">Réglages exportés</string>
+    <string name="backup_failed">Échec de l\'export</string>
+    <string name="backup_imported">Réglages importés : le launcher redémarre</string>
+    <string name="backup_import_failed">Échec de l\'import : %1$s</string>
 </resources>

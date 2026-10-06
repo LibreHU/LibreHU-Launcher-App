@@ -118,6 +118,12 @@ class LauncherActions(
     val show: (Screen) -> Unit,
     val volumeUp: () -> Unit,
     val volumeDown: () -> Unit,
+    /** Current volume step and maximum, and setter (control center slider). */
+    val volume: () -> Pair<Int, Int> = { 0 to 1 },
+    val setVolume: (Int) -> Unit = {},
+    /** Settings backup to a JSON file / restore from one (the launcher restarts after a restore). */
+    val exportSettings: () -> Unit = {},
+    val importSettings: () -> Unit = {},
     val mediaToggle: () -> Unit,
     val mediaNext: () -> Unit,
     val mediaPrevious: () -> Unit,

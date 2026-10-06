@@ -40,6 +40,9 @@ import java.io.File
 
 enum class PressureUnit { KPA, BAR, PSI }
 
+/** Imported car picture without a picture of its own for one theme: shown as is, or with its colours inverted. */
+enum class CarInvert { NONE, IN_LIGHT, IN_DARK }
+
 data class TpmsSettings(
     val enabled: Boolean = false,
     val lowKpa: Int = 180,
@@ -59,6 +62,7 @@ data class TpmsSettings(
     /** Imported car picture: wheel axles, in % of its height from the nose. */
     val frontAxle: Int = 22,
     val rearAxle: Int = 76,
+    val carInvert: CarInvert = CarInvert.NONE,
 ) {
     companion object {
         val REFRESH_CHOICES = listOf(1, 5, 15, 30, 60)
@@ -137,6 +141,41 @@ class TpmsManager private constructor(
 
     /** Car seen from above imported by the user (PNG, transparency kept), null = drawn car. */
     val carImage: StateFlow<Bitmap?> = _carImage.asStateFlow()
+
+    private val carDarkFile = File(context.filesDir, "tpms_car_dark.png")
+    private val _carImageDark = MutableStateFlow(if (carDarkFile.exists()) BitmapFactory.decodeFile(carDarkFile.path) else null)
+
+    /** Optional picture for the dark theme (a light car on a dark dashboard), else [carImage] is used. */
+    val carImageDark: StateFlow<Bitmap?> = _carImageDark.asStateFlow()
+
+    @Volatile
+    private var inverted: Pair<Bitmap, Bitmap>? = null
+
+    /** Picture to draw in the [dark] or light theme: its own picture, else the main one, inverted if asked. */
+    fun carImageFor(dark: Boolean): Bitmap? {
+        val own = if (dark) _carImageDark.value else null
+        if (own != null) return own
+        val main = _carImage.value ?: _carImageDark.value ?: return null
+        val invert = _settings.value.carInvert
+        val wanted = (dark && invert == CarInvert.IN_DARK) || (!dark && invert == CarInvert.IN_LIGHT)
+        if (!wanted) return main
+        inverted?.let { (src, inv) -> if (src === main) return inv }
+        return invert(main).also { inverted = main to it }
+    }
+
+    /** Colours inverted, transparency kept (black outline on white ↔ white outline on black). */
+    private fun invert(src: Bitmap): Bitmap {
+        val out = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
+        val m =
+            android.graphics.ColorMatrix(
+                floatArrayOf(-1f, 0f, 0f, 0f, 255f, 0f, -1f, 0f, 0f, 255f, 0f, 0f, -1f, 0f, 255f, 0f, 0f, 0f, 1f, 0f),
+            )
+        android.graphics
+            .Canvas(out)
+            .drawBitmap(src, 0f, 0f, android.graphics.Paint().apply { colorFilter = android.graphics.ColorMatrixColorFilter(m) })
+        return out
+    }
+
     val settings: StateFlow<TpmsSettings> = _settings.asStateFlow()
 
     private val prober =
@@ -283,7 +322,10 @@ class TpmsManager private constructor(
      * decoded with ImageDecoder (PNG, JPEG, WebP, HEIF…) or BitmapFactory. Returns null when done, else the reason.
      * Blocking, call it off the main thread.
      */
-    fun setCarImage(uri: Uri): String? {
+    fun setCarImage(
+        uri: Uri,
+        dark: Boolean = false,
+    ): String? {
         val bytes =
             try {
                 context.contentResolver.openInputStream(uri)?.use { input ->
@@ -316,12 +358,12 @@ class TpmsManager private constructor(
                 decoded
             }
         try {
-            carFile.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            (if (dark) carDarkFile else carFile).outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
         } catch (e: Exception) {
             Log.w(TAG, "car picture save: $e")
             return e.message ?: "save failed"
         }
-        _carImage.value = bmp
+        if (dark) _carImageDark.value = bmp else _carImage.value = bmp
         main.post { TpmsWidget.refresh(context) }
         return null
     }
@@ -349,9 +391,14 @@ class TpmsManager private constructor(
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
     }
 
-    fun clearCarImage() {
-        carFile.delete()
-        _carImage.value = null
+    fun clearCarImage(dark: Boolean = false) {
+        if (dark) {
+            carDarkFile.delete()
+            _carImageDark.value = null
+        } else {
+            carFile.delete()
+            _carImage.value = null
+        }
         TpmsWidget.refresh(context)
     }
 
@@ -468,8 +515,10 @@ class TpmsManager private constructor(
             .putBoolean("ble", s.bleEnabled)
             .putInt("front_axle", s.frontAxle)
             .putInt("rear_axle", s.rearAxle)
+            .putString("car_invert", s.carInvert.name)
             .apply()
         _settings.value = s
+        if (s.carInvert != old.carInvert) TpmsWidget.refresh(context)
         if (started && (s.bleEnabled != old.bleEnabled || s.refreshSec != old.refreshSec)) {
             if (s.bleEnabled) ble.start(s.refreshSec) else ble.stop()
         }
@@ -564,6 +613,7 @@ class TpmsManager private constructor(
             bleEnabled = prefs.getBoolean("ble", d.bleEnabled),
             frontAxle = prefs.getInt("front_axle", d.frontAxle),
             rearAxle = prefs.getInt("rear_axle", d.rearAxle),
+            carInvert = runCatching { CarInvert.valueOf(prefs.getString("car_invert", null)!!) }.getOrDefault(d.carInvert),
         )
     }
 

@@ -62,6 +62,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.librehu.launcher.R
+import org.librehu.launcher.tpms.CarInvert
 import org.librehu.launcher.tpms.PressureUnit
 import org.librehu.launcher.tpms.TpmsManager
 import org.librehu.launcher.tpms.TpmsSettings
@@ -86,7 +87,10 @@ fun TpmsCard(
     val tpms = TpmsManager.get(LocalContext.current)
     val st by tpms.state.collectAsStateWithLifecycle()
     val s by tpms.settings.collectAsStateWithLifecycle()
-    val car by tpms.carImage.collectAsStateWithLifecycle()
+    val carLight by tpms.carImage.collectAsStateWithLifecycle()
+    val carDark by tpms.carImageDark.collectAsStateWithLifecycle()
+    val dark = CarColors.palette.dark
+    val car = remember(carLight, carDark, s.carInvert, dark) { tpms.carImageFor(dark) }
     Column(
         modifier =
             modifier
@@ -372,14 +376,18 @@ fun TpmsScreen() {
     val tpms = TpmsManager.get(LocalContext.current)
     val st by tpms.state.collectAsStateWithLifecycle()
     val s by tpms.settings.collectAsStateWithLifecycle()
-    val car by tpms.carImage.collectAsStateWithLifecycle()
+    val carLight by tpms.carImage.collectAsStateWithLifecycle()
+    val carDark by tpms.carImageDark.collectAsStateWithLifecycle()
+    val dark = CarColors.palette.dark
+    val car = remember(carLight, carDark, s.carInvert, dark) { tpms.carImageFor(dark) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    var pickDark by remember { mutableStateOf(false) }
     val pickCar =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) {
                 scope.launch {
-                    val error = withContext(Dispatchers.IO) { tpms.setCarImage(uri) }
+                    val error = withContext(Dispatchers.IO) { tpms.setCarImage(uri, pickDark) }
                     if (error != null) {
                         Toast.makeText(context, context.getString(R.string.tpms_car_failed) + " ($error)", Toast.LENGTH_LONG).show()
                     }
@@ -556,10 +564,28 @@ fun TpmsScreen() {
                     Section(stringResource(R.string.tpms_car))
                     Hint(stringResource(R.string.tpms_car_hint))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Pill(stringResource(R.string.tpms_car_import), false) { pickCar.launch("image/*") }
-                        if (car != null) Pill(stringResource(R.string.tpms_car_default), false) { tpms.clearCarImage() }
+                        Pill(stringResource(R.string.tpms_car_import), false) {
+                            pickDark = false
+                            pickCar.launch("image/*")
+                        }
+                        Pill(stringResource(R.string.tpms_car_import_dark), carDark != null) {
+                            pickDark = true
+                            pickCar.launch("image/*")
+                        }
+                        if (carDark != null) Pill(stringResource(R.string.tpms_car_remove_dark), false) { tpms.clearCarImage(dark = true) }
+                        if (carLight != null) Pill(stringResource(R.string.tpms_car_default), false) { tpms.clearCarImage() }
                     }
                     if (car != null) {
+                        Hint(stringResource(R.string.tpms_car_invert))
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(
+                                CarInvert.NONE to R.string.tpms_car_invert_none,
+                                CarInvert.IN_LIGHT to R.string.tpms_car_invert_light,
+                                CarInvert.IN_DARK to R.string.tpms_car_invert_dark,
+                            ).forEach { (v, label) ->
+                                Pill(stringResource(label), s.carInvert == v) { tpms.updateSettings { it.copy(carInvert = v) } }
+                            }
+                        }
                         Threshold(stringResource(R.string.tpms_front_axle), s.frontAxle, 5f..50f, "${s.frontAxle} %") { v ->
                             tpms.updateSettings { it.copy(frontAxle = v.coerceIn(5, 50)) }
                         }
