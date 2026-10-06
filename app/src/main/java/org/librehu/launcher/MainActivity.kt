@@ -177,7 +177,7 @@ class MainActivity : ComponentActivity() {
                     screen.value = Screen.HOME
                 },
                 power = ::power,
-                canResetSoc = headUnit.canResetSoc,
+                canResetSoc = { headUnit.canResetSoc },
             )
         setContent {
             CarTheme {

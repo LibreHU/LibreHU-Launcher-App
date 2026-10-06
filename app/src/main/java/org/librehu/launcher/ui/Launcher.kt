@@ -139,8 +139,8 @@ class LauncherActions(
     val finishSetup: () -> Unit,
     /** Power menu choice (confirmed for restart / shut down). */
     val power: (PowerChoice) -> Unit,
-    /** The head unit can restart through its MCU. */
-    val canResetSoc: Boolean,
+    /** The head unit can restart through its MCU (asked when the menu opens: the bridge binds late). */
+    val canResetSoc: () -> Boolean,
 )
 
 /** Car dashboard: shortcut rail on the left, dashboard or app grid on the right. */
@@ -211,7 +211,7 @@ fun LauncherScreen(
     }
     menuFor?.let { app -> AppMenu(app, app.key in pins, actions) { menuFor = null } }
     if (powerMenu.value) {
-        PowerMenu(actions.canResetSoc, onDismiss = { powerMenu.value = false }) { choice ->
+        PowerMenu(actions.canResetSoc(), onDismiss = { powerMenu.value = false }) { choice ->
             powerMenu.value = false
             if (choice == PowerChoice.LOCK || choice == PowerChoice.STANDBY) actions.power(choice) else confirmPower = choice
         }
