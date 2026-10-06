@@ -77,7 +77,14 @@ class MediaRepository(
 
     fun togglePlay() {
         val c = current ?: return
-        if (c.playbackState?.state == PlaybackState.STATE_PLAYING) c.transportControls.pause() else c.transportControls.play()
+        if (c.playbackState?.state == PlaybackState.STATE_PLAYING) {
+            c.transportControls.pause()
+        } else {
+            // prepare() first: the Bluetooth player takes the audio focus with it; without the focus Android 9's A2DP
+            // sink pauses the phone again right away (A2dpSinkStreamHandler). Harmless for the other players.
+            c.transportControls.prepare()
+            c.transportControls.play()
+        }
     }
 
     fun next() = current?.transportControls?.skipToNext()

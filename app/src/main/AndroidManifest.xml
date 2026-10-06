@@ -47,6 +47,15 @@
         android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- Control center: Wi-Fi and Bluetooth switches, brightness ("Modify system settings", asked once). -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
     <!-- Power menu: privileged install, else root. -->
     <uses-permission
         android:name="android.permission.REBOOT"
@@ -81,6 +90,12 @@
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Front panel touch keys of LibreHU-service, key mapping: power menu, app drawer. -->
+            <intent-filter>
+                <action android:name="org.librehu.action.POWER_MENU" />
+                <action android:name="org.librehu.action.ALL_APPS" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <!-- USB TPMS receivers: same USB-serial adapters as the original TPMS apps. -->
             <intent-filter>

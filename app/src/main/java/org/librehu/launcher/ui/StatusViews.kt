@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.GpsNotFixed
 import androidx.compose.material.icons.filled.GpsOff
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.SignalCellularConnectedNoInternet0Bar
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -30,9 +31,11 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,18 +56,35 @@ fun PhoneStatusView(compact: Boolean) {
     }
     val s by watcher.state.collectAsStateWithLifecycle()
     if (!s.connected) return
+    val noService = s.service == false
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            SignalBars(s.signal)
-            BatteryGauge(s.battery)
+            if (noService) {
+                Icon(
+                    Icons.Default.SignalCellularConnectedNoInternet0Bar,
+                    stringResource(R.string.phone_no_service),
+                    tint = NO_SERVICE,
+                    modifier = Modifier.size(18.dp),
+                )
+            } else {
+                SignalBars(s.signal)
+            }
+            BatteryGauge(s.battery, s.charging)
         }
-        val label = s.operator.ifBlank { s.name } + if (s.roaming) " R" else ""
+        // HFP gives the operator, the signal and the service, not the network type (2G…5G).
+        val label =
+            if (noService) {
+                stringResource(R.string.phone_no_service)
+            } else {
+                s.operator.ifBlank { s.name } + if (s.roaming) " R" else ""
+            }
         if (label.isNotBlank()) {
             Text(
                 label,
-                color = CarColors.TextDim,
+                color = if (noService) NO_SERVICE else CarColors.TextDim,
                 fontSize = 12.sp,
                 maxLines = 1,
+                textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
                 modifier = if (compact) Modifier.width(96.dp) else Modifier.width(140.dp),
             )
@@ -93,10 +113,21 @@ private fun SignalBars(level: Int) {
     }
 }
 
-/** Battery outline filled to the HFP level 0..5; red at 1 and below. */
+private val NO_SERVICE = Color(0xFFF28B82)
+
+/** Battery outline filled to the HFP level 0..5; red at 1 and below, green with a bolt while charging. */
 @Composable
-private fun BatteryGauge(level: Int) {
-    val color = if (level in 0..1) Color(0xFFF28B82) else CarColors.Text
+private fun BatteryGauge(
+    level: Int,
+    charging: Boolean,
+) {
+    val color =
+        when {
+            charging -> Color(0xFF81C995)
+            level in 0..1 -> Color(0xFFF28B82)
+            else -> CarColors.Text
+        }
+    val boltColor = CarColors.Surface
     val dim = CarColors.TextDim
     Canvas(Modifier.size(width = 26.dp, height = 14.dp)) {
         val tip = 3.dp.toPx()
@@ -108,6 +139,23 @@ private fun BatteryGauge(level: Int) {
             val inset = stroke * 2
             val w = (body.width - inset * 2) * (level.coerceIn(0, 5) / 5f)
             drawRect(color, topLeft = Offset(inset, inset), size = Size(w, body.height - inset * 2))
+        }
+        if (charging) {
+            // Lightning bolt in the middle of the body.
+            val cx = body.width / 2
+            val h = body.height
+            val bolt =
+                Path().apply {
+                    moveTo(cx + h * 0.10f, h * 0.10f)
+                    lineTo(cx - h * 0.22f, h * 0.55f)
+                    lineTo(cx, h * 0.55f)
+                    lineTo(cx - h * 0.10f, h * 0.90f)
+                    lineTo(cx + h * 0.22f, h * 0.45f)
+                    lineTo(cx, h * 0.45f)
+                    close()
+                }
+            drawPath(bolt, boltColor)
+            drawPath(bolt, color, style = Stroke(1.dp.toPx()))
         }
     }
 }

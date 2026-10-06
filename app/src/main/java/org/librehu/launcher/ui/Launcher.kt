@@ -47,12 +47,16 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -61,9 +65,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -83,6 +89,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import org.librehu.launcher.R
 import org.librehu.launcher.data.AppsRepository
+import org.librehu.launcher.data.DrawerSort
 import org.librehu.launcher.data.LauncherApp
 import org.librehu.launcher.data.LauncherPrefs
 import org.librehu.launcher.data.MediaRepository
@@ -169,7 +176,7 @@ fun LauncherScreen(
     val content: @Composable () -> Unit = {
         when (screen) {
             Screen.HOME -> Dashboard(prefs, media, widgets, actions, sos)
-            Screen.APPS -> AppGrid(apps, pins, actions) { menuFor = it }
+            Screen.APPS -> AppGrid(apps, pins, look, actions) { menuFor = it }
             Screen.SETTINGS -> SettingsScreen(theme, themeController, actions)
             Screen.TPMS -> TpmsScreen()
             Screen.SETUP -> Unit
@@ -209,7 +216,10 @@ fun LauncherScreen(
             }
         }
     }
-    menuFor?.let { app -> AppMenu(app, app.key in pins, actions) { menuFor = null } }
+    if (controlCenter.value) {
+        ControlCenter(themeController, theme, actions, onPowerMenu = ::showPowerMenu) { controlCenter.value = false }
+    }
+    menuFor?.let { app -> AppMenu(app, app.key in pins, app.key in look.hiddenApps, actions) { menuFor = null } }
     if (powerMenu.value) {
         PowerMenu(actions.canResetSoc(), onDismiss = { powerMenu.value = false }) { choice ->
             powerMenu.value = false
@@ -276,9 +286,11 @@ private fun Rail(
         }
         RailButton(Icons.Default.Apps, R.string.all_apps, selected = screen == Screen.APPS) { actions.show(Screen.APPS) }
         if (sos.onRail) SosButton(sos.longPress, 56, actions.sos)
-        Row {
-            SmallRailButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
-            SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
+        if (look.showVolume) {
+            Row {
+                SmallRailButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
+                SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
+            }
         }
         if (look.showPhoneStatus) PhoneStatusView(compact = true)
         if (look.showGps || look.showPower) {
@@ -287,7 +299,7 @@ private fun Rail(
                 if (look.showPower) SmallRailButton(Icons.Default.PowerSettingsNew, R.string.power_title) { powerMenu.value = true }
             }
         }
-        Clock(actions.standby)
+        Clock(onClick = { controlCenter.value = true }, onLongClick = actions.standby)
     }
 }
 
@@ -324,17 +336,28 @@ private fun BottomRail(
         }
         RailButton(Icons.Default.Apps, R.string.all_apps, selected = screen == Screen.APPS) { actions.show(Screen.APPS) }
         if (sos.onRail) SosButton(sos.longPress, 56, actions.sos)
-        SmallRailButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
-        SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
+        if (look.showVolume) {
+            SmallRailButton(Icons.AutoMirrored.Filled.VolumeDown, R.string.volume_down, actions.volumeDown)
+            SmallRailButton(Icons.AutoMirrored.Filled.VolumeUp, R.string.volume_up, actions.volumeUp)
+        }
         if (look.showPhoneStatus) PhoneStatusView(compact = false)
         if (look.showGps) GpsStatusView { actions.requestPermissions(GPS_PERMISSIONS) }
         if (look.showPower) SmallRailButton(Icons.Default.PowerSettingsNew, R.string.power_title) { powerMenu.value = true }
-        Clock(actions.standby)
+        Clock(onClick = { controlCenter.value = true }, onLongClick = actions.standby)
     }
 }
 
-/** Power menu visible (opened from the rail). */
+/** Power menu visible (opened from the rail, the control center or org.librehu.action.POWER_MENU). */
 private val powerMenu = mutableStateOf(false)
+
+/** Control center visible (touch on the rail clock). */
+private val controlCenter = mutableStateOf(false)
+
+/** Opens the power menu (front panel touch key through org.librehu.action.POWER_MENU). */
+fun showPowerMenu() {
+    controlCenter.value = false
+    powerMenu.value = true
+}
 
 /** Red SOS button; with [longPress], a short touch only says to hold it. */
 @OptIn(ExperimentalFoundationApi::class)
@@ -361,9 +384,13 @@ fun SosButton(
     }
 }
 
-/** Rail clock; a touch shows the standby clock. */
+/** Rail clock; a touch opens the control center, a long touch the standby clock. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Clock(onClick: () -> Unit) {
+private fun Clock(
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
     val context = LocalContext.current
     var now by remember { mutableStateOf(Date()) }
     LaunchedEffect(Unit) {
@@ -382,7 +409,7 @@ private fun Clock(onClick: () -> Unit) {
         modifier =
             Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .clickable(onClick = onClick)
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(horizontal = 6.dp, vertical = 4.dp),
     )
 }
@@ -806,9 +833,26 @@ private fun Hint(
 private fun AppGrid(
     apps: List<LauncherApp>,
     pins: List<String>,
+    look: ThemeSettings,
     actions: LauncherActions,
     onMenu: (LauncherApp) -> Unit,
 ) {
+    var query by rememberSaveable { mutableStateOf("") }
+    var showHidden by rememberSaveable { mutableStateOf(false) }
+    val shown =
+        remember(apps, pins, look.drawerSort, look.hiddenApps, query, showHidden) {
+            val q = query.trim()
+            val visible =
+                apps.filter {
+                    (showHidden || it.key !in look.hiddenApps) && (q.isEmpty() || it.label.contains(q, ignoreCase = true))
+                }
+            when (look.drawerSort) {
+                DrawerSort.NAME -> visible.sortedBy { it.label.lowercase() }
+                DrawerSort.NAME_DESC -> visible.sortedByDescending { it.label.lowercase() }
+                DrawerSort.PINNED_FIRST -> visible.sortedWith(compareBy({ it.key !in pins }, { it.label.lowercase() }))
+            }
+        }
+    val icon = look.drawerIconSize.coerceIn(48, 104)
     Column(
         modifier =
             Modifier
@@ -817,34 +861,78 @@ private fun AppGrid(
                 .background(CarColors.Surface)
                 .padding(16.dp),
     ) {
-        Text(stringResource(R.string.all_apps), color = CarColors.Text, fontSize = 24.sp, fontWeight = FontWeight.Medium)
-        Text(stringResource(R.string.pin_hint), color = CarColors.TextDim, fontSize = 14.sp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.all_apps), color = CarColors.Text, fontSize = 24.sp, fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.pin_hint), color = CarColors.TextDim, fontSize = 14.sp)
+            }
+            if (look.hiddenApps.isNotEmpty()) {
+                SettingChoice(
+                    stringResource(R.string.drawer_show_hidden, look.hiddenApps.size),
+                    showHidden,
+                ) { showHidden = !showHidden }
+            }
+        }
+        if (look.drawerSearch) {
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Default.Search, null, tint = CarColors.TextDim) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        Icon(
+                            Icons.Default.Close,
+                            stringResource(R.string.close),
+                            tint = CarColors.TextDim,
+                            modifier =
+                                Modifier.clickable {
+                                    query =
+                                        ""
+                                },
+                        )
+                    }
+                },
+                placeholder = { Text(stringResource(R.string.drawer_search)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         Spacer(Modifier.height(12.dp))
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(132.dp),
+            columns = GridCells.Adaptive((icon + 60).dp),
             contentPadding = PaddingValues(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item(key = "settings") {
-                GridTile(stringResource(R.string.settings), onClick = { actions.show(Screen.SETTINGS) }) {
-                    Box(
-                        Modifier.size(72.dp).clip(CircleShape).background(CarColors.Accent),
-                        contentAlignment = Alignment.Center,
-                    ) { Icon(Icons.Default.Settings, null, tint = CarColors.OnAccent, modifier = Modifier.size(40.dp)) }
+            if (query.isBlank()) {
+                item(key = "settings") {
+                    GridTile(stringResource(R.string.settings), look.drawerLabels, onClick = { actions.show(Screen.SETTINGS) }) {
+                        Box(
+                            Modifier.size(icon.dp).clip(CircleShape).background(CarColors.Accent),
+                            contentAlignment = Alignment.Center,
+                        ) { Icon(Icons.Default.Settings, null, tint = CarColors.OnAccent, modifier = Modifier.size((icon * 0.55f).dp)) }
+                    }
+                }
+                item(key = "tpms") {
+                    GridTile(stringResource(R.string.tpms_title), look.drawerLabels, onClick = { actions.show(Screen.TPMS) }) {
+                        Box(
+                            Modifier.size(icon.dp).clip(CircleShape).background(CarColors.SurfaceHigh),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                painterResource(R.drawable.ic_tyre),
+                                null,
+                                tint = CarColors.Accent,
+                                modifier = Modifier.size((icon * 0.55f).dp),
+                            )
+                        }
+                    }
                 }
             }
-            item(key = "tpms") {
-                GridTile(stringResource(R.string.tpms_title), onClick = { actions.show(Screen.TPMS) }) {
-                    Box(
-                        Modifier.size(72.dp).clip(CircleShape).background(CarColors.SurfaceHigh),
-                        contentAlignment = Alignment.Center,
-                    ) { Icon(painterResource(R.drawable.ic_tyre), null, tint = CarColors.Accent, modifier = Modifier.size(40.dp)) }
-                }
-            }
-            items(apps, key = { it.key }) { app ->
-                GridTile(app.label) {
-                    Box {
-                        AppIcon(app, size = 72, onLongClick = { onMenu(app) }) {
+            items(shown, key = { it.key }) { app ->
+                GridTile(app.label, look.drawerLabels) {
+                    Box(Modifier.alpha(if (app.key in look.hiddenApps) 0.4f else 1f)) {
+                        AppIcon(app, size = icon, onLongClick = { onMenu(app) }) {
                             actions.launch(app.component)
                             actions.show(Screen.HOME)
                         }
@@ -866,6 +954,7 @@ private fun AppGrid(
 @Composable
 private fun GridTile(
     label: String,
+    showLabel: Boolean = true,
     onClick: (() -> Unit)? = null,
     icon: @Composable () -> Unit,
 ) {
@@ -878,8 +967,17 @@ private fun GridTile(
                 .padding(4.dp),
     ) {
         icon()
-        Spacer(Modifier.height(8.dp))
-        Text(label, color = CarColors.Text, fontSize = 15.sp, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
+        if (showLabel) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                label,
+                color = CarColors.Text,
+                fontSize = 15.sp,
+                maxLines = 2,
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
@@ -888,6 +986,7 @@ private fun GridTile(
 private fun AppMenu(
     app: LauncherApp,
     pinned: Boolean,
+    hidden: Boolean,
     actions: LauncherActions,
     onDismiss: () -> Unit,
 ) {
@@ -906,6 +1005,13 @@ private fun AppMenu(
                 if (pinned) {
                     MenuRow(Icons.Default.ArrowUpward, stringResource(R.string.move_up)) { actions.movePin(app.key, -1) }
                     MenuRow(Icons.Default.ArrowDownward, stringResource(R.string.move_down)) { actions.movePin(app.key, 1) }
+                }
+                MenuRow(
+                    if (hidden) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                    stringResource(if (hidden) R.string.drawer_unhide else R.string.drawer_hide),
+                ) {
+                    actions.setTheme { it.copy(hiddenApps = if (hidden) it.hiddenApps - app.key else it.hiddenApps + app.key) }
+                    onDismiss()
                 }
                 MenuRow(Icons.Default.Info, stringResource(R.string.app_info)) {
                     actions.appInfo(pkg)
