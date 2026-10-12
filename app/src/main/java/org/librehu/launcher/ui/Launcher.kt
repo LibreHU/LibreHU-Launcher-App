@@ -57,6 +57,8 @@ import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -64,6 +66,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -127,6 +130,7 @@ class LauncherActions(
     val mediaToggle: () -> Unit,
     val mediaNext: () -> Unit,
     val mediaPrevious: () -> Unit,
+    val mediaSeek: (Long) -> Unit = {},
     val mediaOpen: () -> Unit,
     val grantMediaAccess: () -> Unit,
     val addWidget: (LauncherPrefs.Slot, ComponentName) -> Unit,
@@ -818,12 +822,68 @@ private fun NowPlayingContent(
                 Text(np.subtitle, color = CarColors.TextDim, fontSize = 16.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
+        if (np.durationMs > 0) SeekBar(np, actions.mediaSeek)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
             MediaButton(Icons.Default.SkipPrevious, R.string.previous, false, actions.mediaPrevious)
             MediaButton(if (np.playing) Icons.Default.Pause else Icons.Default.PlayArrow, R.string.play_pause, true, actions.mediaToggle)
             MediaButton(Icons.Default.SkipNext, R.string.next, false, actions.mediaNext)
         }
     }
+}
+
+/** Position of the track, draggable when the app accepts seeking; elapsed and total time under it. */
+@Composable
+private fun SeekBar(
+    np: NowPlaying,
+    onSeek: (Long) -> Unit,
+) {
+    var position by remember { mutableLongStateOf(np.positionNow()) }
+    var dragging by remember { mutableStateOf<Float?>(null) }
+    // Once a second while playing: no recomposition at frame rate for a clock.
+    LaunchedEffect(np) {
+        position = np.positionNow()
+        while (np.playing) {
+            delay(1000L - position % 1000L)
+            position = np.positionNow()
+        }
+    }
+    val duration = np.durationMs.toFloat()
+    val shown = dragging ?: (position / duration).coerceIn(0f, 1f)
+    Column(Modifier.fillMaxWidth()) {
+        Slider(
+            value = shown,
+            onValueChange = { if (np.canSeek) dragging = it },
+            onValueChangeFinished = {
+                dragging?.let { f ->
+                    val target = (f * duration).toLong()
+                    onSeek(target)
+                    position = target
+                }
+                dragging = null
+            },
+            enabled = np.canSeek,
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = CarColors.Accent,
+                    activeTrackColor = CarColors.Accent,
+                    inactiveTrackColor = CarColors.SurfaceHigh,
+                    disabledThumbColor = CarColors.TextDim,
+                    disabledActiveTrackColor = CarColors.TextDim,
+                    disabledInactiveTrackColor = CarColors.SurfaceHigh,
+                ),
+            modifier = Modifier.fillMaxWidth().height(32.dp),
+        )
+        Row(Modifier.fillMaxWidth()) {
+            Text(formatTime((shown * duration).toLong()), color = CarColors.TextDim, fontSize = 13.sp)
+            Spacer(Modifier.weight(1f))
+            Text(formatTime(np.durationMs), color = CarColors.TextDim, fontSize = 13.sp)
+        }
+    }
+}
+
+private fun formatTime(ms: Long): String {
+    val s = ms / 1000
+    return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, s / 60 % 60, s % 60) else "%d:%02d".format(s / 60, s % 60)
 }
 
 @Composable

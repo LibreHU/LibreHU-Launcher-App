@@ -186,6 +186,7 @@ class MainActivity : ComponentActivity() {
                 mediaToggle = media::togglePlay,
                 mediaNext = media::next,
                 mediaPrevious = media::previous,
+                mediaSeek = media::seekTo,
                 mediaOpen = media::open,
                 grantMediaAccess = { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) },
                 addWidget = ::addWidget,

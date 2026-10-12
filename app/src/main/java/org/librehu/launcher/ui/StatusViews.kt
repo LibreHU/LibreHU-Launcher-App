@@ -2,20 +2,27 @@ package org.librehu.launcher.ui
 
 import android.Manifest
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.GpsNotFixed
 import androidx.compose.material.icons.filled.GpsOff
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.SignalCellularConnectedNoInternet0Bar
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -33,8 +40,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -221,21 +230,58 @@ fun PowerMenu(
         icon = { Icon(Icons.Default.PowerSettingsNew, null, tint = CarColors.Accent) },
         title = { Text(stringResource(R.string.power_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 val items =
                     listOfNotNull(
-                        PowerChoice.LOCK to R.string.power_lock,
-                        PowerChoice.STANDBY to R.string.power_standby,
-                        PowerChoice.REBOOT to R.string.power_reboot,
-                        PowerChoice.SHUTDOWN to R.string.power_shutdown,
-                        if (mcuReset) PowerChoice.MCU_RESET to R.string.power_mcu_reset else null,
+                        Triple(PowerChoice.LOCK, R.string.power_lock, Icons.Default.Lock),
+                        Triple(PowerChoice.STANDBY, R.string.power_standby, Icons.Default.Bedtime),
+                        Triple(PowerChoice.REBOOT, R.string.power_reboot, Icons.Default.RestartAlt),
+                        Triple(PowerChoice.SHUTDOWN, R.string.power_shutdown, Icons.Default.PowerSettingsNew),
+                        if (mcuReset) Triple(PowerChoice.MCU_RESET, R.string.power_mcu_reset, Icons.Default.Memory) else null,
                     )
-                for ((choice, label) in items) {
-                    SettingChoice(stringResource(label), choice == PowerChoice.LOCK) { onChoice(choice) }
+                for ((choice, label, icon) in items) {
+                    PowerButton(stringResource(label), icon, choice == PowerChoice.LOCK) { onChoice(choice) }
                 }
-                Text(stringResource(R.string.power_hint), color = CarColors.TextDim, fontSize = 13.sp)
+                Text(
+                    stringResource(R.string.power_hint),
+                    color = CarColors.TextDim,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/** Full-width pill of the power menu, icon and label centred. */
+@Composable
+private fun PowerButton(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .clip(RoundedCornerShape(50))
+                .background(if (selected) CarColors.Accent else CarColors.SurfaceHigh)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 24.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val color = if (selected) CarColors.OnAccent else CarColors.Text
+        Icon(icon, null, tint = color, modifier = Modifier.size(24.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(label, color = color, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+    }
 }
