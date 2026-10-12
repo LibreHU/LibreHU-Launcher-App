@@ -7,16 +7,11 @@ import android.graphics.drawable.AnimatedImageDrawable
 import android.graphics.drawable.Drawable
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.os.SystemClock
 import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import android.widget.ImageView
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,9 +19,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -42,6 +41,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.data.WallpaperKind
@@ -298,24 +298,40 @@ private class VideoPlayer(
 
 // --- Built-in animations -----------------------------------------------------------------------------------------
 
-/** 0 → 1 over [ms], forever. */
+/**
+ * 0 → 1 over [ms], forever, at [fps] frames per second: these wallpapers move slowly, and redrawing full-screen
+ * gradients at 60 fps kept the head unit's GPU busy behind every screen. Read the value inside the draw lambda, so
+ * that only the drawing runs again (no recomposition); it stops with the frames when the launcher is not visible.
+ */
 @Composable
-private fun loop(ms: Int): Float {
-    val t = rememberInfiniteTransition(label = "wallpaper")
-    val v by t.animateFloat(0f, 1f, infiniteRepeatable(tween(ms, easing = LinearEasing), RepeatMode.Restart), label = "t")
-    return v
+private fun loop(
+    ms: Int,
+    fps: Int = WALLPAPER_FPS,
+): State<Float> {
+    val state = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(ms, fps) {
+        val start = SystemClock.uptimeMillis()
+        while (true) {
+            withFrameMillis { state.floatValue = ((SystemClock.uptimeMillis() - start) % ms) / ms.toFloat() }
+            delay(1000L / fps)
+        }
+    }
+    return state
 }
+
+private const val WALLPAPER_FPS = 20
 
 /** Slow coloured glows drifting around, like northern lights. */
 @Composable
 private fun Aurora() {
-    val t = loop(40_000)
+    val time = loop(40_000)
     val base = CarColors.Background
     val accent = CarColors.Accent
     val second = lerp(accent, Color(0xFF7E57C2), 0.6f)
     val third = lerp(accent, Color(0xFF26A69A), 0.6f)
     val alpha = if (CarColors.palette.dark) 0.55f else 0.40f
     Canvas(Modifier.fillMaxSize()) {
+        val t = time.value
         drawRect(base)
         val a = t * 2 * PI.toFloat()
         val r = maxOf(size.width, size.height) * 0.6f
@@ -351,12 +367,13 @@ private fun Stars() {
             val rnd = Random(42)
             List(140) { Star(rnd.nextFloat(), rnd.nextFloat(), 0.8f + rnd.nextFloat() * 2.2f, rnd.nextFloat(), 1 + rnd.nextInt(3)) }
         }
-    val t = loop(120_000)
+    val time = loop(120_000)
     val dark = CarColors.palette.dark
     val base = CarColors.Background
     val star = if (dark) Color.White else CarColors.Accent
     val glow = CarColors.Accent
     Canvas(Modifier.fillMaxSize()) {
+        val t = time.value
         drawRect(Brush.verticalGradient(listOf(base, lerp(base, glow, if (dark) 0.18f else 0.12f))))
         for (s in stars) {
             val x = ((s.x + t * s.speed) % 1f) * size.width
@@ -369,10 +386,11 @@ private fun Stars() {
 /** Layers of soft waves along the bottom of the screen. */
 @Composable
 private fun Waves() {
-    val t = loop(16_000)
+    val time = loop(16_000, fps = 30)
     val base = CarColors.Background
     val accent = CarColors.Accent
     Canvas(Modifier.fillMaxSize()) {
+        val t = time.value
         drawRect(base)
         val a = t * 2 * PI.toFloat()
         for (i in 0 until 4) {
