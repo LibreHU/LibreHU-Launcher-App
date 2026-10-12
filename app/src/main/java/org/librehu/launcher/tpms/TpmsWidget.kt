@@ -68,10 +68,11 @@ class TpmsWidget : AppWidgetProvider() {
             st: TpmsState,
             s: TpmsSettings,
         ): RemoteViews {
-            val dark = context.getSharedPreferences(ThemeProvider.EFFECTIVE, Context.MODE_PRIVATE).getBoolean("dark", true)
+            val theme = context.getSharedPreferences(ThemeProvider.EFFECTIVE, Context.MODE_PRIVATE)
+            val dark = theme.getBoolean("dark", true)
             val text = if (dark) 0xFFE8EAED.toInt() else 0xFF202124.toInt()
             val dim = if (dark) 0xFF9AA0A6.toInt() else 0xFF5F6368.toInt()
-            val accent = if (dark) 0xFF8AB4F8.toInt() else 0xFF1A73E8.toInt()
+            val accent = theme.getInt("accent", 0).takeIf { it != 0 } ?: if (dark) 0xFF8AB4F8.toInt() else 0xFF1A73E8.toInt()
             val white = 0xFFFFFFFF.toInt()
             val red = 0xFFF44336.toInt()
             return RemoteViews(context.packageName, R.layout.widget_tpms).apply {
