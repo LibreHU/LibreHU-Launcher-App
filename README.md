@@ -16,6 +16,11 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   notification d'alerte, **widget « Pneus »** (4 pneus autour de la voiture, rouge en alerte, ouvre l'écran TPMS)
   utilisable dans les emplacements du launcher ou sur n'importe quel autre écran d'accueil. Protocole :
   [docs/tpms.md](docs/tpms.md).
+- **Carte média** : titre, pochette, ⏮ ⏯ ⏭ et **barre de progression** (temps écoulé / durée, déplaçable quand
+  l'appli accepte l'avance rapide).
+- **Menu power** : verrouiller, horloge de veille, redémarrer, éteindre, redémarrer par la MCU ; boutons centrés.
+- **Fluidité** : fonds animés redessinés à 20 i/s (vagues 30, spectre 30) sans recomposer l'écran, arrêtés quand le
+  lanceur n'est pas visible ; APK publié en build *release* (non débogable, compilé entièrement par Android).
 - **Fonds d'écran** (Paramètres) : aucun, animations intégrées à la couleur d'accent (aurore, étoiles, vagues),
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
   focus audio), ou **fond Android / live wallpaper** affiché derrière le launcher (`FLAG_SHOW_WALLPAPER`). Les
@@ -91,7 +96,7 @@ Cette branche : **`librehu-service`** (installer LibreHU-service avant le lanceu
 
 ## Installation
 
-1. Installer l'APK (artefact de l'Action **Build**), appuyer sur Accueil et choisir **LibreHU Launcher** → Toujours.
+1. Installer l'APK avec [LibreHU Apps (OTA)](https://github.com/LibreHU/LibreHU-OTA-app), ou l'APK de la release `latest-<branche>` du dépôt (build *release* signé avec la clé commune des applis LibreHU ; les anciens APK de debug avaient chacun leur clé : désinstaller une fois avant), appuyer sur Accueil et choisir **LibreHU Launcher** → Toujours.
 2. Carte média : la toucher et autoriser l'**accès aux notifications** (nécessaire pour lire les sessions média).
 3. Widgets : Android demande l'autorisation la première fois ; en app privilégiée (`BIND_APPWIDGET`), aucune
    question.

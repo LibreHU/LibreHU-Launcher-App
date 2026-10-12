@@ -178,7 +178,13 @@ class SpectrumRenderer(
         GLES20.glViewport(0, 0, w, h)
     }
 
+    /** Uptime of the last frame: drawing is capped at [MAX_FPS] (continuous rendering otherwise runs at 60 fps). */
+    private var lastFrame = 0L
+
     override fun onDrawFrame(gl: GL10?) {
+        val wait = lastFrame + 1000L / MAX_FPS - SystemClock.uptimeMillis()
+        if (wait > 0) Thread.sleep(wait)
+        lastFrame = SystemClock.uptimeMillis()
         val c = colors
         GLES20.glClearColor(c[9], c[10], c[11], 1f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
@@ -222,7 +228,7 @@ class SpectrumRenderer(
     /** Next frame of the idle waves and of the spectrum, cross-faded. */
     private fun update() {
         val active = SystemClock.uptimeMillis() - lastLevels < AUDIO_TIMEOUT_MS
-        mix = (mix + if (active) FADE_STEP else -FADE_STEP).coerceIn(0f, 1f)
+        mix = (mix + (if (active) FADE_STEP else -FADE_STEP) * SPEED).coerceIn(0f, 1f)
         // Superimposed moving sine waves (AOSP waveform.rs, makeIdleWave), sampled at the original 1024 columns.
         val a1 = sin(0.007f * amp1) * 120
         val a2 = sin(0.023f * amp2) * 80
@@ -237,14 +243,15 @@ class SpectrumRenderer(
                 offsets[i] = off * (1 - mix)
             }
         }
-        pos1++
-        amp1++
-        pos2--
-        amp2++
-        pos3++
-        amp3++
-        pos4++
-        amp4++
+        // Steps of the original 60 fps animation, SPEED of them per frame at MAX_FPS.
+        pos1 += SPEED
+        amp1 += SPEED
+        pos2 -= SPEED
+        amp2 += SPEED
+        pos3 += SPEED
+        amp3 += SPEED
+        pos4 += SPEED
+        amp4 += SPEED
     }
 
     private fun shader(
@@ -258,6 +265,8 @@ class SpectrumRenderer(
 
     companion object {
         const val COLUMNS = 512
+        private const val MAX_FPS = 30
+        private const val SPEED = 60 / MAX_FPS
         private const val FLOATS_PER_VERTEX = 3
         private const val AUDIO_TIMEOUT_MS = 1500L
         private const val FADE_STEP = 0.04f

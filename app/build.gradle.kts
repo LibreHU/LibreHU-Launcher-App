@@ -41,6 +41,12 @@ android {
 
     buildTypes {
         getByName("debug") { signingConfig = signingConfigs.getByName("librehu") }
+        // What the CI publishes: not debuggable, so that ART compiles it fully (Compose is much slower in a debug
+        // build). No R8: reflection on hidden APIs and AIDL stay as they are.
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("librehu")
+            isMinifyEnabled = false
+        }
     }
 
     compileOptions {
@@ -55,6 +61,8 @@ android {
     }
 
     lint {
+        // Lint runs on its own; it must not block the release APK.
+        checkReleaseBuilds = false
         // BIND_APPWIDGET is granted to privileged installs only; others ask the user once per widget.
         disable += setOf("ProtectedPermissions", "OldTargetApi")
     }
