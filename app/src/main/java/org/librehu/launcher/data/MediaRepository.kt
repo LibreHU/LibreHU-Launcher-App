@@ -20,7 +20,21 @@ data class NowPlaying(
     val subtitle: String,
     val art: Bitmap?,
     val playing: Boolean,
-)
+    /** Track length in ms, 0 when unknown (radio, streams). */
+    val durationMs: Long = 0,
+    /** Position in ms at [positionAt] (elapsedRealtime), advancing at [speed] while playing. */
+    val positionMs: Long = 0,
+    val positionAt: Long = 0,
+    val speed: Float = 1f,
+    /** The app accepts seekTo. */
+    val canSeek: Boolean = false,
+) {
+    /** Position now, extrapolated like Android's media notifications. */
+    fun positionNow(now: Long = android.os.SystemClock.elapsedRealtime()): Long {
+        val p = if (playing && positionAt > 0) positionMs + ((now - positionAt) * speed).toLong() else positionMs
+        return if (durationMs > 0) p.coerceIn(0, durationMs) else p.coerceAtLeast(0)
+    }
+}
 
 /** Current media session (radio, music, phone projection…) for the dashboard card. */
 class MediaRepository(
@@ -105,6 +119,11 @@ class MediaRepository(
 
     fun next() = current?.transportControls?.skipToNext()
 
+    /** Moves the current track to [positionMs] (apps that accept it, see [NowPlaying.canSeek]). */
+    fun seekTo(positionMs: Long) {
+        current?.transportControls?.seekTo(positionMs)
+    }
+
     fun previous() = current?.transportControls?.skipToPrevious()
 
     fun open() {
@@ -147,6 +166,11 @@ class MediaRepository(
                         md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
                             ?: md.getBitmap(MediaMetadata.METADATA_KEY_ART),
                     playing = c.playbackState?.state == PlaybackState.STATE_PLAYING,
+                    durationMs = md.getLong(MediaMetadata.METADATA_KEY_DURATION).coerceAtLeast(0),
+                    positionMs = c.playbackState?.position?.takeIf { it >= 0 } ?: 0,
+                    positionAt = c.playbackState?.lastPositionUpdateTime ?: 0,
+                    speed = c.playbackState?.playbackSpeed?.takeIf { it > 0f } ?: 1f,
+                    canSeek = (c.playbackState?.actions ?: 0L) and PlaybackState.ACTION_SEEK_TO != 0L,
                 )
             }
     }
