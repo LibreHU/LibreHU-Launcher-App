@@ -84,6 +84,15 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - Actions `org.librehu.action.POWER_MENU` et `org.librehu.action.ALL_APPS` (touches de façade de LibreHU-service).
 - Barres système masquées (balayer depuis le bord pour les afficher).
 
+## Captures d'écran
+
+| | |
+|---|---|
+| ![Accueil](docs/screenshots/home.png)<br>Accueil | ![Tiroir d'applis](docs/screenshots/drawer.png)<br>Tiroir d'applis |
+| ![Menu marche / arrêt](docs/screenshots/power.png)<br>Menu marche / arrêt | ![Premier démarrage](docs/screenshots/onboarding.png)<br>Premier démarrage |
+
+Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots).
+
 ## Branches
 
 Cette branche : **`librehu-service`** (installer LibreHU-service avant le lanceur).
