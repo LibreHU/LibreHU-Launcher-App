@@ -21,6 +21,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -66,6 +67,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var theme: ThemeStore
     private lateinit var themeController: ThemeController
     private val screen = mutableStateOf(Screen.HOME)
+    private var started = false
+    private var homeReported: Boolean? = null
 
     /** Widget being added: (slot, appWidgetId). */
     private var pending: Pair<LauncherPrefs.Slot, Int>? = null
@@ -153,6 +156,8 @@ class MainActivity : ComponentActivity() {
                 .distinctUntilChanged()
                 .collect(::showSystemWallpaper)
         }
+        // LibreHU-service's rear view widget shows the live camera only while the dashboard can be seen.
+        lifecycleScope.launch { snapshotFlow { screen.value }.collect { reportHome() } }
         hideSystemBars()
         if (intent?.action == TpmsWidget.ACTION_SHOW_TPMS) screen.value = Screen.TPMS
         intent?.let(::handleShortcut)
@@ -239,12 +244,24 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         widgets.host.startListening()
         media.start()
+        started = true
+        reportHome()
     }
 
     override fun onStop() {
+        started = false
+        reportHome()
         media.stop()
         widgets.host.stopListening()
         super.onStop()
+    }
+
+    /** Tells LibreHU-service when the dashboard (and its widgets) is on screen or not. */
+    private fun reportHome() {
+        val visible = started && screen.value == Screen.HOME
+        if (visible == homeReported) return
+        homeReported = visible
+        sendBroadcast(Intent(ACTION_HOME_VISIBLE).setPackage(SERVICE_PACKAGE).putExtra("visible", visible))
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -449,5 +466,7 @@ class MainActivity : ComponentActivity() {
         const val REQUEST_CONFIGURE = 2
         const val ACTION_POWER_MENU = "org.librehu.action.POWER_MENU"
         const val ACTION_ALL_APPS = "org.librehu.action.ALL_APPS"
+        const val ACTION_HOME_VISIBLE = "org.librehu.action.HOME_VISIBLE"
+        const val SERVICE_PACKAGE = "org.librehu.service"
     }
 }
