@@ -12,6 +12,8 @@
 - **Position** : GPS (et réseau si disponible), en décimal et en degrés-minutes-secondes, précision et âge.
 - **Informations pour les secours** : nom, infos médicales, véhicule (modèle, couleur, plaque), à lire à
   l'opérateur.
+  La description du véhicule tenue par LibreHU-service (marque, modèle, année, couleur, plaque : premier démarrage
+  du launcher ou onglet Véhicule du service) s'affiche d'office, en plus du texte saisi ici.
 - Le menu **Tester l'écran** l'ouvre sans compte à rebours.
 
 Limites : sans téléphone connecté (ou sans appli téléphone sur l'autoradio), aucun appel ne part : l'écran le dit.

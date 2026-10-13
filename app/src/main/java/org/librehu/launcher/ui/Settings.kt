@@ -54,6 +54,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import org.librehu.launcher.R
 import org.librehu.launcher.data.DrawerSort
 import org.librehu.launcher.data.LauncherApp
@@ -407,6 +408,81 @@ fun StandbySettingsPage(
 }
 
 // --- SOS ---------------------------------------------------------------------------------------------------------
+
+/**
+ * The car's name and description, kept by LibreHU-service and given to the other LibreHU apps (SOS screen, Android
+ * Auto, CarPlay): typed once here (first setup) or in the service's Véhicule tab.
+ */
+@Composable
+fun VehicleSettingsPage() {
+    val context = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val info by org.librehu.launcher.data.VehicleLink.info
+        .collectAsStateWithLifecycle()
+    var available by remember { mutableStateOf<Boolean?>(null) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        available =
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                org.librehu.launcher.data.VehicleLink.available(context).also {
+                    if (it) {
+                        org.librehu.launcher.data.VehicleLink
+                            .refresh(context)
+                    }
+                }
+            }
+    }
+    if (available == false) {
+        SettingHint(stringResource(R.string.vehicle_no_service))
+        return
+    }
+    val current = info ?: return
+    var name by remember(current.name) { mutableStateOf(current.name) }
+    var make by remember(current.make) { mutableStateOf(current.make) }
+    var model by remember(current.model) { mutableStateOf(current.model) }
+    var year by remember(current.year) { mutableStateOf(current.year) }
+    var color by remember(current.color) { mutableStateOf(current.color) }
+    var plate by remember(current.plate) { mutableStateOf(current.plate) }
+    var fuel by remember(current.fuel) { mutableStateOf(current.fuel) }
+    var side by remember(current.driverSide) { mutableStateOf(current.driverSide) }
+    var saved by remember { mutableStateOf<Boolean?>(null) }
+    SettingHint(stringResource(R.string.vehicle_hint))
+    SettingText(stringResource(R.string.vehicle_name), name) { name = it.take(64) }
+    SettingHint(stringResource(R.string.vehicle_name_hint))
+    SettingText(stringResource(R.string.vehicle_make), make) { make = it.take(40) }
+    SettingText(stringResource(R.string.vehicle_model), model) { model = it.take(40) }
+    SettingText(stringResource(R.string.vehicle_year), year, KeyboardType.Number) { year = it.filter(Char::isDigit).take(4) }
+    SettingText(stringResource(R.string.vehicle_color), color) { color = it.take(40) }
+    SettingText(stringResource(R.string.vehicle_plate), plate) { plate = it.uppercase().take(16) }
+    SettingText(stringResource(R.string.vehicle_fuel), fuel) { fuel = it.take(40) }
+    SettingSection(stringResource(R.string.vehicle_driver_side))
+    SettingChoices(
+        listOf("left" to stringResource(R.string.vehicle_driver_left), "right" to stringResource(R.string.vehicle_driver_right)),
+        side,
+    ) { side = it }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        SettingChoice(stringResource(R.string.vehicle_save), true) {
+            scope.launch {
+                saved =
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        org.librehu.launcher.data.VehicleLink.write(
+                            context,
+                            mapOf(
+                                "make" to make,
+                                "model" to model,
+                                "year" to year,
+                                "color" to color,
+                                "plate" to plate,
+                                "fuel" to fuel,
+                                "driver_side" to side,
+                            ) + (if (name.isNotBlank() && name != current.name) mapOf("name" to name) else emptyMap()),
+                        )
+                    }
+            }
+        }
+        Spacer(Modifier.width(16.dp))
+        saved?.let { ok -> SettingHint(stringResource(if (ok) R.string.vehicle_saved else R.string.vehicle_not_saved)) }
+    }
+}
 
 @Composable
 fun SosSettingsPage(
