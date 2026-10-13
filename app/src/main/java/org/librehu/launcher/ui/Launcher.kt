@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MusicNote
@@ -49,6 +50,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SkipNext
@@ -146,6 +148,10 @@ class LauncherActions(
     val uninstall: (String) -> Unit,
     val forceStop: (String) -> Unit,
     val appInfo: (String) -> Unit,
+    /** Own icon (image picked on the unit) and name for an app, and back to its own (app menu). */
+    val pickAppIcon: (String) -> Unit = {},
+    val renameApp: (String, String) -> Unit = { _, _ -> },
+    val resetApp: (String) -> Unit = {},
     val setTheme: ((ThemeSettings) -> ThemeSettings) -> Unit,
     val pickImage: () -> Unit,
     val pickVideo: () -> Unit,
@@ -1210,6 +1216,7 @@ private fun AppMenu(
 ) {
     val pkg = app.component.packageName
     var confirmUninstall by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { AppIconImage(app, 56, Modifier.size(56.dp).clip(CircleShape)) },
@@ -1231,6 +1238,17 @@ private fun AppMenu(
                     actions.setTheme { it.copy(hiddenApps = if (hidden) it.hiddenApps - app.key else it.hiddenApps + app.key) }
                     onDismiss()
                 }
+                MenuRow(Icons.Default.Image, stringResource(R.string.app_custom_icon)) {
+                    actions.pickAppIcon(app.key)
+                    onDismiss()
+                }
+                MenuRow(Icons.Default.Edit, stringResource(R.string.app_rename)) { renaming = true }
+                if (app.customized) {
+                    MenuRow(Icons.Default.Restore, stringResource(R.string.app_custom_reset)) {
+                        actions.resetApp(app.key)
+                        onDismiss()
+                    }
+                }
                 MenuRow(Icons.Default.Info, stringResource(R.string.app_info)) {
                     actions.appInfo(pkg)
                     onDismiss()
@@ -1244,6 +1262,29 @@ private fun AppMenu(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
     )
+    if (renaming) {
+        var name by remember { mutableStateOf(app.label) }
+        AlertDialog(
+            onDismissRequest = { renaming = false },
+            title = { Text(stringResource(R.string.app_rename)) },
+            text = {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    supportingText = { Text(stringResource(R.string.app_rename_hint)) },
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    actions.renameApp(app.key, name)
+                    renaming = false
+                    onDismiss()
+                }) { Text(stringResource(android.R.string.ok)) }
+            },
+            dismissButton = { TextButton(onClick = { renaming = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
     if (confirmUninstall) {
         AlertDialog(
             onDismissRequest = { confirmUninstall = false },

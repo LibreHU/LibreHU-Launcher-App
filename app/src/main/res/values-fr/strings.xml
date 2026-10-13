@@ -40,6 +40,11 @@
     <string name="reset">Réinitialiser</string>
     <string name="reset_all">Réinitialiser le lanceur</string>
     <string name="reset_confirm">Raccourcis, widgets, thème et fond d\'écran reviennent aux valeurs par défaut.</string>
+    <string name="app_custom_icon">Changer l\'icône</string>
+    <string name="app_custom_icon_error">Impossible de lire cette image</string>
+    <string name="app_rename">Renommer</string>
+    <string name="app_rename_hint">Vide : le nom de l\'appli</string>
+    <string name="app_custom_reset">Icône et nom d\'origine</string>
     <string name="app_info">Infos sur l\'appli</string>
     <string name="force_stop">Forcer l\'arrêt</string>
     <string name="uninstall">Désinstaller</string>

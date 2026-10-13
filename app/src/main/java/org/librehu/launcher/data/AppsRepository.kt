@@ -6,6 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.content.ContextCompat
@@ -13,6 +16,7 @@ import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.io.File
 import java.text.Collator
 
 data class LauncherApp(
@@ -23,6 +27,8 @@ data class LauncherApp(
     val glyph: ImageBitmap? = null,
     /** Size of [glyph] in the circle: 1 for an adaptive monochrome layer (its own margins), less for a bare glyph. */
     val glyphScale: Float = 0.55f,
+    /** Icon or name chosen in the launcher (app menu) instead of the app's own. */
+    val customized: Boolean = false,
 ) {
     val key: String get() = component.flattenToString()
 }
@@ -66,13 +72,23 @@ class AppsRepository(
                 .filter { it.activityInfo.packageName != context.packageName }
                 .map {
                     val ai = it.activityInfo
-                    val glyph = themedGlyph(pm, ai.packageName, iconPx)
+                    val component = ComponentName(ai.packageName, ai.name)
+                    val key = component.flattenToString()
+                    val label = labels.getString(key, null)
+                    val icon =
+                        iconFile(key)
+                            .takeIf { f -> f.exists() }
+                            ?.let { f -> runCatching { BitmapFactory.decodeFile(f.path) }.getOrNull() }
+                            ?.let { b -> Bitmap.createScaledBitmap(b, iconPx, iconPx, true).asImageBitmap() }
+                    // A chosen icon is drawn as is, also with the themed icons.
+                    val glyph = if (icon == null) themedGlyph(pm, ai.packageName, iconPx) else null
                     LauncherApp(
-                        ComponentName(ai.packageName, ai.name),
-                        it.loadLabel(pm).toString(),
-                        it.loadIcon(pm).toBitmap(iconPx, iconPx).asImageBitmap(),
+                        component,
+                        label ?: it.loadLabel(pm).toString(),
+                        icon ?: it.loadIcon(pm).toBitmap(iconPx, iconPx).asImageBitmap(),
                         glyph?.first,
                         glyph?.second ?: 0.55f,
+                        customized = label != null || icon != null,
                     )
                 }.sortedWith { a, b -> collator.compare(a.label, b.label) }
     }
@@ -98,8 +114,58 @@ class AppsRepository(
 
     fun launch(app: LauncherApp) = launch(context, app.component)
 
+    private val labels = context.getSharedPreferences("app_labels", Context.MODE_PRIVATE)
+
+    /** Icon chosen for an app (any image: PNG with transparency, JPEG…), stored as a 192 px PNG. False if unreadable. */
+    fun setIcon(
+        key: String,
+        uri: Uri,
+    ): Boolean {
+        val bitmap =
+            runCatching {
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+                var sample = 1
+                while (bounds.outWidth / (sample * 2) >= CUSTOM_ICON_PX && bounds.outHeight / (sample * 2) >= CUSTOM_ICON_PX) sample *= 2
+                context.contentResolver.openInputStream(uri)?.use {
+                    BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
+                }
+            }.getOrNull() ?: return false
+        // Centred square, so that a wide logo is not stretched.
+        val side = minOf(bitmap.width, bitmap.height)
+        val square = Bitmap.createBitmap(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side)
+        val scaled = Bitmap.createScaledBitmap(square, CUSTOM_ICON_PX, CUSTOM_ICON_PX, true)
+        val ok =
+            runCatching {
+                val f = iconFile(key)
+                f.parentFile?.mkdirs()
+                f.outputStream().use { scaled.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            }.isSuccess
+        refresh()
+        return ok
+    }
+
+    /** Name shown for an app; blank = its own name. */
+    fun rename(
+        key: String,
+        label: String,
+    ) {
+        labels.edit().apply { if (label.isBlank()) remove(key) else putString(key, label.trim()) }.apply()
+        refresh()
+    }
+
+    /** Back to the app's own icon and name. */
+    fun resetCustom(key: String) {
+        iconFile(key).delete()
+        labels.edit().remove(key).apply()
+        refresh()
+    }
+
+    private fun iconFile(key: String) = File(File(context.filesDir, "app_icons"), key.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".png")
+
     companion object {
         private const val ICON_DP = 64
+        private const val CUSTOM_ICON_PX = 192
         const val THEMED_ICON = "org.librehu.themed_icon"
 
         fun launch(
