@@ -172,6 +172,13 @@ fun LookSettings(
         }
     }
 
+    SettingSection(stringResource(R.string.home_pages))
+    SettingChoices(
+        (1..org.librehu.launcher.data.ThemeStore.MAX_HOME_PAGES).map { it to "$it" },
+        s.homePages,
+    ) { n -> actions.setTheme { it.copy(homePages = n) } }
+    SettingHint(stringResource(R.string.home_pages_hint))
+
     SettingSection(stringResource(R.string.rail_position))
     SettingChoices(
         listOf(RailPosition.LEFT to stringResource(R.string.rail_left), RailPosition.BOTTOM to stringResource(R.string.rail_bottom)),
@@ -262,6 +269,7 @@ fun LookSettings(
         SettingChoice(stringResource(R.string.wallpaper_aurora), w == WallpaperKind.AURORA) { actions.setWallpaper(WallpaperKind.AURORA) }
         SettingChoice(stringResource(R.string.wallpaper_stars), w == WallpaperKind.STARS) { actions.setWallpaper(WallpaperKind.STARS) }
         SettingChoice(stringResource(R.string.wallpaper_waves), w == WallpaperKind.WAVES) { actions.setWallpaper(WallpaperKind.WAVES) }
+        SettingChoice(stringResource(R.string.wallpaper_online), w == WallpaperKind.ONLINE) { actions.setWallpaper(WallpaperKind.ONLINE) }
         if (full) {
             SettingChoice(
                 stringResource(R.string.wallpaper_pick),
@@ -276,6 +284,40 @@ fun LookSettings(
         }
     }
     if (w == WallpaperKind.SYSTEM) SettingChoice(stringResource(R.string.wallpaper_live_choose), false, actions.chooseLiveWallpaper)
+    if (w == WallpaperKind.ONLINE) {
+        SettingHint(stringResource(R.string.wallpaper_online_source))
+        SettingChoices(
+            listOf(
+                org.librehu.launcher.data.OnlineSource.BING to stringResource(R.string.wallpaper_online_bing),
+                org.librehu.launcher.data.OnlineSource.WIKIMEDIA to stringResource(R.string.wallpaper_online_wikimedia),
+                org.librehu.launcher.data.OnlineSource.PICSUM to stringResource(R.string.wallpaper_online_picsum),
+            ),
+            s.onlineSource,
+        ) { v -> actions.setTheme { it.copy(onlineSource = v) } }
+        if (s.onlineSource == org.librehu.launcher.data.OnlineSource.BING) {
+            SettingHint(stringResource(R.string.wallpaper_online_market))
+            SettingChoices(
+                org.librehu.launcher.data.OnlineWallpaper.BING_MARKETS.map {
+                    it to if (it == "auto") stringResource(R.string.wallpaper_online_market_auto) else it
+                },
+                s.bingMarket,
+            ) { v -> actions.setTheme { it.copy(bingMarket = v) } }
+        }
+        SettingHint(stringResource(R.string.wallpaper_online_refresh))
+        SettingChoices(
+            listOf(
+                org.librehu.launcher.data.OnlineRefresh.DAILY to stringResource(R.string.wallpaper_online_daily),
+                org.librehu.launcher.data.OnlineRefresh.SIX_HOURS to stringResource(R.string.wallpaper_online_6h),
+                org.librehu.launcher.data.OnlineRefresh.EACH_START to stringResource(R.string.wallpaper_online_start),
+            ),
+            s.onlineRefresh,
+        ) { v -> actions.setTheme { it.copy(onlineRefresh = v) } }
+        SettingSwitch(stringResource(R.string.wallpaper_online_caption), null, s.onlineCaption) { on ->
+            actions.setTheme { it.copy(onlineCaption = on) }
+        }
+        SettingChoice(stringResource(R.string.wallpaper_online_now), false, actions.renewOnlineWallpaper)
+        SettingHint(stringResource(R.string.wallpaper_online_hint))
+    }
     if (w == WallpaperKind.SPECTRUM) {
         SettingHint(stringResource(R.string.spectrum_colors))
         SettingChoices(

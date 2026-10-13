@@ -86,6 +86,26 @@ class LauncherPrefs(
     ) {
         MAIN("slot_main"),
         SIDE("slot_side"),
+
+        // Home pages 2 to 4: four widgets each (see Launcher's HomePages).
+        P2_1("slot_p2_1"),
+        P2_2("slot_p2_2"),
+        P2_3("slot_p2_3"),
+        P2_4("slot_p2_4"),
+        P3_1("slot_p3_1"),
+        P3_2("slot_p3_2"),
+        P3_3("slot_p3_3"),
+        P3_4("slot_p3_4"),
+        P4_1("slot_p4_1"),
+        P4_2("slot_p4_2"),
+        P4_3("slot_p4_3"),
+        P4_4("slot_p4_4"),
+        ;
+
+        companion object {
+            /** The four slots of home page [page] (2 to 4). */
+            fun ofPage(page: Int): List<Slot> = (1..4).map { valueOf("P${page}_$it") }
+        }
     }
 
     companion object {

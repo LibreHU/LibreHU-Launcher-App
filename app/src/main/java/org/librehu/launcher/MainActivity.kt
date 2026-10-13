@@ -28,6 +28,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -168,6 +169,20 @@ class MainActivity : ComponentActivity() {
         AndroidAutoLink.start(this) // Open Headunit's session and next maneuver for the dashboard
         Thread({ VehicleLink.start(this) }, "vehicle").start() // the car's description from LibreHU-service
         apps.start()
+        // Internet wallpaper: renewed when due (start, back to the front, then hourly while the launcher lives).
+        lifecycleScope.launch {
+            while (true) {
+                org.librehu.launcher.data.OnlineWallpaper.refreshIfDue(this@MainActivity, theme)
+                kotlinx.coroutines.delay(3600_000L)
+            }
+        }
+        lifecycleScope.launch {
+            theme.settings
+                .map { it.wallpaper == WallpaperKind.ONLINE to it.onlineSource.name + it.bingMarket }
+                .distinctUntilChanged()
+                .drop(1) // a change of source or market, not the start (the loop above handles it)
+                .collect { (online, _) -> if (online) org.librehu.launcher.data.OnlineWallpaper.refreshIfDue(this@MainActivity, theme, force = true) }
+        }
         lifecycleScope.launch {
             theme.settings
                 .map { it.wallpaper == WallpaperKind.SYSTEM }
@@ -235,6 +250,16 @@ class MainActivity : ComponentActivity() {
                 pickImage = { pickImage.launch("image/*") },
                 pickVideo = { pickVideo.launch("video/*") },
                 setWallpaper = theme::setWallpaperKind,
+                renewOnlineWallpaper = {
+                    lifecycleScope.launch {
+                        val ok = org.librehu.launcher.data.OnlineWallpaper.refreshIfDue(this@MainActivity, theme, force = true)
+                        if (!ok) {
+                            android.widget.Toast
+                                .makeText(this@MainActivity, R.string.wallpaper_online_failed, android.widget.Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                },
                 chooseLiveWallpaper = ::chooseLiveWallpaper,
                 resetAll = {
                     prefs.reset().forEach(widgets::delete)
@@ -312,6 +337,7 @@ class MainActivity : ComponentActivity() {
         // Home pressed while locked: the lock screen comes back over the launcher.
         if (LockStore.get(this).locked) LockActivity.show(this)
         scheduleIdle()
+        if (::theme.isInitialized) lifecycleScope.launch { org.librehu.launcher.data.OnlineWallpaper.refreshIfDue(this@MainActivity, theme) }
     }
 
     private fun power(choice: PowerChoice) {

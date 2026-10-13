@@ -14,6 +14,8 @@
     <!-- The car's name and description from LibreHU-service (signature permission it declares). -->
     <uses-permission android:name="org.librehu.permission.VEHICLE" />
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <!-- Internet wallpaper (Bing, Wikimedia Commons, Lorem Picsum). -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Privileged install: real force stop, system-wide light / dark mode. -->
     <uses-permission
         android:name="android.permission.FORCE_STOP_PACKAGES"

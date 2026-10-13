@@ -363,4 +363,21 @@
     <string name="aa_card_fullscreen">Android Auto full screen</string>
     <string name="aa_live_video">Android Auto picture on the dashboard (experimental)</string>
     <string name="aa_live_video_hint">During a projection, the Android Auto card shows its live picture, which you can touch, instead of the next maneuver (Open Headunit LibreHU installed before the launcher)</string>
+    <string name="wallpaper_online">Internet (picture of the day)</string>
+    <string name="wallpaper_online_source">Source</string>
+    <string name="wallpaper_online_bing">Bing of the day</string>
+    <string name="wallpaper_online_wikimedia">Wikimedia Commons of the day</string>
+    <string name="wallpaper_online_picsum">Random photo</string>
+    <string name="wallpaper_online_market">Bing country and language</string>
+    <string name="wallpaper_online_market_auto">Device language</string>
+    <string name="wallpaper_online_refresh">New picture</string>
+    <string name="wallpaper_online_daily">Every day</string>
+    <string name="wallpaper_online_6h">Every 6 hours</string>
+    <string name="wallpaper_online_start">At each start</string>
+    <string name="wallpaper_online_caption">Show the title and credit</string>
+    <string name="wallpaper_online_now">New picture now</string>
+    <string name="wallpaper_online_hint">Downloaded when there is network (about 0.5 MB per picture); the last one stays without network. Pictures belong to their authors (credit shown in the corner).</string>
+    <string name="wallpaper_online_failed">No picture (no network?)</string>
+    <string name="home_pages">Home pages</string>
+    <string name="home_pages_hint">Swipe sideways: the dashboard, then pages of four widgets each.</string>
 </resources>

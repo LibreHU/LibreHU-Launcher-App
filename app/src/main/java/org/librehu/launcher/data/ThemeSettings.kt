@@ -39,10 +39,28 @@ enum class WallpaperKind {
 
     /** Spectrum waves (AOSP "Music visualization" wallpaper), optionally following the music. */
     SPECTRUM,
+
+    /** A picture from the internet, renewed by itself ([OnlineSource], [OnlineRefresh]). */
+    ONLINE,
     ;
 
     val builtIn get() = this == AURORA || this == STARS || this == WAVES || this == SPECTRUM
 }
+
+/** Where the internet wallpaper comes from. */
+enum class OnlineSource {
+    /** Bing's picture of the day, for a market (country and language). */
+    BING,
+
+    /** Wikimedia Commons' picture of the day. */
+    WIKIMEDIA,
+
+    /** A random photo (Lorem Picsum, free photos from Unsplash). */
+    PICSUM,
+}
+
+/** When the internet wallpaper is renewed (when there is network). */
+enum class OnlineRefresh { DAILY, SIX_HOURS, EACH_START }
 
 /** Order of the app drawer. */
 enum class DrawerSort { NAME, NAME_DESC, PINNED_FIRST }
@@ -105,6 +123,14 @@ data class ThemeSettings(
     val themedIcons: Boolean = true,
     /** Android Auto's picture in the dashboard card while its screen is not shown (Open Headunit LibreHU). */
     val aaLiveVideo: Boolean = false,
+    val onlineSource: OnlineSource = OnlineSource.BING,
+    /** Bing market, e.g. fr-FR; "auto" = the language of the device. */
+    val bingMarket: String = "auto",
+    val onlineRefresh: OnlineRefresh = OnlineRefresh.DAILY,
+    /** Title and credit of the internet picture, small, in a corner. */
+    val onlineCaption: Boolean = true,
+    /** Home pages swiped sideways: the dashboard, then pages of four widgets (1 to 4). */
+    val homePages: Int = 1,
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -152,6 +178,11 @@ class ThemeStore(
             .putStringSet("hidden_apps", s.hiddenApps)
             .putBoolean("themed_icons", s.themedIcons)
             .putBoolean("aa_live_video", s.aaLiveVideo)
+            .putString("online_source", s.onlineSource.name)
+            .putString("bing_market", s.bingMarket)
+            .putString("online_refresh", s.onlineRefresh.name)
+            .putBoolean("online_caption", s.onlineCaption)
+            .putInt("home_pages", s.homePages)
             .apply()
         _settings.value = s
     }
@@ -222,9 +253,46 @@ class ThemeStore(
         _settings.value = ThemeSettings()
     }
 
+    private val _caption = MutableStateFlow(prefs.getString("online_caption_text", "").orEmpty())
+
+    /** Title and credit of the internet picture shown now. */
+    val caption: StateFlow<String> = _caption.asStateFlow()
+
+    /** When the internet picture was last renewed (epoch ms), 0 = never. */
+    val onlineFetchedAt: Long get() = prefs.getLong("online_fetched_at", 0)
+
+    /**
+     * The downloaded internet picture [file] becomes the wallpaper (scaled down to the screen like a picked one), with
+     * its [caption]. Blocking, call it off the main thread.
+     */
+    fun setOnline(
+        file: File,
+        caption: String,
+    ): Boolean {
+        val dm = context.resources.displayMetrics
+        val target = maxOf(dm.widthPixels, dm.heightPixels)
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.path, bounds)
+        if (bounds.outWidth <= 0) return false
+        var sample = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= target) sample *= 2
+        val bmp = BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = sample }) ?: return false
+        val out = File(context.cacheDir, "wallpaper_jpg")
+        out.outputStream().use { bmp.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+        replace(out, wallpaperFile)
+        _wallpaper.value = bmp
+        _caption.value = caption
+        prefs
+            .edit()
+            .putString("online_caption_text", caption)
+            .putLong("online_fetched_at", System.currentTimeMillis())
+            .apply()
+        return use(WallpaperKind.ONLINE)
+    }
+
     private fun use(kind: WallpaperKind): Boolean {
         // Only keep the file of the wallpaper in use.
-        if (kind != WallpaperKind.IMAGE) {
+        if (kind != WallpaperKind.IMAGE && kind != WallpaperKind.ONLINE) {
             wallpaperFile.delete()
             _wallpaper.value = null
         }
@@ -328,6 +396,11 @@ class ThemeStore(
             hiddenApps = prefs.getStringSet("hidden_apps", emptySet()).orEmpty().toSet(),
             themedIcons = prefs.getBoolean("themed_icons", true),
             aaLiveVideo = prefs.getBoolean("aa_live_video", false),
+            onlineSource = runCatching { OnlineSource.valueOf(prefs.getString("online_source", null)!!) }.getOrDefault(OnlineSource.BING),
+            bingMarket = prefs.getString("bing_market", "auto") ?: "auto",
+            onlineRefresh = runCatching { OnlineRefresh.valueOf(prefs.getString("online_refresh", null)!!) }.getOrDefault(OnlineRefresh.DAILY),
+            onlineCaption = prefs.getBoolean("online_caption", true),
+            homePages = prefs.getInt("home_pages", 1).coerceIn(1, MAX_HOME_PAGES),
         )
     }
 
@@ -336,6 +409,7 @@ class ThemeStore(
     companion object {
         private const val MAX_ANIMATED_BYTES = 64L * 1024 * 1024
         private const val MAX_VIDEO_BYTES = 512L * 1024 * 1024
+        const val MAX_HOME_PAGES = 4
 
         /** Sent to the other LibreHU apps when the effective theme changes (extras: dark, accent). */
         const val ACTION_THEME_CHANGED = "org.librehu.action.THEME_CHANGED"
