@@ -37,6 +37,7 @@ import org.librehu.launcher.data.LauncherPrefs
 import org.librehu.launcher.data.MediaRepository
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeStore
+import org.librehu.launcher.data.VehicleLink
 import org.librehu.launcher.data.WallpaperKind
 import org.librehu.launcher.data.WidgetHost
 import org.librehu.launcher.headunit.HeadUnitBridge
@@ -151,6 +152,7 @@ class MainActivity : ComponentActivity() {
         TpmsManager.get(this).start()
         SpeedWidget.ensureRunning(this)
         AndroidAutoLink.start(this) // Open Headunit's session and next maneuver for the dashboard
+        Thread({ VehicleLink.start(this) }, "vehicle").start() // the car's description from LibreHU-service
         apps.start()
         lifecycleScope.launch {
             theme.settings

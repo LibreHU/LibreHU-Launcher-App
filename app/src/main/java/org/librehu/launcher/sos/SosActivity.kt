@@ -56,6 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import org.librehu.launcher.R
 import org.librehu.launcher.ui.CarColors
@@ -106,6 +107,10 @@ class SosActivity : ComponentActivity() {
         setTurnScreenOn(true)
         val s = SosStore.get(this).settings.value
         test = intent?.getBooleanExtra(EXTRA_TEST, false) == true
+        Thread({
+            org.librehu.launcher.data.VehicleLink
+                .refresh(this)
+        }, "vehicle").start()
         if (savedInstanceState == null && !test) countdown.intValue = s.countdown
         lm = getSystemService(LocationManager::class.java)
         val missing =
@@ -223,7 +228,10 @@ class SosActivity : ComponentActivity() {
                         )
                     }
                 }
-                val info = listOf(s.owner, s.medical, s.vehicle).filter { it.isNotBlank() }
+                // The car as LibreHU-service describes it (make, model, colour, plate), then what was typed here.
+                val car by org.librehu.launcher.data.VehicleLink.info
+                    .collectAsStateWithLifecycle()
+                val info = listOf(s.owner, s.medical, car?.description().orEmpty(), s.vehicle).filter { it.isNotBlank() }.distinct()
                 if (info.isNotEmpty()) {
                     Card(Icons.Default.Person, stringResource(R.string.sos_info)) {
                         for (line in info) Text(line, color = CarColors.Text, fontSize = 20.sp)

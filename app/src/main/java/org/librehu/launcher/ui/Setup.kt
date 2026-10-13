@@ -1,6 +1,7 @@
 package org.librehu.launcher.ui
 
 import android.Manifest
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,7 @@ private enum class SetupStep(
     val title: Int,
 ) {
     WELCOME(R.string.setup_welcome),
+    VEHICLE(R.string.vehicle_title),
     LOOK(R.string.settings_look),
     ACCESS(R.string.setup_access),
     STANDBY(R.string.standby_title),
@@ -45,8 +48,8 @@ private enum class SetupStep(
 }
 
 /**
- * First start assistant (and Settings → General): appearance and rail position, Android permissions, standby clock,
- * SOS. Every step can be skipped; everything stays in the settings.
+ * First start assistant (and Settings → General): the car (name and description, kept by LibreHU-service for every
+ * LibreHU app), appearance and rail position, Android permissions, Bluetooth pairing, updates, standby clock, SOS. Every step can be skipped; everything stays in the settings.
  */
 @Composable
 fun SetupScreen(
@@ -94,6 +97,10 @@ fun SetupScreen(
                         SettingHint(stringResource(R.string.setup_welcome_text))
                     }
 
+                    SetupStep.VEHICLE -> {
+                        VehicleSettingsPage()
+                    }
+
                     SetupStep.LOOK -> {
                         LookSettings(theme, controller, actions, full = false)
                     }
@@ -106,6 +113,19 @@ fun SetupScreen(
                             actions.openHomeSettings,
                         )
                         SetupItem(stringResource(R.string.setup_media), stringResource(R.string.media_access), actions.grantMediaAccess)
+                        val context = LocalContext.current
+                        SetupItem(stringResource(R.string.setup_bluetooth), stringResource(R.string.setup_bluetooth_hint)) {
+                            runCatching {
+                                context.startActivity(
+                                    Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                )
+                            }
+                        }
+                        context.packageManager.getLaunchIntentForPackage("org.librehu.ota")?.let { ota ->
+                            SetupItem(stringResource(R.string.setup_updates), stringResource(R.string.setup_updates_hint)) {
+                                runCatching { context.startActivity(ota.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                            }
+                        }
                         SetupItem(stringResource(R.string.setup_permissions), stringResource(R.string.setup_permissions_hint)) {
                             actions.requestPermissions(
                                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE),
