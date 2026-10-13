@@ -1,6 +1,7 @@
 package org.librehu.launcher.ui
 
 import android.Manifest
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,9 +16,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.librehu.launcher.R
 import org.librehu.launcher.data.DrawerSort
+import org.librehu.launcher.data.LauncherApp
 import org.librehu.launcher.data.PhoneLabel
 import org.librehu.launcher.data.RailPosition
 import org.librehu.launcher.data.SpectrumPalette
@@ -84,6 +89,7 @@ fun SettingsScreen(
     theme: ThemeStore,
     controller: ThemeController,
     actions: LauncherActions,
+    apps: List<LauncherApp> = emptyList(),
 ) {
     var tab by rememberSaveable { mutableStateOf(SettingsTab.LOOK) }
     Column(
@@ -99,7 +105,7 @@ fun SettingsScreen(
         Text(stringResource(R.string.settings), color = CarColors.Text, fontSize = 26.sp, fontWeight = FontWeight.Medium)
         SettingChoices(SettingsTab.entries.map { it to stringResource(it.label) }, tab) { tab = it }
         when (tab) {
-            SettingsTab.LOOK -> LookSettings(theme, controller, actions)
+            SettingsTab.LOOK -> LookSettings(theme, controller, actions, apps = apps)
             SettingsTab.STANDBY -> StandbySettingsPage(actions)
             SettingsTab.SOS -> SosSettingsPage(actions)
             SettingsTab.LOCK -> LockSettingsPage(actions)
@@ -119,8 +125,10 @@ fun LookSettings(
     controller: ThemeController,
     actions: LauncherActions,
     full: Boolean = true,
+    apps: List<LauncherApp> = emptyList(),
 ) {
     val s by theme.settings.collectAsStateWithLifecycle()
+    var choosingHidden by remember { mutableStateOf(false) }
     val dark by controller.dark.collectAsStateWithLifecycle()
     val systemAllowed by controller.systemWideAllowed.collectAsStateWithLifecycle()
 
@@ -230,12 +238,12 @@ fun LookSettings(
         SettingSwitch(stringResource(R.string.drawer_search_switch), null, s.drawerSearch) { on ->
             actions.setTheme { it.copy(drawerSearch = on) }
         }
-        if (s.hiddenApps.isNotEmpty()) {
-            SettingSwitch(
-                stringResource(R.string.drawer_hidden_count, s.hiddenApps.size),
-                stringResource(R.string.drawer_hidden_hint),
-                true,
-            ) { on -> if (!on) actions.setTheme { it.copy(hiddenApps = emptySet()) } }
+        SettingChoice(stringResource(R.string.drawer_hidden_choose, s.hiddenApps.size), false) { choosingHidden = true }
+        SettingHint(stringResource(R.string.drawer_hidden_hint))
+        if (choosingHidden) {
+            HiddenAppsDialog(apps, s.hiddenApps, { key, hide ->
+                actions.setTheme { it.copy(hiddenApps = if (hide) it.hiddenApps + key else it.hiddenApps - key) }
+            }) { choosingHidden = false }
         }
     }
 
@@ -569,6 +577,45 @@ private fun GeneralSettings(actions: LauncherActions) {
 }
 
 // --- Building blocks (also used by the first start assistant) ----------------------------------------------------
+
+/** Every app with a switch: off = hidden from the drawer (and the search). */
+@Composable
+private fun HiddenAppsDialog(
+    apps: List<LauncherApp>,
+    hidden: Set<String>,
+    onChange: (String, Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sorted = remember(apps) { apps.sortedBy { it.label.lowercase() } }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = CarColors.Surface,
+        title = { Text(stringResource(R.string.drawer_hidden_title), color = CarColors.Text) },
+        text = {
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 460.dp)) {
+                items(sorted, key = { it.key }) { app ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onChange(app.key, app.key !in hidden) }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Image(app.icon, null, Modifier.size(40.dp))
+                        Spacer(Modifier.width(14.dp))
+                        Text(app.label, color = CarColors.Text, fontSize = 18.sp, modifier = Modifier.weight(1f))
+                        Switch(
+                            checked = app.key !in hidden,
+                            onCheckedChange = { shown -> onChange(app.key, !shown) },
+                            colors = SwitchDefaults.colors(checkedTrackColor = CarColors.Accent, checkedThumbColor = CarColors.OnAccent),
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.drawer_hiding_done), color = CarColors.Accent) } },
+    )
+}
 
 @Composable
 fun SettingSection(title: String) {

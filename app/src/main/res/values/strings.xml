@@ -251,8 +251,12 @@
     <string name="drawer_hide">Hide from the drawer</string>
     <string name="drawer_unhide">Show in the drawer</string>
     <string name="drawer_show_hidden">Hidden (%1$d)</string>
-    <string name="drawer_hidden_count">%1$d hidden apps</string>
-    <string name="drawer_hidden_hint">Long press on an app to hide or show it; turn off to show them all again</string>
+    <string name="drawer_hidden_choose">Hidden apps (%1$d)…</string>
+    <string name="drawer_hidden_title">Apps shown in the drawer</string>
+    <string name="drawer_hiding">Hide apps</string>
+    <string name="drawer_hiding_done">Done</string>
+    <string name="drawer_hiding_hint">Touch an app to hide it from the drawer or show it again</string>
+    <string name="drawer_hidden_hint">Also from the drawer: \"Hide apps\" button, or a long press on an app. Hidden apps stay reachable with \"Hidden\" in the drawer.</string>
     <string name="cc_brightness_grant">Allow the launcher to change the brightness</string>
     <string name="cc_volume">Volume</string>
     <string name="cc_wifi">Wi-Fi</string>
