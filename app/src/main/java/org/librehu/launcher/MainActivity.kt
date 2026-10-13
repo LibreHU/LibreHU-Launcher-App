@@ -178,7 +178,7 @@ class MainActivity : ComponentActivity() {
         }
         lifecycleScope.launch {
             theme.settings
-                .map { it.wallpaper == WallpaperKind.ONLINE to it.onlineSource.name + it.bingMarket }
+                .map { (it.wallpaper == WallpaperKind.ONLINE) to (it.onlineSource.name + it.bingMarket) }
                 .distinctUntilChanged()
                 .drop(1) // a change of source or market, not the start (the loop above handles it)
                 .collect { (online, _) -> if (online) org.librehu.launcher.data.OnlineWallpaper.refreshIfDue(this@MainActivity, theme, force = true) }
