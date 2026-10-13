@@ -159,6 +159,8 @@ class LauncherActions(
     val pickImage: () -> Unit,
     val pickVideo: () -> Unit,
     val setWallpaper: (WallpaperKind) -> Unit,
+    /** Internet wallpaper: a new picture now. */
+    val renewOnlineWallpaper: () -> Unit = {},
     val chooseLiveWallpaper: () -> Unit,
     val resetAll: () -> Unit,
     /** Standby clock now. */
@@ -204,7 +206,7 @@ fun LauncherScreen(
     val pinned = pins.mapNotNull { byKey[it] }
     val content: @Composable () -> Unit = {
         when (screen) {
-            Screen.HOME -> Dashboard(prefs, media, widgets, actions, sos, look.aaLiveVideo)
+            Screen.HOME -> HomePages(look.homePages) { page -> if (page == 0) Dashboard(prefs, media, widgets, actions, sos, look.aaLiveVideo) else WidgetPage(page + 1, prefs, widgets, actions) }
             Screen.APPS -> AppGrid(apps, pins, look, actions) { menuFor = it }
             Screen.SETTINGS -> SettingsScreen(theme, themeController, actions, apps)
             Screen.TPMS -> TpmsScreen()
@@ -520,6 +522,70 @@ private fun AppIconImage(
         }
     } else {
         Image(app.icon, contentDescription = app.label, modifier = modifier)
+    }
+}
+
+// --- Home pages ----------------------------------------------------------------------------------------------------
+
+/** The dashboard, then [count] - 1 pages of widgets, swiped sideways, with dots under them when there are several. */
+@Composable
+private fun HomePages(
+    count: Int,
+    content: @Composable (page: Int) -> Unit,
+) {
+    if (count <= 1) {
+        content(0)
+        return
+    }
+    val pager = androidx.compose.foundation.pager.rememberPagerState { count }
+    Column(Modifier.fillMaxSize()) {
+        androidx.compose.foundation.pager.HorizontalPager(
+            state = pager,
+            pageSpacing = 16.dp,
+            beyondViewportPageCount = 1,
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+        ) { page -> content(page) }
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        ) {
+            repeat(count) { i ->
+                Box(
+                    Modifier
+                        .padding(horizontal = 5.dp)
+                        .size(if (i == pager.currentPage) 10.dp else 8.dp)
+                        .clip(CircleShape)
+                        .background(if (i == pager.currentPage) CarColors.Accent else CarColors.TextDim.copy(alpha = 0.5f)),
+                )
+            }
+        }
+    }
+}
+
+/** Home page [page] (2 to 4): four widget slots, two by two. */
+@Composable
+private fun WidgetPage(
+    page: Int,
+    prefs: LauncherPrefs,
+    widgets: WidgetHost,
+    actions: LauncherActions,
+) {
+    val slots by prefs.slots.collectAsStateWithLifecycle()
+    val pageSlots = LauncherPrefs.Slot.ofPage(page)
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
+        for (row in pageSlots.chunked(2)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f).fillMaxWidth()) {
+                for (slot in row) {
+                    WidgetSlot(
+                        slot = slot,
+                        appWidgetId = slots[slot] ?: LauncherPrefs.NO_WIDGET,
+                        widgets = widgets,
+                        actions = actions,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    ) { pick -> EmptySlot(Icons.Default.Widgets, stringResource(R.string.add_widget)) { pick() } }
+                }
+            }
+        }
     }
 }
 
