@@ -103,6 +103,8 @@ data class ThemeSettings(
     val hiddenApps: Set<String> = emptySet(),
     /** LibreHU apps' icons drawn in the theme colours (their single-colour icon on the accent colour). */
     val themedIcons: Boolean = true,
+    /** Android Auto's picture in the dashboard card while its screen is not shown (Open Headunit LibreHU). */
+    val aaLiveVideo: Boolean = false,
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -149,6 +151,7 @@ class ThemeStore(
             .putBoolean("drawer_search", s.drawerSearch)
             .putStringSet("hidden_apps", s.hiddenApps)
             .putBoolean("themed_icons", s.themedIcons)
+            .putBoolean("aa_live_video", s.aaLiveVideo)
             .apply()
         _settings.value = s
     }
@@ -324,6 +327,7 @@ class ThemeStore(
             drawerSearch = prefs.getBoolean("drawer_search", true),
             hiddenApps = prefs.getStringSet("hidden_apps", emptySet()).orEmpty().toSet(),
             themedIcons = prefs.getBoolean("themed_icons", true),
+            aaLiveVideo = prefs.getBoolean("aa_live_video", false),
         )
     }
 

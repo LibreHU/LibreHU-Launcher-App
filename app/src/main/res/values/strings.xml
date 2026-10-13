@@ -360,4 +360,7 @@
     <string name="setup_bluetooth_hint">Bluetooth settings: calls, music, and the handshake of wireless Android Auto / CarPlay.</string>
     <string name="setup_updates">Updates</string>
     <string name="setup_updates_hint">LibreHU Apps: install and update the LibreHU apps (Android Auto included).</string>
+    <string name="aa_card_fullscreen">Android Auto full screen</string>
+    <string name="aa_live_video">Android Auto picture on the dashboard (experimental)</string>
+    <string name="aa_live_video_hint">During a projection, the Android Auto card shows its live picture, which you can touch, instead of the next maneuver (Open Headunit LibreHU installed before the launcher)</string>
 </resources>
