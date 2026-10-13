@@ -213,6 +213,9 @@ fun LookSettings(
         SettingSwitch(stringResource(R.string.themed_icons), stringResource(R.string.themed_icons_hint), s.themedIcons) { on ->
             actions.setTheme { it.copy(themedIcons = on) }
         }
+        SettingSwitch(stringResource(R.string.aa_live_video), stringResource(R.string.aa_live_video_hint), s.aaLiveVideo) { on ->
+            actions.setTheme { it.copy(aaLiveVideo = on) }
+        }
 
         SettingSection(stringResource(R.string.drawer_title))
         SettingChoices(
