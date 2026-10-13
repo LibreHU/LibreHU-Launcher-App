@@ -10,8 +10,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   lecture » (n'importe quelle app avec une `MediaSession` : radio, musique, projection…) avec précédent / lecture /
   suivant, second emplacement de widget avec ajout du widget de [LibreHU FM](https://github.com/LibreHU/LibreHU-FM-App)
   en un geste. Le launcher signale au service LibreHU quand le tableau de bord est affiché
-  (`org.librehu.action.HOME_VISIBLE`) : le widget « Vue arrière » de LibreHU-service n'y montre la caméra en direct
-  que pendant ce temps.
+  (`org.librehu.action.HOME_VISIBLE`). Le widget « Vue arrière » de LibreHU-service est affiché **en vrai flux** :
+  le launcher pose sa propre vue vidéo sur le widget et le service y fait dessiner la caméra directement (pleine
+  cadence, `ui/RearLive.kt`) ; un toucher ouvre ou ferme la vue arrière plein écran.
 - **Toutes les applis** : grille ; appui long pour épingler, retirer ou réordonner dans le rail.
 - **Pneus (TPMS)** : récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte
   sur le tableau de bord, écran détaillé (pression, température, batterie, ID), appairage, permutation, seuils et
