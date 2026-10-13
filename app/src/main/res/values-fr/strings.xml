@@ -251,8 +251,12 @@
     <string name="drawer_hide">Masquer du tiroir</string>
     <string name="drawer_unhide">Afficher dans le tiroir</string>
     <string name="drawer_show_hidden">Masquées (%1$d)</string>
-    <string name="drawer_hidden_count">%1$d applis masquées</string>
-    <string name="drawer_hidden_hint">Appui long sur une appli pour la masquer ou l\'afficher ; désactiver pour toutes les réafficher</string>
+    <string name="drawer_hidden_choose">Applis masquées (%1$d)…</string>
+    <string name="drawer_hidden_title">Applis affichées dans le tiroir</string>
+    <string name="drawer_hiding">Masquer des applis</string>
+    <string name="drawer_hiding_done">Terminé</string>
+    <string name="drawer_hiding_hint">Touchez une appli pour la masquer du tiroir ou la réafficher</string>
+    <string name="drawer_hidden_hint">Aussi depuis le tiroir : bouton « Masquer des applis », ou appui long sur une appli. Les applis masquées restent accessibles avec « Masquées » dans le tiroir.</string>
     <string name="cc_brightness_grant">Autoriser le launcher à régler la luminosité</string>
     <string name="cc_volume">Volume</string>
     <string name="cc_wifi">Wi-Fi</string>

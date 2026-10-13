@@ -189,7 +189,7 @@ fun LauncherScreen(
         when (screen) {
             Screen.HOME -> Dashboard(prefs, media, widgets, actions, sos)
             Screen.APPS -> AppGrid(apps, pins, look, actions) { menuFor = it }
-            Screen.SETTINGS -> SettingsScreen(theme, themeController, actions)
+            Screen.SETTINGS -> SettingsScreen(theme, themeController, actions, apps)
             Screen.TPMS -> TpmsScreen()
             Screen.SETUP -> Unit
         }
@@ -930,12 +930,14 @@ private fun AppGrid(
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var showHidden by rememberSaveable { mutableStateOf(false) }
+    // Hiding mode: every app shown, a touch hides it from the drawer or shows it again.
+    var hiding by rememberSaveable { mutableStateOf(false) }
     val shown =
-        remember(apps, pins, look.drawerSort, look.hiddenApps, query, showHidden) {
+        remember(apps, pins, look.drawerSort, look.hiddenApps, query, showHidden, hiding) {
             val q = query.trim()
             val visible =
                 apps.filter {
-                    (showHidden || it.key !in look.hiddenApps) && (q.isEmpty() || it.label.contains(q, ignoreCase = true))
+                    (showHidden || hiding || it.key !in look.hiddenApps) && (q.isEmpty() || it.label.contains(q, ignoreCase = true))
                 }
             when (look.drawerSort) {
                 DrawerSort.NAME -> visible.sortedBy { it.label.lowercase() }
@@ -955,13 +957,21 @@ private fun AppGrid(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.all_apps), color = CarColors.Text, fontSize = 24.sp, fontWeight = FontWeight.Medium)
-                Text(stringResource(R.string.pin_hint), color = CarColors.TextDim, fontSize = 14.sp)
+                Text(
+                    stringResource(if (hiding) R.string.drawer_hiding_hint else R.string.pin_hint),
+                    color = if (hiding) CarColors.Accent else CarColors.TextDim,
+                    fontSize = 14.sp,
+                )
             }
-            if (look.hiddenApps.isNotEmpty()) {
+            if (look.hiddenApps.isNotEmpty() && !hiding) {
                 SettingChoice(
                     stringResource(R.string.drawer_show_hidden, look.hiddenApps.size),
                     showHidden,
                 ) { showHidden = !showHidden }
+                Spacer(Modifier.width(8.dp))
+            }
+            SettingChoice(stringResource(if (hiding) R.string.drawer_hiding_done else R.string.drawer_hiding), hiding) {
+                hiding = !hiding
             }
         }
         if (look.drawerSearch) {
@@ -995,7 +1005,7 @@ private fun AppGrid(
             contentPadding = PaddingValues(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            if (query.isBlank()) {
+            if (query.isBlank() && !hiding) {
                 item(key = "settings") {
                     GridTile(stringResource(R.string.settings), look.drawerLabels, onClick = { actions.show(Screen.SETTINGS) }) {
                         Box(
@@ -1022,12 +1032,30 @@ private fun AppGrid(
             }
             items(shown, key = { it.key }) { app ->
                 GridTile(app.label, look.drawerLabels) {
-                    Box(Modifier.alpha(if (app.key in look.hiddenApps) 0.4f else 1f)) {
+                    val hidden = app.key in look.hiddenApps
+                    Box(Modifier.alpha(if (hidden) 0.4f else 1f)) {
                         AppIcon(app, size = icon, onLongClick = { onMenu(app) }) {
-                            actions.launch(app.component)
-                            actions.show(Screen.HOME)
+                            if (hiding) {
+                                actions.setTheme { it.copy(hiddenApps = if (hidden) it.hiddenApps - app.key else it.hiddenApps + app.key) }
+                            } else {
+                                actions.launch(app.component)
+                                actions.show(Screen.HOME)
+                            }
                         }
-                        if (app.key in pins) {
+                        if (hiding) {
+                            Icon(
+                                if (hidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                null,
+                                tint = CarColors.OnAccent,
+                                modifier =
+                                    Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(26.dp)
+                                        .clip(CircleShape)
+                                        .background(if (hidden) CarColors.TextDim else CarColors.Accent)
+                                        .padding(4.dp),
+                            )
+                        } else if (app.key in pins) {
                             Icon(
                                 Icons.Default.PushPin,
                                 null,

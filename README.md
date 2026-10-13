@@ -63,7 +63,7 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   le launcher redémarre après l'import. La disposition des widgets n'est pas incluse (leurs identifiants changent
   d'un appareil à l'autre).
 - **Tiroir d'applis personnalisable** (Paramètres du launcher → Personnalisation) : taille des icônes, noms, tri
-  (A → Z, Z → A, épinglées d'abord), recherche, applis masquées (appui long sur une appli) ; boutons de volume de la
+  (A → Z, Z → A, épinglées d'abord), recherche, applis masquées (bouton « Masquer des applis » du tiroir : un appui masque / réaffiche, liste à interrupteurs dans Réglages → Tiroir d'applis, ou appui long sur une appli ; « Masquées » les montre) ; boutons de volume de la
   barre masquables.
 - **Lecture / pause** : le dernier basculement est retenu 4 s, pour les lecteurs qui annoncent leur nouvel état en
   retard (YouTube, Tidal en Bluetooth : il ne faut plus appuyer deux fois).
