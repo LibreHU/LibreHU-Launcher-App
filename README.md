@@ -9,7 +9,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Tableau de bord** : grand emplacement de widget (horloge et date tant qu'il est vide), carte « en cours de
   lecture » (n'importe quelle app avec une `MediaSession` : radio, musique, projection…) avec précédent / lecture /
   suivant, second emplacement de widget avec ajout du widget de [LibreHU FM](https://github.com/LibreHU/LibreHU-FM-App)
-  en un geste.
+  en un geste. Le launcher signale au service LibreHU quand le tableau de bord est affiché
+  (`org.librehu.action.HOME_VISIBLE`) : le widget « Vue arrière » de LibreHU-service n'y montre la caméra en direct
+  que pendant ce temps.
 - **Toutes les applis** : grille ; appui long pour épingler, retirer ou réordonner dans le rail.
 - **Pneus (TPMS)** : récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte
   sur le tableau de bord, écran détaillé (pression, température, batterie, ID), appairage, permutation, seuils et
