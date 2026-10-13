@@ -41,7 +41,9 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -51,11 +53,15 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.TurnLeft
+import androidx.compose.material.icons.filled.TurnRight
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -93,6 +99,8 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import org.librehu.launcher.R
+import org.librehu.launcher.data.AaState
+import org.librehu.launcher.data.AndroidAutoLink
 import org.librehu.launcher.data.AppsRepository
 import org.librehu.launcher.data.DrawerSort
 import org.librehu.launcher.data.LauncherApp
@@ -529,6 +537,8 @@ private fun Dashboard(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.weight(1f).fillMaxHeight(),
         ) {
+            val aa by AndroidAutoLink.state.collectAsStateWithLifecycle()
+            if (aa.active) AndroidAutoCard(aa, Modifier.weight(0.8f).fillMaxWidth())
             MediaCard(media, actions, Modifier.weight(1f).fillMaxWidth())
             val tpmsSettings by TpmsManager
                 .get(LocalContext.current)
@@ -552,6 +562,93 @@ private fun Dashboard(
         }
     }
 }
+
+/**
+ * Android Auto (Open Headunit) running: its state, the next maneuver of the navigation (Open Headunit LibreHU), show
+ * and disconnect. A touch brings the projection back.
+ */
+@Composable
+private fun AndroidAutoCard(
+    aa: AaState,
+    modifier: Modifier,
+) {
+    val context = LocalContext.current
+    val maneuver by AndroidAutoLink.maneuver.collectAsStateWithLifecycle()
+    Row(
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(28.dp))
+                .background(CarColors.Surface)
+                .clickable { AndroidAutoLink.show(context) }
+                .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val m = maneuver
+        Icon(
+            when (m?.side) {
+                1 -> Icons.Default.TurnLeft
+                2 -> Icons.Default.TurnRight
+                else -> if (m != null) Icons.Default.Navigation else Icons.Default.Smartphone
+            },
+            contentDescription = null,
+            tint = CarColors.Accent,
+            modifier = Modifier.size(44.dp),
+        )
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            if (m != null) {
+                Text(
+                    listOf(distance(m.distanceMeters), m.action).filter { it.isNotEmpty() }.joinToString(" · "),
+                    color = CarColors.Text,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    listOf(
+                        m.road,
+                        m.arrival
+                            .takeIf { it.isNotEmpty() }
+                            ?.let { "→ $it" }
+                            .orEmpty(),
+                    ).filter { it.isNotEmpty() }
+                        .joinToString(" · ")
+                        .ifEmpty { stringResource(R.string.aa_card_title) },
+                    color = CarColors.TextDim,
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            } else {
+                Text(stringResource(R.string.aa_card_title), color = CarColors.Text, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+                Text(
+                    stringResource(
+                        when (aa.state) {
+                            "projecting" -> R.string.aa_card_projecting
+                            "connected" -> R.string.aa_card_connected
+                            else -> R.string.aa_card_connecting
+                        },
+                    ) + if (aa.transport == "usb" || aa.transport == "wifi") " · " + aa.transport.uppercase() else "",
+                    color = CarColors.TextDim,
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                )
+            }
+        }
+        IconButton(onClick = { AndroidAutoLink.disconnect(context) }) {
+            Icon(Icons.Default.LinkOff, stringResource(R.string.aa_card_disconnect), tint = CarColors.TextDim)
+        }
+    }
+}
+
+/** 350 m, 1.2 km. */
+private fun distance(meters: Int): String =
+    when {
+        meters < 0 -> ""
+        meters < 1000 -> "${(meters / 10) * 10} m"
+        else -> String.format(java.util.Locale.getDefault(), "%.1f km", meters / 1000f)
+    }
 
 /** Dashboard SOS card: the button and who will be called. */
 @Composable

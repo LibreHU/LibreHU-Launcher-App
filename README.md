@@ -13,6 +13,11 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   (`org.librehu.action.HOME_VISIBLE`). Le widget « Vue arrière » de LibreHU-service est affiché **en vrai flux** :
   le launcher pose sa propre vue vidéo sur le widget et le service y fait dessiner la caméra directement (pleine
   cadence, `ui/RearLive.kt`) ; un toucher ouvre ou ferme la vue arrière plein écran.
+- **Android Auto** ([Open Headunit](https://github.com/andreknieriem/headunit-revived) ou son fork LibreHU) : pendant
+  une session, carte sur le tableau de bord (connexion, à l'écran, USB / Wi-Fi ; toucher = afficher la projection,
+  bouton déconnecter) et, avec Open Headunit LibreHU, **la prochaine manœuvre de la navigation** (direction,
+  distance, route, heure d'arrivée ; diffusion `NAVIGATION_UPDATE` réservée aux applis signées avec la clé LibreHU).
+  Réglages d'Android Auto : LibreHU-service, onglet Android Auto.
 - **Toutes les applis** : grille ; appui long pour épingler, retirer ou réordonner dans le rail.
 - **Pneus (TPMS)** : récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte
   sur le tableau de bord, écran détaillé (pression, température, batterie, ID), appairage, permutation, seuils et
