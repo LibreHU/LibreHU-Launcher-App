@@ -334,4 +334,25 @@
     <string name="aa_card_connected">Connecté</string>
     <string name="aa_card_projecting">Toucher pour l\'afficher</string>
     <string name="aa_card_disconnect">Déconnecter Android Auto</string>
+    <string name="vehicle_title">Véhicule</string>
+    <string name="vehicle_hint">Gardé par LibreHU-service et transmis aux applis LibreHU : écran SOS (à lire aux secours), Android Auto et CarPlay. Aussi dans LibreHU-service, onglet Véhicule.</string>
+    <string name="vehicle_no_service">LibreHU-service n\'est pas installé (ou pas signé avec la clé LibreHU) : la voiture peut être décrite dans les réglages SOS à la place.</string>
+    <string name="vehicle_name">Nom de la voiture</string>
+    <string name="vehicle_name_hint">Ce que voit le téléphone : Bluetooth, point d\'accès Wi-Fi et Wi-Fi Direct (Android Auto / CarPlay sans fil).</string>
+    <string name="vehicle_make">Marque</string>
+    <string name="vehicle_model">Modèle</string>
+    <string name="vehicle_year">Année</string>
+    <string name="vehicle_color">Couleur</string>
+    <string name="vehicle_plate">Plaque d\'immatriculation</string>
+    <string name="vehicle_fuel">Énergie</string>
+    <string name="vehicle_driver_side">Côté conducteur</string>
+    <string name="vehicle_driver_left">Gauche</string>
+    <string name="vehicle_driver_right">Droite</string>
+    <string name="vehicle_save">Enregistrer</string>
+    <string name="vehicle_saved">Enregistré.</string>
+    <string name="vehicle_not_saved">Non enregistré : LibreHU-service a refusé.</string>
+    <string name="setup_bluetooth">Associer le téléphone</string>
+    <string name="setup_bluetooth_hint">Réglages Bluetooth : appels, musique, et poignée de main d\'Android Auto / CarPlay sans fil.</string>
+    <string name="setup_updates">Mises à jour</string>
+    <string name="setup_updates_hint">LibreHU Apps : installer et mettre à jour les applis LibreHU (Android Auto compris).</string>
 </resources>

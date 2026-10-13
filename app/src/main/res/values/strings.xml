@@ -334,4 +334,25 @@
     <string name="aa_card_connected">Connected</string>
     <string name="aa_card_projecting">Touch to show it</string>
     <string name="aa_card_disconnect">Disconnect Android Auto</string>
+    <string name="vehicle_title">Vehicle</string>
+    <string name="vehicle_hint">Kept by LibreHU-service and given to the LibreHU apps: SOS screen (read to the emergency services), Android Auto and CarPlay. Also in LibreHU-service, Véhicule tab.</string>
+    <string name="vehicle_no_service">LibreHU-service is not installed (or not signed with the LibreHU key): the car can be described in the SOS settings instead.</string>
+    <string name="vehicle_name">Car name</string>
+    <string name="vehicle_name_hint">What the phone sees: Bluetooth, Wi-Fi hotspot and Wi-Fi Direct (wireless Android Auto / CarPlay).</string>
+    <string name="vehicle_make">Make</string>
+    <string name="vehicle_model">Model</string>
+    <string name="vehicle_year">Year</string>
+    <string name="vehicle_color">Colour</string>
+    <string name="vehicle_plate">Licence plate</string>
+    <string name="vehicle_fuel">Fuel</string>
+    <string name="vehicle_driver_side">Driver\'s side</string>
+    <string name="vehicle_driver_left">Left</string>
+    <string name="vehicle_driver_right">Right</string>
+    <string name="vehicle_save">Save</string>
+    <string name="vehicle_saved">Saved.</string>
+    <string name="vehicle_not_saved">Not saved: LibreHU-service refused it.</string>
+    <string name="setup_bluetooth">Pair the phone</string>
+    <string name="setup_bluetooth_hint">Bluetooth settings: calls, music, and the handshake of wireless Android Auto / CarPlay.</string>
+    <string name="setup_updates">Updates</string>
+    <string name="setup_updates_hint">LibreHU Apps: install and update the LibreHU apps (Android Auto included).</string>
 </resources>

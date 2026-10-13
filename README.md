@@ -48,10 +48,13 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   [docs/standby.md](docs/standby.md).
 - **SOS** : bouton d'urgence (barre, tableau de bord et/ou widget, appui long), compte à rebours annulable puis appel
   du numéro d'urgence (112 par défaut), contacts d'urgence, position GPS (décimal + degrés-minutes-secondes) et
-  informations pour les secours (nom, infos médicales, véhicule) ; action `org.librehu.action.SOS`. Voir
-  [docs/sos.md](docs/sos.md).
-- **Assistant de premier démarrage** : apparence et barre, accès Android (accueil par défaut, notifications,
-  position / appels), horloge de veille, SOS ; relançable depuis Paramètres → Général.
+  informations pour les secours (nom, infos médicales, véhicule : marque, modèle, année, couleur et plaque repris
+  de LibreHU-service) ; action `org.librehu.action.SOS`. Voir [docs/sos.md](docs/sos.md).
+- **Assistant de premier démarrage** : **véhicule** (nom de la voiture, qui renomme Bluetooth, point d'accès et
+  Wi-Fi Direct, puis marque, modèle, année, couleur, plaque, énergie, côté conducteur, gardés par LibreHU-service
+  pour toutes les applis LibreHU : SOS, Android Auto, CarPlay), apparence et barre, accès Android (accueil par
+  défaut, notifications, position / appels), association Bluetooth du téléphone, mises à jour (LibreHU Apps),
+  horloge de veille, SOS ; relançable depuis Paramètres → Général.
 - **État près de l'horloge** : téléphone connecté en Bluetooth (barres de réseau, batterie, opérateur, lus sur le
   profil mains libres HFP) et **GPS de l'autoradio** (gris éteint, jaune en recherche avec le nombre de satellites
   visibles, vert position acquise avec les satellites utilisés). Désactivables (Paramètres → Personnalisation). Sous l'état
