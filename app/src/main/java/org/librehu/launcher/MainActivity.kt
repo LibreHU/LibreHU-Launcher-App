@@ -134,6 +134,20 @@ class MainActivity : ComponentActivity() {
     /** Standby clock after a while without touching the home screen. */
     private val idle = Runnable { if (screen.value != Screen.SETUP) StandbyActivity.show(this) }
 
+    /** App whose icon is being chosen (app menu). */
+    private var iconFor: String? = null
+
+    private val pickAppIcon =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            val key = iconFor ?: return@registerForActivityResult
+            iconFor = null
+            if (uri == null) return@registerForActivityResult
+            lifecycleScope.launch {
+                val ok = withContext(Dispatchers.IO) { apps.setIcon(key, uri) }
+                if (!ok) Toast.makeText(this@MainActivity, R.string.app_custom_icon_error, Toast.LENGTH_LONG).show()
+            }
+        }
+
     private val pickVideo =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) importWallpaper(R.string.wallpaper_video_error) { theme.setVideo(uri) }
@@ -211,6 +225,12 @@ class MainActivity : ComponentActivity() {
                 appInfo = { pkg ->
                     startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
                 },
+                pickAppIcon = { key ->
+                    iconFor = key
+                    pickAppIcon.launch("image/*")
+                },
+                renameApp = { key, label -> apps.rename(key, label) },
+                resetApp = { key -> apps.resetCustom(key) },
                 setTheme = theme::update,
                 pickImage = { pickImage.launch("image/*") },
                 pickVideo = { pickVideo.launch("video/*") },

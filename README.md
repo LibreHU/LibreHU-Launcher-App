@@ -83,6 +83,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Tiroir d'applis personnalisable** (Paramètres du launcher → Personnalisation) : taille des icônes, noms, tri
   (A → Z, Z → A, épinglées d'abord), recherche, applis masquées (bouton « Masquer des applis » du tiroir : un appui masque / réaffiche, liste à interrupteurs dans Réglages → Tiroir d'applis, ou appui long sur une appli ; « Masquées » les montre) ; boutons de volume de la
   barre masquables.
+- **Icône et nom de chaque appli** (appui long sur une appli → « Changer l'icône », « Renommer », « Icône et nom
+  d'origine ») : n'importe quelle image de l'autoradio (PNG transparent, JPEG…), recadrée au carré et gardée dans le
+  launcher ; elle est affichée telle quelle, même avec les icônes thématiques. Pratique pour mettre ses propres logos
+  sur les forks LibreHU d'Open Headunit (« Android Auto ») et de xcertplay (« CarPlay »).
 - **Lecture / pause** : le dernier basculement est retenu 4 s, pour les lecteurs qui annoncent leur nouvel état en
   retard (YouTube, Tidal en Bluetooth : il ne faut plus appuyer deux fois).
 - **Téléphone** : « Pas de service » quand le réseau est perdu ; charge déduite (téléphone sur l'USB de l'autoradio,
