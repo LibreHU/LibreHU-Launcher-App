@@ -318,4 +318,15 @@
     <string name="phone_percent_hint">Le profil mains libres ne donne que 6 niveaux : paliers de 20 %.</string>
     <string name="standby_phone">État du téléphone</string>
     <string name="standby_phone_hint">Réseau, batterie et opérateur / nom du téléphone Bluetooth au-dessus de l\'heure (même texte que la barre).</string>
+    <string name="find_phone">Retrouver le téléphone</string>
+    <string name="find_phone_sending">Envoi d\'un message au téléphone…</string>
+    <string name="find_phone_message">LibreHU : votre téléphone est ici.</string>
+    <string name="find_phone_sent">Message envoyé : le téléphone devrait sonner ou vibrer</string>
+    <string name="find_phone_no_number">Numéro inconnu : Réglages → Général → Retrouver le téléphone</string>
+    <string name="find_phone_no_phone">Aucun téléphone associé en Bluetooth</string>
+    <string name="find_phone_no_map">Pas d\'accès aux messages (MAP) dans ce Bluetooth</string>
+    <string name="find_phone_refused">Le téléphone a refusé (autoriser l\'accès aux messages sur le téléphone)</string>
+    <string name="find_phone_hint">Le Bluetooth ne sait pas faire sonner un téléphone : l\'autoradio envoie, par le téléphone lui-même (accès aux messages), un SMS au numéro du téléphone, qui sonne ou vibre selon ses réglages (pas en « ne pas déranger »). Le téléphone demande une fois d\'autoriser l\'accès aux messages. Un SMS peut être facturé.</string>
+    <string name="find_phone_number">Numéro du téléphone</string>
+    <string name="find_phone_number_detected">Numéro du téléphone (donné par le téléphone : %1$s)</string>
 </resources>
