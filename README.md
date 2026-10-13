@@ -17,7 +17,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   utilisable dans les emplacements du launcher ou sur n'importe quel autre écran d'accueil. Protocole :
   [docs/tpms.md](docs/tpms.md).
 - **Carte média** : titre, pochette, ⏮ ⏯ ⏭ et **barre de progression** (temps écoulé / durée, déplaçable quand
-  l'appli accepte l'avance rapide).
+  l'appli accepte l'avance rapide). **Musique Bluetooth** : l'AVRCP n'a pas de « aller à la position », seulement
+  avance / retour rapides : le lanceur appuie dessus pas à pas en relisant la position, jusqu'à quelques secondes de
+  la cible (approximatif ; s'arrête si le lecteur du téléphone les ignore).
 - **Menu power** : verrouiller, horloge de veille, redémarrer, éteindre, redémarrer par la MCU ; boutons centrés.
 - **Fluidité** : fonds animés redessinés à 20 i/s (vagues 30, spectre 30) sans recomposer l'écran, arrêtés quand le
   lanceur n'est pas visible ; APK publié en build *release* (non débogable, compilé entièrement par Android).
@@ -56,8 +58,13 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   « Modifier les paramètres système »), **curseur de volume** (volume de la puce sur les branches `ivi` et
   `librehu-service`), Wi-Fi, Bluetooth, **partage de connexion** (point d'accès Wi-Fi ; l'allumer directement demande
   une installation privilégiée, sinon la tuile ouvre l'écran Android du partage de connexion), thème, horloge de
-  veille, verrouillage, menu marche/arrêt, réglages du launcher et d'Android. **Appui long** sur une tuile ou sur le
+  veille, verrouillage, **retrouver le téléphone**, menu marche/arrêt, réglages du launcher et d'Android. **Appui long** sur une tuile ou sur le
   volume : ouvre le réglage Android correspondant (Wi-Fi, Bluetooth, son, affichage…).
+- **Retrouver le téléphone** (tuile du centre de contrôle) : le Bluetooth n'a aucun profil pour faire sonner un
+  téléphone ; l'autoradio envoie donc, par le téléphone lui-même (profil d'accès aux messages MAP), un SMS à son
+  propre numéro : il sonne ou vibre selon ses réglages (pas en « ne pas déranger »). Numéro donné par le téléphone en
+  mains libres (AT+CNUM) ou saisi dans Paramètres → Général. Le téléphone demande une fois l'accès aux messages ; un
+  SMS peut être facturé.
 - **Sauvegarde des paramètres** (Paramètres → Général → Sauvegarde) : export / import dans un fichier JSON des
   réglages (thème, accueil, veille, SOS, verrouillage, TPMS) et des images importées (fond d'écran, voiture TPMS) ;
   le launcher redémarre après l'import. La disposition des widgets n'est pas incluse (leurs identifiants changent

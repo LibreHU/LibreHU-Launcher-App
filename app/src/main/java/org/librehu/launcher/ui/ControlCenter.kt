@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,6 +38,7 @@ import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.BrightnessHigh
 import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhonelinkRing
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
@@ -72,6 +74,7 @@ import org.librehu.launcher.R
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeMode
 import org.librehu.launcher.data.ThemeStore
+import org.librehu.launcher.status.FindPhone
 import java.text.DateFormat
 import java.util.Date
 
@@ -290,6 +293,23 @@ fun ControlCenter(
                         false,
                         onLongClick = { openSettings(Settings.ACTION_SECURITY_SETTINGS) },
                     ) { close { actions.power(PowerChoice.LOCK) } }
+                    CcTile(Icons.Default.PhonelinkRing, stringResource(R.string.find_phone), false) {
+                        Toast.makeText(context, R.string.find_phone_sending, Toast.LENGTH_SHORT).show()
+                        FindPhone.ring(context, context.getString(R.string.find_phone_message)) { r ->
+                            Toast
+                                .makeText(
+                                    context,
+                                    when (r) {
+                                        FindPhone.Result.SENT -> R.string.find_phone_sent
+                                        FindPhone.Result.NO_NUMBER -> R.string.find_phone_no_number
+                                        FindPhone.Result.NO_PHONE -> R.string.find_phone_no_phone
+                                        FindPhone.Result.NO_MAP -> R.string.find_phone_no_map
+                                        FindPhone.Result.REFUSED -> R.string.find_phone_refused
+                                    },
+                                    Toast.LENGTH_LONG,
+                                ).show()
+                        }
+                    }
                     CcTile(Icons.Default.PowerSettingsNew, stringResource(R.string.power_title), false) { onPowerMenu() }
                     CcTile(Icons.Default.Tune, stringResource(R.string.settings), false) { close { actions.show(Screen.SETTINGS) } }
                     CcTile(Icons.Default.Settings, stringResource(R.string.cc_android_settings), false) {

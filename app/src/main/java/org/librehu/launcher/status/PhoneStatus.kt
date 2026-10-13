@@ -167,6 +167,8 @@ class PhoneStatusWatcher private constructor(
             if (b.containsKey(EXTRA_NETWORK_STATUS)) s = s.copy(service = b.getInt(EXTRA_NETWORK_STATUS, 1) != 0)
             if (b.containsKey(EXTRA_OPERATOR)) s = s.copy(operator = b.getString(EXTRA_OPERATOR).orEmpty())
             if (b.containsKey(EXTRA_ROAMING)) s = s.copy(roaming = b.getInt(EXTRA_ROAMING, 0) == 1)
+            // The phone's own number (AT+CNUM), for "find my phone".
+            if (b.containsKey(EXTRA_SUBSCRIBER)) FindPhone.onSubscriberNumber(app, b.getString(EXTRA_SUBSCRIBER))
             _state.value = s.copy(charging = s.usbPlugged || rising)
         }
     }
@@ -181,6 +183,7 @@ class PhoneStatusWatcher private constructor(
         private const val EXTRA_OPERATOR = "android.bluetooth.headsetclient.extra.OPERATOR_NAME"
         private const val EXTRA_ROAMING = "android.bluetooth.headsetclient.extra.NETWORK_ROAMING"
         private const val EXTRA_NETWORK_STATUS = "android.bluetooth.headsetclient.extra.NETWORK_STATUS"
+        private const val EXTRA_SUBSCRIBER = "android.bluetooth.headsetclient.extra.SUBSCRIBER_INFO"
 
         /** USB vendor ids of phone makers: Apple, Google, Samsung, Xiaomi, Huawei, OnePlus, Motorola, LG, Sony, Oppo, HTC. */
         private val PHONE_VENDORS = setOf(0x05AC, 0x18D1, 0x04E8, 0x2717, 0x12D1, 0x2A70, 0x22B8, 0x1004, 0x0FCE, 0x22D9, 0x0BB4)
