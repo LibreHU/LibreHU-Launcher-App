@@ -17,6 +17,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   une session, carte sur le tableau de bord (connexion, à l'écran, USB / Wi-Fi ; toucher = afficher la projection,
   bouton déconnecter) et, avec Open Headunit LibreHU, **la prochaine manœuvre de la navigation** (direction,
   distance, route, heure d'arrivée ; diffusion `NAVIGATION_UPDATE` réservée aux applis signées avec la clé LibreHU).
+  **Image d'Android Auto sur le tableau de bord** (expérimental, Réglages → apparence, désactivé par défaut) :
+  pendant une projection, la carte montre l'image en direct et tactile (boutons plein écran et déconnecter). La
+  surface de la carte est confiée au décodeur d'Open Headunit LibreHU (`LibreHuVideoService`, permission signature
+  `org.librehu.headunit.permission.CONFIGURE`) tant que son écran de projection n'est pas affiché.
   Réglages d'Android Auto : LibreHU-service, onglet Android Auto.
 - **Toutes les applis** : grille ; appui long pour épingler, retirer ou réordonner dans le rail.
 - **Pneus (TPMS)** : récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte

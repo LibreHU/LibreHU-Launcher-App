@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LinkOff
@@ -70,6 +72,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -201,7 +204,7 @@ fun LauncherScreen(
     val pinned = pins.mapNotNull { byKey[it] }
     val content: @Composable () -> Unit = {
         when (screen) {
-            Screen.HOME -> Dashboard(prefs, media, widgets, actions, sos)
+            Screen.HOME -> Dashboard(prefs, media, widgets, actions, sos, look.aaLiveVideo)
             Screen.APPS -> AppGrid(apps, pins, look, actions) { menuFor = it }
             Screen.SETTINGS -> SettingsScreen(theme, themeController, actions, apps)
             Screen.TPMS -> TpmsScreen()
@@ -529,6 +532,7 @@ private fun Dashboard(
     widgets: WidgetHost,
     actions: LauncherActions,
     sos: SosSettings,
+    aaLiveVideo: Boolean,
 ) {
     val slots by prefs.slots.collectAsStateWithLifecycle()
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
@@ -544,7 +548,11 @@ private fun Dashboard(
             modifier = Modifier.weight(1f).fillMaxHeight(),
         ) {
             val aa by AndroidAutoLink.state.collectAsStateWithLifecycle()
-            if (aa.active) AndroidAutoCard(aa, Modifier.weight(0.8f).fillMaxWidth())
+            if (aa.active && aaLiveVideo && aa.state == "projecting") {
+                AndroidAutoVideoCard(Modifier.fillMaxWidth())
+            } else if (aa.active) {
+                AndroidAutoCard(aa, Modifier.weight(0.8f).fillMaxWidth())
+            }
             MediaCard(media, actions, Modifier.weight(1f).fillMaxWidth())
             val tpmsSettings by TpmsManager
                 .get(LocalContext.current)
@@ -644,6 +652,58 @@ private fun AndroidAutoCard(
         }
         IconButton(onClick = { AndroidAutoLink.disconnect(context) }) {
             Icon(Icons.Default.LinkOff, stringResource(R.string.aa_card_disconnect), tint = CarColors.TextDim)
+        }
+    }
+}
+
+/**
+ * Android Auto's picture, live and touchable, in a 16:9 card (experimental, Open Headunit LibreHU): the card's surface
+ * goes to its decoder while the projection screen is not shown. Full screen and disconnect buttons over it.
+ */
+@Composable
+private fun AndroidAutoVideoCard(modifier: Modifier) {
+    val context = LocalContext.current
+    val video = remember { org.librehu.launcher.data.AaVideo(context) }
+    DisposableEffect(Unit) { onDispose { video.detach() } }
+    Box(
+        modifier
+            .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(28.dp))
+            .background(androidx.compose.ui.graphics.Color.Black),
+    ) {
+        androidx.compose.ui.viewinterop.AndroidView(
+            factory = { c ->
+                android.view.SurfaceView(c).apply {
+                    holder.addCallback(
+                        object : android.view.SurfaceHolder.Callback {
+                            override fun surfaceCreated(h: android.view.SurfaceHolder) = video.attach(h.surface)
+
+                            override fun surfaceChanged(
+                                h: android.view.SurfaceHolder,
+                                format: Int,
+                                width: Int,
+                                height: Int,
+                            ) = Unit
+
+                            override fun surfaceDestroyed(h: android.view.SurfaceHolder) = video.detach()
+                        },
+                    )
+                    @android.annotation.SuppressLint("ClickableViewAccessibility")
+                    setOnTouchListener { v, e ->
+                        if (v.width > 0 && v.height > 0) video.touch(e.actionMasked, e.x / v.width, e.y / v.height)
+                        true
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+        Row(Modifier.align(Alignment.TopEnd).padding(6.dp)) {
+            IconButton(onClick = { AndroidAutoLink.show(context) }) {
+                Icon(Icons.Default.Fullscreen, stringResource(R.string.aa_card_fullscreen), tint = androidx.compose.ui.graphics.Color.White)
+            }
+            IconButton(onClick = { AndroidAutoLink.disconnect(context) }) {
+                Icon(Icons.Default.LinkOff, stringResource(R.string.aa_card_disconnect), tint = androidx.compose.ui.graphics.Color.White)
+            }
         }
     }
 }
