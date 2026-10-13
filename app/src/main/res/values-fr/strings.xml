@@ -329,4 +329,9 @@
     <string name="find_phone_hint">Le Bluetooth ne sait pas faire sonner un téléphone : l\'autoradio envoie, par le téléphone lui-même (accès aux messages), un SMS au numéro du téléphone, qui sonne ou vibre selon ses réglages (pas en « ne pas déranger »). Le téléphone demande une fois d\'autoriser l\'accès aux messages. Un SMS peut être facturé.</string>
     <string name="find_phone_number">Numéro du téléphone</string>
     <string name="find_phone_number_detected">Numéro du téléphone (donné par le téléphone : %1$s)</string>
+    <string name="aa_card_title">Android Auto</string>
+    <string name="aa_card_connecting">Connexion…</string>
+    <string name="aa_card_connected">Connecté</string>
+    <string name="aa_card_projecting">Toucher pour l\'afficher</string>
+    <string name="aa_card_disconnect">Déconnecter Android Auto</string>
 </resources>
