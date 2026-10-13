@@ -329,4 +329,9 @@
     <string name="find_phone_hint">Bluetooth cannot ring a phone: the head unit sends, through the phone (message access), a text message to the phone\'s own number, which then sounds or vibrates as set (not in do not disturb). The phone asks once to allow access to messages. An SMS may cost.</string>
     <string name="find_phone_number">Phone number</string>
     <string name="find_phone_number_detected">Phone number (given by the phone: %1$s)</string>
+    <string name="aa_card_title">Android Auto</string>
+    <string name="aa_card_connecting">Connecting…</string>
+    <string name="aa_card_connected">Connected</string>
+    <string name="aa_card_projecting">Touch to show it</string>
+    <string name="aa_card_disconnect">Disconnect Android Auto</string>
 </resources>

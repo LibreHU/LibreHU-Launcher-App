@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.librehu.launcher.data.AndroidAutoLink
 import org.librehu.launcher.data.AppsRepository
 import org.librehu.launcher.data.LauncherPrefs
 import org.librehu.launcher.data.MediaRepository
@@ -149,6 +150,7 @@ class MainActivity : ComponentActivity() {
         themeController.start(lifecycleScope)
         TpmsManager.get(this).start()
         SpeedWidget.ensureRunning(this)
+        AndroidAutoLink.start(this) // Open Headunit's session and next maneuver for the dashboard
         apps.start()
         lifecycleScope.launch {
             theme.settings

@@ -7,6 +7,8 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- Next maneuver of Android Auto from Open Headunit LibreHU (signature permission it declares). -->
+    <uses-permission android:name="org.librehu.headunit.permission.NAVIGATION_UPDATE" />
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <!-- Privileged install: real force stop, system-wide light / dark mode. -->
     <uses-permission
