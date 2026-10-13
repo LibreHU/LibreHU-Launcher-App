@@ -40,6 +40,11 @@
     <string name="reset">Reset</string>
     <string name="reset_all">Reset the launcher</string>
     <string name="reset_confirm">Shortcuts, widgets, theme and wallpaper go back to their defaults.</string>
+    <string name="app_custom_icon">Change the icon</string>
+    <string name="app_custom_icon_error">This image could not be read</string>
+    <string name="app_rename">Rename</string>
+    <string name="app_rename_hint">Empty: the app\'s own name</string>
+    <string name="app_custom_reset">Original icon and name</string>
     <string name="app_info">App info</string>
     <string name="force_stop">Force stop</string>
     <string name="uninstall">Uninstall</string>
