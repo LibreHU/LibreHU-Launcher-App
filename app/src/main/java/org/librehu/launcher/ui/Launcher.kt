@@ -646,6 +646,8 @@ private fun WidgetSlot(
             // AndroidView only calls its factory once: without key(), a replaced widget kept showing the old view
             // until the screen was rebuilt (opening the app drawer).
             key(appWidgetId) { AndroidView(factory = { hostView }, modifier = Modifier.fillMaxSize()) }
+            // LibreHU-service's rear view widget: the camera stream drawn by the launcher over it.
+            if (hostView.appWidgetInfo?.provider == REAR_WIDGET) key(appWidgetId) { RearLive(Modifier.fillMaxSize()) }
             Box(
                 modifier =
                     Modifier
