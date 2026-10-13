@@ -546,6 +546,36 @@ private fun ContactDialog(
 @Composable
 private fun GeneralSettings(actions: LauncherActions) {
     var confirmReset by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var phoneNumber by remember {
+        mutableStateOf(
+            org.librehu.launcher.status.FindPhone
+                .typedNumber(context),
+        )
+    }
+    val detected =
+        remember {
+            org.librehu.launcher.status.FindPhone
+                .detectedNumber(context)
+        }
+    SettingSection(stringResource(R.string.find_phone))
+    SettingHint(stringResource(R.string.find_phone_hint))
+    SettingText(
+        if (detected.isNotEmpty()) {
+            stringResource(
+                R.string.find_phone_number_detected,
+                detected,
+            )
+        } else {
+            stringResource(R.string.find_phone_number)
+        },
+        phoneNumber,
+        KeyboardType.Phone,
+    ) { v ->
+        phoneNumber = v.filter { it.isDigit() || it == '+' || it == ' ' }.take(20)
+        org.librehu.launcher.status.FindPhone
+            .setNumber(context, phoneNumber)
+    }
     SettingSection(stringResource(R.string.setup_title))
     SettingHint(stringResource(R.string.setup_rerun_hint))
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -318,4 +318,15 @@
     <string name="phone_percent_hint">The hands-free profile gives 6 levels only: steps of 20 %.</string>
     <string name="standby_phone">Phone status</string>
     <string name="standby_phone_hint">Signal, battery and operator / name of the Bluetooth phone above the clock (same text as the bar).</string>
+    <string name="find_phone">Find my phone</string>
+    <string name="find_phone_sending">Sending a message to the phone…</string>
+    <string name="find_phone_message">LibreHU: your phone is here.</string>
+    <string name="find_phone_sent">Message sent: the phone should ring or vibrate</string>
+    <string name="find_phone_no_number">Phone number unknown: Settings → General → Find my phone</string>
+    <string name="find_phone_no_phone">No phone paired in Bluetooth</string>
+    <string name="find_phone_no_map">No message access (MAP) in this Bluetooth</string>
+    <string name="find_phone_refused">The phone refused (allow access to messages on the phone)</string>
+    <string name="find_phone_hint">Bluetooth cannot ring a phone: the head unit sends, through the phone (message access), a text message to the phone\'s own number, which then sounds or vibrates as set (not in do not disturb). The phone asks once to allow access to messages. An SMS may cost.</string>
+    <string name="find_phone_number">Phone number</string>
+    <string name="find_phone_number_detected">Phone number (given by the phone: %1$s)</string>
 </resources>

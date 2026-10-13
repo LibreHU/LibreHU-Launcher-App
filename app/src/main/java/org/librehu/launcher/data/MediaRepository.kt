@@ -26,8 +26,10 @@ data class NowPlaying(
     val positionMs: Long = 0,
     val positionAt: Long = 0,
     val speed: Float = 1f,
-    /** The app accepts seekTo. */
+    /** The app accepts seekTo, or (Bluetooth) it is reached by fast forward / rewind steps. */
     val canSeek: Boolean = false,
+    /** Seeking is approximate (Bluetooth: AVRCP has no "go to position", only fast forward / rewind). */
+    val seekApprox: Boolean = false,
 ) {
     /** Position now, extrapolated like Android's media notifications. */
     fun positionNow(now: Long = android.os.SystemClock.elapsedRealtime()): Long {
@@ -121,8 +123,60 @@ class MediaRepository(
 
     /** Moves the current track to [positionMs] (apps that accept it, see [NowPlaying.canSeek]). */
     fun seekTo(positionMs: Long) {
-        current?.transportControls?.seekTo(positionMs)
+        val c = current ?: return
+        if (c.playbackState.hasSeekTo() || !isBluetooth(c)) {
+            c.transportControls.seekTo(positionMs)
+        } else {
+            stepTo(c, positionMs)
+        }
     }
+
+    private var stepping: Runnable? = null
+
+    /**
+     * Bluetooth (AVRCP controller): no "go to position" in AVRCP, only the fast forward / rewind buttons of the phone.
+     * They are pressed one at a time, the position being asked again after each, until it is within a few seconds of
+     * the target; stops when the phone does not move (its player ignores them) or goes past the target twice.
+     */
+    private fun stepTo(
+        c: MediaController,
+        target: Long,
+    ) {
+        stepping?.let { main.removeCallbacks(it) }
+        var steps = 0
+        var stuck = 0
+        var flips = 0
+        var lastPos = -1L
+        var lastDir = 0
+        val r =
+            object : Runnable {
+                override fun run() {
+                    if (current?.sessionToken != c.sessionToken) return
+                    val pos = _nowPlaying.value?.positionNow() ?: return
+                    val diff = target - pos
+                    if (kotlin.math.abs(diff) <= SEEK_TOLERANCE_MS || steps >= SEEK_MAX_STEPS || stuck >= 3 || flips >= 2) {
+                        stepping = null
+                        return
+                    }
+                    val dir = if (diff > 0) 1 else -1
+                    if (lastDir != 0 && dir != lastDir) flips++
+                    stuck = if (lastPos >= 0 && kotlin.math.abs(pos - lastPos) < 1000) stuck + 1 else 0
+                    lastPos = pos
+                    lastDir = dir
+                    steps++
+                    if (dir > 0) c.transportControls.fastForward() else c.transportControls.rewind()
+                    // The Bluetooth app asks the phone for its position again (AOSP custom action).
+                    c.transportControls.sendCustomAction(BT_PLAY_STATUS, null)
+                    main.postDelayed(this, SEEK_STEP_MS)
+                }
+            }
+        stepping = r
+        main.post(r)
+    }
+
+    private fun isBluetooth(c: MediaController) = c.packageName == BT_PACKAGE
+
+    private fun PlaybackState?.hasSeekTo() = this != null && actions and PlaybackState.ACTION_SEEK_TO != 0L
 
     fun previous() = current?.transportControls?.skipToPrevious()
 
@@ -170,10 +224,18 @@ class MediaRepository(
                     positionMs = c.playbackState?.position?.takeIf { it >= 0 } ?: 0,
                     positionAt = c.playbackState?.lastPositionUpdateTime ?: 0,
                     speed = c.playbackState?.playbackSpeed?.takeIf { it > 0f } ?: 1f,
-                    canSeek = (c.playbackState?.actions ?: 0L) and PlaybackState.ACTION_SEEK_TO != 0L,
+                    canSeek =
+                        (c.playbackState?.actions ?: 0L) and PlaybackState.ACTION_SEEK_TO != 0L ||
+                            (isBluetooth(c) && md.getLong(MediaMetadata.METADATA_KEY_DURATION) > 0),
+                    seekApprox = isBluetooth(c) && (c.playbackState?.actions ?: 0L) and PlaybackState.ACTION_SEEK_TO == 0L,
                 )
             }
     }
 }
 
 private const val TOGGLE_TRUST_MS = 4000L
+private const val BT_PACKAGE = "com.android.bluetooth"
+private const val BT_PLAY_STATUS = "com.android.bluetooth.a2dpsink.mbs.CUSTOM_ACTION_GET_PLAY_STATUS_NATIVE"
+private const val SEEK_TOLERANCE_MS = 5000L
+private const val SEEK_MAX_STEPS = 40
+private const val SEEK_STEP_MS = 600L
