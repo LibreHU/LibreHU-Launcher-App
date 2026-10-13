@@ -35,6 +35,12 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Menu power** : verrouiller, horloge de veille, redémarrer, éteindre, redémarrer par la MCU ; boutons centrés.
 - **Fluidité** : fonds animés redessinés à 20 i/s (vagues 30, spectre 30) sans recomposer l'écran, arrêtés quand le
   lanceur n'est pas visible ; APK publié en build *release* (non débogable, compilé entièrement par Android).
+- **Pages d'accueil** (Paramètres → apparence, 1 à 4) : on glisse sur le côté du tableau de bord vers des pages de
+  quatre widgets chacune (points sous les pages).
+- **Fond d'écran internet** : image du jour de **Bing** (pays et langue au choix, ou ceux de l'appareil), de
+  **Wikimedia Commons**, ou **photo au hasard** (Lorem Picsum, photos Unsplash) ; nouvelle image chaque jour, toutes les
+  6 heures ou à chaque démarrage, et bouton « Nouvelle image maintenant ». Téléchargée seulement avec du réseau
+  (environ 0,5 Mo), la dernière reste sans réseau ; titre et crédit de l'image en petit dans un coin (désactivable).
 - **Fonds d'écran** (Paramètres) : aucun, animations intégrées à la couleur d'accent (aurore, étoiles, vagues),
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
   focus audio), ou **fond Android / live wallpaper** affiché derrière le launcher (`FLAG_SHOW_WALLPAPER`). Les

@@ -17,6 +17,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +28,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameMillis
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -35,6 +38,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -78,6 +83,34 @@ fun Wallpaper(theme: ThemeStore) {
                 Image(image, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             }
             Scrim()
+        }
+
+        WallpaperKind.ONLINE -> {
+            val bmp by theme.wallpaper.collectAsStateWithLifecycle()
+            val caption by theme.caption.collectAsStateWithLifecycle()
+            Box(Modifier.fillMaxSize().background(CarColors.Background))
+            bmp?.let {
+                val image = remember(it) { it.asImageBitmap() }
+                Image(image, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            }
+            Scrim()
+            if (s.onlineCaption && caption.isNotEmpty()) {
+                Box(Modifier.fillMaxSize()) {
+                    androidx.compose.material3.Text(
+                        caption,
+                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f),
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 12.dp, bottom = 6.dp)
+                                .fillMaxWidth(0.6f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                    )
+                }
+            }
         }
 
         WallpaperKind.ANIMATED -> {

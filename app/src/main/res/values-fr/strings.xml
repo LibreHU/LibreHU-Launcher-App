@@ -363,4 +363,21 @@
     <string name="aa_card_fullscreen">Android Auto en plein écran</string>
     <string name="aa_live_video">Image d\'Android Auto sur le tableau de bord (expérimental)</string>
     <string name="aa_live_video_hint">Pendant une projection, la carte Android Auto montre son image en direct, tactile, à la place de la prochaine manœuvre (Open Headunit LibreHU installé avant le launcher)</string>
+    <string name="wallpaper_online">Internet (image du jour)</string>
+    <string name="wallpaper_online_source">Source</string>
+    <string name="wallpaper_online_bing">Bing du jour</string>
+    <string name="wallpaper_online_wikimedia">Wikimedia Commons du jour</string>
+    <string name="wallpaper_online_picsum">Photo au hasard</string>
+    <string name="wallpaper_online_market">Pays et langue de Bing</string>
+    <string name="wallpaper_online_market_auto">Langue de l\'appareil</string>
+    <string name="wallpaper_online_refresh">Nouvelle image</string>
+    <string name="wallpaper_online_daily">Chaque jour</string>
+    <string name="wallpaper_online_6h">Toutes les 6 heures</string>
+    <string name="wallpaper_online_start">À chaque démarrage</string>
+    <string name="wallpaper_online_caption">Afficher le titre et le crédit</string>
+    <string name="wallpaper_online_now">Nouvelle image maintenant</string>
+    <string name="wallpaper_online_hint">Téléchargée quand il y a du réseau (environ 0,5 Mo par image) ; la dernière reste sans réseau. Les images appartiennent à leurs auteurs (crédit affiché dans le coin).</string>
+    <string name="wallpaper_online_failed">Pas d\'image (pas de réseau ?)</string>
+    <string name="home_pages">Pages d\'accueil</string>
+    <string name="home_pages_hint">Glisser sur le côté : le tableau de bord, puis des pages de quatre widgets chacune.</string>
 </resources>
