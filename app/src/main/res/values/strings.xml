@@ -429,4 +429,9 @@
     <string name="bt_setup_connected">Connected</string>
     <string name="bt_setup_android_settings">Android\'s Bluetooth settings</string>
     <string name="bt_setup_after">Once paired, the phone reconnects by itself at each start. The name shown is the car\'s name set in Vehicle (LibreHU-service).</string>
+    <string name="sos_own_number">Phone number</string>
+    <string name="sos_own_number_from">Given by %1$s over Bluetooth: tell it to the emergency services so they can call back.</string>
+    <string name="sos_own_number_hint">Last number given by the phone over Bluetooth (or typed in Settings → General): tell it to the emergency services so they can call back.</string>
+    <string name="sos_own_number_none">The phone has not given its number over Bluetooth: it can be typed in Settings → General (Find my phone).</string>
+    <string name="sos_own_number_settings">Phone number shown on the SOS screen: %1$s (given by the phone over Bluetooth, or typed in General).</string>
 </resources>

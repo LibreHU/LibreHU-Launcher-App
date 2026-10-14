@@ -58,7 +58,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   `org.librehu.action.STANDBY_CLOCK` (touche remappée) ou comme **économiseur d'écran Android** (DreamService). Voir
   [docs/standby.md](docs/standby.md).
 - **SOS** : bouton d'urgence (barre, tableau de bord et/ou widget, appui long), compte à rebours annulable puis appel
-  du numéro d'urgence (112 par défaut), contacts d'urgence, position GPS (décimal + degrés-minutes-secondes) et
+  du numéro d'urgence (112 par défaut), contacts d'urgence, position GPS (décimal + degrés-minutes-secondes),
+  **numéro du téléphone** (transmis par le téléphone en Bluetooth, sinon tapé dans Général : à donner aux secours
+  pour être rappelé) et
   informations pour les secours (nom, infos médicales, véhicule : marque, modèle, année, couleur et plaque repris
   de LibreHU-service) ; action `org.librehu.action.SOS`. Voir [docs/sos.md](docs/sos.md).
 - **Assistant de premier démarrage**, étape par étape (chacune peut être passée et se retrouve dans les paramètres) :

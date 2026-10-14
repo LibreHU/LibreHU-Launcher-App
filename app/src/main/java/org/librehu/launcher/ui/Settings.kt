@@ -542,12 +542,17 @@ fun SosSettingsPage(
     actions: LauncherActions,
     full: Boolean = true,
 ) {
-    val store = SosStore.get(LocalContext.current)
+    val context = LocalContext.current
+    val store = SosStore.get(context)
     val s by store.settings.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Int?>(null) }
     SettingHint(stringResource(R.string.sos_hint))
     SettingText(stringResource(R.string.sos_number), s.number, KeyboardType.Phone) { v -> store.update { it.copy(number = v.trim()) } }
     SettingHint(stringResource(R.string.sos_number_hint))
+    val ownNumber = remember { org.librehu.launcher.status.FindPhone.number(context) }
+    SettingHint(
+        if (ownNumber.isNotBlank()) stringResource(R.string.sos_own_number_settings, ownNumber) else stringResource(R.string.sos_own_number_none),
+    )
     SettingSection(stringResource(R.string.sos_button))
     SettingSwitch(stringResource(R.string.sos_on_rail), null, s.onRail) { on -> store.update { it.copy(onRail = on) } }
     SettingSwitch(stringResource(R.string.sos_on_dashboard), null, s.onDashboard) { on -> store.update { it.copy(onDashboard = on) } }

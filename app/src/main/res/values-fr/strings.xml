@@ -429,4 +429,9 @@
     <string name="bt_setup_connected">Connecté</string>
     <string name="bt_setup_android_settings">Réglages Bluetooth d\'Android</string>
     <string name="bt_setup_after">Une fois appairé, le téléphone se reconnecte tout seul à chaque démarrage. Le nom affiché est celui de la voiture réglé dans Véhicule (LibreHU-service).</string>
+    <string name="sos_own_number">Numéro du téléphone</string>
+    <string name="sos_own_number_from">Transmis par %1$s en Bluetooth : à donner aux secours pour qu\'ils puissent rappeler.</string>
+    <string name="sos_own_number_hint">Dernier numéro transmis par le téléphone en Bluetooth (ou tapé dans Paramètres → Général) : à donner aux secours pour qu\'ils puissent rappeler.</string>
+    <string name="sos_own_number_none">Le téléphone n\'a pas transmis son numéro en Bluetooth : il peut être tapé dans Paramètres → Général (Retrouver le téléphone).</string>
+    <string name="sos_own_number_settings">Numéro du téléphone affiché sur l\'écran SOS : %1$s (transmis par le téléphone en Bluetooth, ou tapé dans Général).</string>
 </resources>
