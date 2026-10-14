@@ -106,6 +106,8 @@
     <string name="rail_position">Barre de raccourcis</string>
     <string name="rail_left">À gauche</string>
     <string name="rail_bottom">En bas</string>
+    <string name="rail_opacity">Opacité de la barre de raccourcis</string>
+    <string name="rail_opacity_hint">Fond derrière la barre, dans la couleur du thème : 0 % laisse le fond d\'écran tel quel, 100 % le cache.</string>
     <string name="wallpaper_spectrum">Spectre</string>
     <string name="spectrum_colors">Couleurs des vagues</string>
     <string name="spectrum_accent">Accent</string>
@@ -380,4 +382,22 @@
     <string name="wallpaper_online_failed">Pas d\'image (pas de réseau ?)</string>
     <string name="home_pages">Pages d\'accueil</string>
     <string name="home_pages_hint">Glisser sur le côté : le tableau de bord, puis des pages de quatre widgets chacune.</string>
+    <string name="region_title">Langue et heure</string>
+    <string name="region_hint">Réglé ici en root ; sans root, chaque choix ouvre l\'écran d\'Android.</string>
+    <string name="region_language">Langue</string>
+    <string name="region_current">Actuellement : %1$s</string>
+    <string name="region_other">Autre…</string>
+    <string name="region_zone">Fuseau horaire</string>
+    <string name="region_auto_zone">Fuseau horaire automatique</string>
+    <string name="region_auto_zone_hint">Depuis le réseau mobile (carte SIM nécessaire)</string>
+    <string name="region_time">Date et heure</string>
+    <string name="region_now">%1$s</string>
+    <string name="region_auto_time">Heure automatique</string>
+    <string name="region_auto_time_hint">Depuis le réseau quand il y en a un ; LibreHU-service règle aussi l\'heure depuis le GPS</string>
+    <string name="region_24h">Format 24 heures</string>
+    <string name="region_set_date">Régler la date</string>
+    <string name="region_set_time">Régler l\'heure</string>
+    <string name="region_time_hint">Régler la date ou l\'heure à la main coupe l\'heure automatique.</string>
+    <string name="region_done">Fait</string>
+    <string name="region_no_root">Root indisponible : l\'écran d\'Android est ouvert à la place</string>
 </resources>

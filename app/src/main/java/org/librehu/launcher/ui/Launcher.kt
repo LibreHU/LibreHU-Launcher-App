@@ -300,6 +300,7 @@ private fun Rail(
             Modifier
                 .width(104.dp)
                 .fillMaxHeight()
+                .background(railBackground(look), RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp))
                 .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -350,6 +351,7 @@ private fun BottomRail(
             Modifier
                 .fillMaxWidth()
                 .height(96.dp)
+                .background(railBackground(look), RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -378,6 +380,9 @@ private fun BottomRail(
         Clock(onClick = { controlCenter.value = true }, onLongClick = actions.standby)
     }
 }
+
+/** Shortcut bar background: the theme's surface at the chosen opacity (Settings → Customisation). */
+private fun railBackground(look: ThemeSettings): Color = CarColors.Surface.copy(alpha = look.railOpacity.coerceIn(0, 100) / 100f)
 
 /** Power menu visible (opened from the rail, the control center or org.librehu.action.POWER_MENU). */
 private val powerMenu = mutableStateOf(false)
