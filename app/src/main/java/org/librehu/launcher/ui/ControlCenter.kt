@@ -296,6 +296,10 @@ fun ControlCenter(
                     CcTile(Icons.Default.PhonelinkRing, stringResource(R.string.find_phone), false) {
                         Toast.makeText(context, R.string.find_phone_sending, Toast.LENGTH_SHORT).show()
                         FindPhone.ring(context, context.getString(R.string.find_phone_message)) { r ->
+                            // Without root: Android's own dialog, then the tile again.
+                            if (r == FindPhone.Result.NO_PERMISSION) {
+                                (context as? android.app.Activity)?.requestPermissions(arrayOf(android.Manifest.permission.SEND_SMS), 0)
+                            }
                             Toast
                                 .makeText(
                                     context,
@@ -304,6 +308,7 @@ fun ControlCenter(
                                         FindPhone.Result.NO_NUMBER -> R.string.find_phone_no_number
                                         FindPhone.Result.NO_PHONE -> R.string.find_phone_no_phone
                                         FindPhone.Result.NO_MAP -> R.string.find_phone_no_map
+                                        FindPhone.Result.NO_PERMISSION -> R.string.find_phone_no_permission
                                         FindPhone.Result.REFUSED -> R.string.find_phone_refused
                                     },
                                     Toast.LENGTH_LONG,

@@ -1,15 +1,18 @@
 package org.librehu.launcher.status
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothProfile
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import java.lang.reflect.Method
+import java.util.concurrent.TimeUnit
 
 /**
  * "Where is my phone": Bluetooth has no profile to ring or vibrate a phone, so the head unit sends, through the phone
@@ -18,6 +21,8 @@ import java.lang.reflect.Method
  *
  * The number is the one the phone gives over hands-free (AT+CNUM, "subscriber number"), or typed in the settings.
  * The phone must allow access to messages for the head unit (asked on the phone the first time). An SMS may cost.
+ * Android's MAP client wants SEND_SMS from the caller (`MapClientService.sendMessage`): granted as root when it can be,
+ * else asked by the screen ([Result.NO_PERMISSION]).
  */
 object FindPhone {
     private const val TAG = "LibreHU-Launcher"
@@ -28,7 +33,7 @@ object FindPhone {
     private const val CONNECT_WAIT_MS = 10_000L
     private const val POLL_MS = 500L
 
-    enum class Result { SENT, NO_NUMBER, NO_PHONE, NO_MAP, REFUSED }
+    enum class Result { SENT, NO_NUMBER, NO_PHONE, NO_MAP, NO_PERMISSION, REFUSED }
 
     /** Number typed in the settings, else the one the phone gave. */
     fun number(context: Context): String {
@@ -77,6 +82,37 @@ object FindPhone {
         val number = number(app)
         if (number.isBlank()) return done(Result.NO_NUMBER)
         val adapter = BluetoothAdapter.getDefaultAdapter() ?: return done(Result.NO_PHONE)
+        Thread({
+            if (!hasPermission(app) && !grantAsRoot(app)) {
+                main.post { done(Result.NO_PERMISSION) }
+            } else {
+                main.post { connect(app, adapter, number, message, done) }
+            }
+        }, "find-phone-perm").start()
+    }
+
+    fun hasPermission(context: Context): Boolean =
+        context.checkSelfPermission(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED
+
+    /** `pm grant` as root (SuperSU asks once); true when granted. */
+    private fun grantAsRoot(context: Context): Boolean {
+        runCatching {
+            val p = ProcessBuilder("su", "-c", "pm grant ${context.packageName} ${Manifest.permission.SEND_SMS}").start()
+            p.outputStream.close()
+            if (!p.waitFor(20, TimeUnit.SECONDS)) p.destroy()
+        }
+        return hasPermission(context)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun connect(
+        app: Context,
+        adapter: BluetoothAdapter,
+        number: String,
+        message: String,
+        done: (Result) -> Unit,
+    ) {
+        val main = Handler(Looper.getMainLooper())
         exemptHiddenApi()
         val ok =
             try {

@@ -331,6 +331,7 @@
     <string name="find_phone_sent">Message sent: the phone should ring or vibrate</string>
     <string name="find_phone_no_number">Phone number unknown: Settings → General → Find my phone</string>
     <string name="find_phone_no_phone">No phone paired in Bluetooth</string>
+    <string name="find_phone_no_permission">Allow LibreHU Launcher to send SMS (asked now), then try again: the head unit sends the message through the phone.</string>
     <string name="find_phone_no_map">No message access (MAP) in this Bluetooth</string>
     <string name="find_phone_refused">The phone refused (allow access to messages on the phone)</string>
     <string name="find_phone_hint">Bluetooth cannot ring a phone: the head unit sends, through the phone (message access), a text message to the phone\'s own number, which then sounds or vibrates as set (not in do not disturb). The phone asks once to allow access to messages. An SMS may cost.</string>
