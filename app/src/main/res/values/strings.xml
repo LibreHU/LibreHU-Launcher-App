@@ -106,6 +106,8 @@
     <string name="rail_position">Shortcut bar</string>
     <string name="rail_left">Left</string>
     <string name="rail_bottom">Bottom</string>
+    <string name="rail_opacity">Shortcut bar opacity</string>
+    <string name="rail_opacity_hint">Background behind the bar, in the theme\'s colour: 0 % shows the wallpaper as it is, 100 % hides it.</string>
     <string name="wallpaper_spectrum">Spectrum</string>
     <string name="spectrum_colors">Colours of the waves</string>
     <string name="spectrum_accent">Accent</string>
@@ -380,4 +382,22 @@
     <string name="wallpaper_online_failed">No picture (no network?)</string>
     <string name="home_pages">Home pages</string>
     <string name="home_pages_hint">Swipe sideways: the dashboard, then pages of four widgets each.</string>
+    <string name="region_title">Language and time</string>
+    <string name="region_hint">Set here as root; without root each choice opens Android\'s own screen.</string>
+    <string name="region_language">Language</string>
+    <string name="region_current">Now: %1$s</string>
+    <string name="region_other">Other…</string>
+    <string name="region_zone">Time zone</string>
+    <string name="region_auto_zone">Automatic time zone</string>
+    <string name="region_auto_zone_hint">From the mobile network (a SIM card is needed)</string>
+    <string name="region_time">Date and time</string>
+    <string name="region_now">%1$s</string>
+    <string name="region_auto_time">Automatic time</string>
+    <string name="region_auto_time_hint">From the network when there is one; LibreHU-service also sets the clock from GPS</string>
+    <string name="region_24h">24-hour format</string>
+    <string name="region_set_date">Set the date</string>
+    <string name="region_set_time">Set the time</string>
+    <string name="region_time_hint">Setting the date or time by hand switches automatic time off.</string>
+    <string name="region_done">Done</string>
+    <string name="region_no_root">Root not available: Android\'s screen is opened instead</string>
 </resources>

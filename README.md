@@ -49,7 +49,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   [Neospectro](https://github.com/danielnavarrowo/Neospectro) (réécrit en OpenGL ES 2, pas de code repris : le dépôt
   Neospectro n'a pas de licence). 7 palettes dont la couleur d'accent ; option **« suivre la musique »** (spectre du
   son joué via le `Visualizer` d'Android, autorisation micro, rien n'est enregistré).
-- **Barre de raccourcis à gauche ou en bas** (Paramètres → Personnalisation).
+- **Barre de raccourcis à gauche ou en bas** (Paramètres → Personnalisation), avec un **fond réglable** : opacité
+  0 à 100 % dans la couleur de surface du thème (70 % par défaut ; 0 % = fond d'écran visible tel quel).
 - **Horloge de veille** : grande horloge numérique ou analogique sur fond noir, date, titre en cours (centré sous
   l'heure, artiste en dessous), couleur
   d'accent, luminosité réduite, léger décalage chaque minute (marquage de l'écran), pause de la lecture et reprise à
@@ -60,7 +61,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   du numéro d'urgence (112 par défaut), contacts d'urgence, position GPS (décimal + degrés-minutes-secondes) et
   informations pour les secours (nom, infos médicales, véhicule : marque, modèle, année, couleur et plaque repris
   de LibreHU-service) ; action `org.librehu.action.SOS`. Voir [docs/sos.md](docs/sos.md).
-- **Assistant de premier démarrage** : **véhicule** (nom de la voiture, qui renomme Bluetooth, point d'accès et
+- **Assistant de premier démarrage** : **langue et heure** (langue d'Android, fuseau horaire, heure / fuseau
+  automatiques, format 24 h, date et heure à la main ; réglés en root par un assistant `app_process`
+  — `LocalePicker.updateLocales`, `IAlarmManager.setTimeZone` / `setTime` d'Android 9 — sans permission privilégiée
+  en plus ; sans root, l'écran d'Android s'ouvre ; aussi dans Paramètres → Langue et heure), **véhicule** (nom de la voiture, qui renomme Bluetooth, point d'accès et
   Wi-Fi Direct, puis marque, modèle, année, couleur, plaque, énergie, côté conducteur, gardés par LibreHU-service
   pour toutes les applis LibreHU : SOS, Android Auto, CarPlay), apparence et barre, accès Android (accueil par
   défaut, notifications, position / appels), association Bluetooth du téléphone, mises à jour (LibreHU Apps),
