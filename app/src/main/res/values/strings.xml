@@ -434,4 +434,7 @@
     <string name="sos_own_number_hint">Last number given by the phone over Bluetooth (or typed in Settings → General): tell it to the emergency services so they can call back.</string>
     <string name="sos_own_number_none">The phone has not given its number over Bluetooth: it can be typed in Settings → General (Find my phone).</string>
     <string name="sos_own_number_settings">Phone number shown on the SOS screen: %1$s (given by the phone over Bluetooth, or typed in General).</string>
+    <string name="setup_root_skip">Skip this app</string>
+    <string name="setup_root_skipped">Skipped</string>
+    <string name="setup_root_outdated">Update this app first (LibreHU Apps): this version does not answer</string>
 </resources>

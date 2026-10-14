@@ -69,7 +69,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
      rien) et bouton **« Autoriser le root pour toutes les applis LibreHU »** : le launcher, puis LibreHU-service,
      LibreHU Apps, la radio FM, ViPER4Android, MCU Toolkit et Android Auto (ceux qui sont installés) demandent le root
      l'un après l'autre, donc toutes les fenêtres SuperSU arrivent ici, une seule fois ; état de chaque appli
-     (accordé, refusé, pas de réponse = SuperSU absent ou ancienne version de l'appli). Protocole : diffusion
+     (accordé, refusé, à mettre à jour = version sans le récepteur, détectée sans attendre, passée, pas de réponse) ;
+     bouton « Passer cette appli » pendant l'attente ; les applis jamais ouvertes sont réveillées
+     (`FLAG_INCLUDE_STOPPED_PACKAGES`). Protocole : diffusion
      `org.librehu.action.REQUEST_ROOT` envoyée au paquet (`reply_to` = le launcher), réponse
      `org.librehu.action.ROOT_RESULT` (`package`, `granted`) ; chaque appli lance seulement `su -c id`
      (`system/RootGrants.kt`, `RootRequestReceiver` dans chaque appli).

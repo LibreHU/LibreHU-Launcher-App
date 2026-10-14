@@ -35,7 +35,14 @@ object RootGrants {
             "org.librehu.headunit" to "Android Auto",
         )
 
-    enum class Result { WAITING, ASKING, GRANTED, DENIED, NO_ANSWER, NOT_INSTALLED }
+    enum class Result { WAITING, ASKING, GRANTED, DENIED, NO_ANSWER, SKIPPED, OUTDATED, NOT_INSTALLED }
+
+    /** "Skip": the app being asked is left (no SuperSU prompt came, or the user does not want it now). */
+    private val skip = kotlinx.coroutines.channels.Channel<Unit>(kotlinx.coroutines.channels.Channel.CONFLATED)
+
+    fun skipCurrent() {
+        skip.trySend(Unit)
+    }
 
     /** Asks each app in turn; [onUpdate] gets each app's result as it comes. */
     suspend fun requestAll(
@@ -43,9 +50,15 @@ object RootGrants {
         onUpdate: (String, Result) -> Unit,
     ) {
         val app = context.applicationContext
+        skip.tryReceive()
         for ((pkg, _) in APPS) {
             if (!installed(app, pkg)) {
                 onUpdate(pkg, Result.NOT_INSTALLED)
+                continue
+            }
+            // A version from before the receiver would never answer: say so at once instead of waiting.
+            if (pkg != app.packageName && !hasReceiver(app, pkg)) {
+                onUpdate(pkg, Result.OUTDATED)
                 continue
             }
             onUpdate(pkg, Result.ASKING)
@@ -64,6 +77,14 @@ object RootGrants {
         } catch (_: PackageManager.NameNotFoundException) {
             false
         }
+
+    private fun hasReceiver(
+        context: Context,
+        pkg: String,
+    ): Boolean =
+        runCatching {
+            context.packageManager.queryBroadcastReceivers(Intent(ACTION_REQUEST).setPackage(pkg), 0).isNotEmpty()
+        }.getOrDefault(true)
 
     private suspend fun suSelf(): Boolean =
         withContext(Dispatchers.IO) {
@@ -93,12 +114,21 @@ object RootGrants {
             }
         ContextCompat.registerReceiver(context, receiver, IntentFilter(ACTION_RESULT), ContextCompat.RECEIVER_EXPORTED)
         return try {
-            context.sendBroadcast(Intent(ACTION_REQUEST).setPackage(pkg).putExtra("reply_to", context.packageName))
-            when (withTimeoutOrNull(TimeUnit.SECONDS.toMillis(WAIT_S + 10)) { answer.await() }) {
-                true -> Result.GRANTED
-                false -> Result.DENIED
-                null -> Result.NO_ANSWER
-            }
+            // Stopped apps (never opened since their install, or force-stopped) get no broadcast without this flag.
+            context.sendBroadcast(
+                Intent(ACTION_REQUEST)
+                    .setPackage(pkg)
+                    .addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
+                    .putExtra("reply_to", context.packageName),
+            )
+            val outcome =
+                withTimeoutOrNull(TimeUnit.SECONDS.toMillis(WAIT_S + 5)) {
+                    kotlinx.coroutines.selects.select<Result> {
+                        answer.onAwait { if (it) Result.GRANTED else Result.DENIED }
+                        skip.onReceive { Result.SKIPPED }
+                    }
+                }
+            outcome ?: Result.NO_ANSWER
         } finally {
             runCatching { context.unregisterReceiver(receiver) }
         }
