@@ -228,7 +228,8 @@ fun LauncherScreen(
                             Modifier
                                 .weight(1f)
                                 .fillMaxWidth()
-                                .padding(top = 12.dp, start = 12.dp, end = 12.dp),
+                                // Gap above the bar (it has a background now).
+                                .padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 12.dp),
                     ) { content() }
                     BottomRail(pinned, screen, actions, sos, look) { menuFor = it }
                 }
@@ -242,7 +243,7 @@ fun LauncherScreen(
                             Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
-                                .padding(top = 12.dp, end = 12.dp, bottom = 12.dp),
+                                .padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 12.dp),
                     ) { content() }
                 }
             }
