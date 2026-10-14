@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,11 +59,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlin.math.abs
 import kotlinx.coroutines.delay
 import org.librehu.launcher.R
 import org.librehu.launcher.ui.CarColors
 import org.librehu.launcher.ui.CarTheme
-import kotlin.math.abs
 
 /**
  * SOS screen: countdown before calling the emergency number (cancellable), then large call buttons (emergency number,
@@ -226,6 +228,29 @@ class SosActivity : ComponentActivity() {
                             color = CarColors.TextDim,
                             fontSize = 15.sp,
                         )
+                    }
+                }
+                // The phone's own number, given by the phone over hands-free (or typed in the settings): to tell the
+                // emergency services, who can call back.
+                val phone by org.librehu.launcher.status.PhoneStatusWatcher
+                    .get(this@SosActivity)
+                    .state
+                    .collectAsStateWithLifecycle()
+                val ownNumber = remember(phone.connected) { org.librehu.launcher.status.FindPhone.number(this@SosActivity) }
+                Card(Icons.Default.Smartphone, stringResource(R.string.sos_own_number)) {
+                    if (ownNumber.isNotBlank()) {
+                        Text(ownNumber, color = CarColors.Text, fontSize = 30.sp, fontFamily = FontFamily.Monospace)
+                        Text(
+                            if (phone.connected && phone.name.isNotBlank()) {
+                                stringResource(R.string.sos_own_number_from, phone.name)
+                            } else {
+                                stringResource(R.string.sos_own_number_hint)
+                            },
+                            color = CarColors.TextDim,
+                            fontSize = 15.sp,
+                        )
+                    } else {
+                        Text(stringResource(R.string.sos_own_number_none), color = CarColors.TextDim, fontSize = 18.sp)
                     }
                 }
                 // The car as LibreHU-service describes it (make, model, colour, plate), then what was typed here.
