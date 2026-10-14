@@ -235,6 +235,9 @@ private fun RootWarning() {
                 running = false
             }
         }
+        if (running) {
+            SettingChoice(stringResource(R.string.setup_root_skip), false) { RootGrants.skipCurrent() }
+        }
         for ((pkg, name) in RootGrants.APPS) {
             val r = results[pkg] ?: continue
             if (r == RootGrants.Result.NOT_INSTALLED) continue
@@ -247,13 +250,15 @@ private fun RootWarning() {
                             RootGrants.Result.ASKING -> R.string.setup_root_asking
                             RootGrants.Result.GRANTED -> R.string.setup_root_ok
                             RootGrants.Result.DENIED -> R.string.setup_root_denied
+                            RootGrants.Result.SKIPPED -> R.string.setup_root_skipped
+                            RootGrants.Result.OUTDATED -> R.string.setup_root_outdated
                             else -> R.string.setup_root_no_answer
                         },
                     ),
                     color =
                         when (r) {
                             RootGrants.Result.GRANTED -> CarColors.Accent
-                            RootGrants.Result.DENIED, RootGrants.Result.NO_ANSWER -> Color(0xFFF44336)
+                            RootGrants.Result.DENIED, RootGrants.Result.NO_ANSWER, RootGrants.Result.OUTDATED -> Color(0xFFF44336)
                             else -> CarColors.TextDim
                         },
                     fontSize = 15.sp,
