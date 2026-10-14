@@ -81,7 +81,7 @@ class AppsRepository(
                             ?.let { f -> runCatching { BitmapFactory.decodeFile(f.path) }.getOrNull() }
                             ?.let { b -> Bitmap.createScaledBitmap(b, iconPx, iconPx, true).asImageBitmap() }
                     // A chosen icon is drawn as is, also with the themed icons.
-                    val glyph = if (icon == null) themedGlyph(pm, ai.packageName, iconPx) else null
+                    val glyph = if (icon == null) themedGlyph(pm, component, iconPx) else null
                     LauncherApp(
                         component,
                         label ?: it.loadLabel(pm).toString(),
@@ -95,18 +95,20 @@ class AppsRepository(
 
     /**
      * Single-colour icon declared by the app (`<meta-data android:name="org.librehu.themed_icon"
-     * android:resource="@drawable/…" />` on its application: every LibreHU app), with its scale in the circle.
+     * android:resource="@drawable/…" />` on its application: every LibreHU app, or on the launcher activity itself when
+     * an app has several entries), with its scale in the circle.
      */
     private fun themedGlyph(
         pm: PackageManager,
-        pkg: String,
+        component: ComponentName,
         px: Int,
     ): Pair<ImageBitmap, Float>? =
         runCatching {
-            val info = pm.getApplicationInfo(pkg, PackageManager.GET_META_DATA)
-            val res = info.metaData?.getInt(THEMED_ICON) ?: 0
+            val info = pm.getApplicationInfo(component.packageName, PackageManager.GET_META_DATA)
+            val own = runCatching { pm.getActivityInfo(component, PackageManager.GET_META_DATA).metaData?.getInt(THEMED_ICON) }.getOrNull()
+            val res = own?.takeIf { it != 0 } ?: info.metaData?.getInt(THEMED_ICON) ?: 0
             if (res == 0) return null
-            val d = pm.getDrawable(pkg, res, info) ?: return null
+            val d = pm.getDrawable(component.packageName, res, info) ?: return null
             val dp = d.intrinsicWidth / context.resources.displayMetrics.density
             // 108 dp = adaptive icon layer, the glyph already sits in its safe zone.
             d.toBitmap(px, px).asImageBitmap() to (if (dp >= 100) 1f else 0.55f)
