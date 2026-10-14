@@ -434,4 +434,7 @@
     <string name="sos_own_number_hint">Dernier numéro transmis par le téléphone en Bluetooth (ou tapé dans Paramètres → Général) : à donner aux secours pour qu\'ils puissent rappeler.</string>
     <string name="sos_own_number_none">Le téléphone n\'a pas transmis son numéro en Bluetooth : il peut être tapé dans Paramètres → Général (Retrouver le téléphone).</string>
     <string name="sos_own_number_settings">Numéro du téléphone affiché sur l\'écran SOS : %1$s (transmis par le téléphone en Bluetooth, ou tapé dans Général).</string>
+    <string name="setup_root_skip">Passer cette appli</string>
+    <string name="setup_root_skipped">Passée</string>
+    <string name="setup_root_outdated">Mettre d\'abord cette appli à jour (LibreHU Apps) : cette version ne répond pas</string>
 </resources>
