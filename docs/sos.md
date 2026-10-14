@@ -10,6 +10,9 @@
   est **composé** et il reste à appuyer sur « appeler ». Les contacts d'urgence (5 max) sont appelés directement si
   `CALL_PHONE` est accordée.
 - **Position** : GPS (et réseau si disponible), en décimal et en degrés-minutes-secondes, précision et âge.
+- **Numéro du téléphone** : celui que le téléphone connecté transmet en mains libres (« subscriber number », AT+CNUM, gardé
+  par le launcher), sinon celui tapé dans Paramètres → Général (Retrouver le téléphone), avec le nom du téléphone : à
+  donner aux secours pour qu'ils puissent rappeler. Aussi rappelé dans Paramètres → SOS.
 - **Informations pour les secours** : nom, infos médicales, véhicule (modèle, couleur, plaque), à lire à
   l'opérateur.
   La description du véhicule tenue par LibreHU-service (marque, modèle, année, couleur, plaque : premier démarrage
