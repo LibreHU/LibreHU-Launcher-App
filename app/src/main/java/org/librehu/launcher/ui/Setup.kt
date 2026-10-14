@@ -39,6 +39,7 @@ private enum class SetupStep(
     val title: Int,
 ) {
     WELCOME(R.string.setup_welcome),
+    REGION(R.string.region_title),
     VEHICLE(R.string.vehicle_title),
     LOOK(R.string.settings_look),
     ACCESS(R.string.setup_access),
@@ -48,8 +49,8 @@ private enum class SetupStep(
 }
 
 /**
- * First start assistant (and Settings → General): the car (name and description, kept by LibreHU-service for every
- * LibreHU app), appearance and rail position, Android permissions, Bluetooth pairing, updates, standby clock, SOS. Every step can be skipped; everything stays in the settings.
+ * First start assistant (and Settings → General): language, time zone, date and time, the car (name and description,
+ * kept by LibreHU-service for every LibreHU app), appearance and rail position, Android permissions, Bluetooth pairing, updates, standby clock, SOS. Every step can be skipped; everything stays in the settings.
  */
 @Composable
 fun SetupScreen(
@@ -95,6 +96,10 @@ fun SetupScreen(
                 when (step) {
                     SetupStep.WELCOME -> {
                         SettingHint(stringResource(R.string.setup_welcome_text))
+                    }
+
+                    SetupStep.REGION -> {
+                        RegionSettingsPage()
                     }
 
                     SetupStep.VEHICLE -> {

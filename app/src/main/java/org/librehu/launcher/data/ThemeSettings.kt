@@ -101,6 +101,8 @@ data class ThemeSettings(
     val systemWide: Boolean = true,
     val wallpaper: WallpaperKind = WallpaperKind.NONE,
     val rail: RailPosition = RailPosition.LEFT,
+    /** Background of the shortcut bar, in % (0 = none, the wallpaper shows through). */
+    val railOpacity: Int = ThemeStore.DEFAULT_RAIL_OPACITY,
     val spectrumPalette: SpectrumPalette = SpectrumPalette.ACCENT,
     /** Spectrum follows the sound being played (Visualizer, needs RECORD_AUDIO). */
     val spectrumAudio: Boolean = false,
@@ -163,6 +165,7 @@ class ThemeStore(
             .putBoolean("system_wide", s.systemWide)
             .putString("wallpaper", s.wallpaper.name)
             .putString("rail", s.rail.name)
+            .putInt("rail_opacity", s.railOpacity)
             .putString("spectrum_palette", s.spectrumPalette.name)
             .putBoolean("spectrum_audio", s.spectrumAudio)
             .putBoolean("show_phone", s.showPhoneStatus)
@@ -380,6 +383,7 @@ class ThemeStore(
             systemWide = prefs.getBoolean("system_wide", true),
             wallpaper = kind,
             rail = runCatching { RailPosition.valueOf(prefs.getString("rail", null)!!) }.getOrDefault(RailPosition.LEFT),
+            railOpacity = prefs.getInt("rail_opacity", DEFAULT_RAIL_OPACITY).coerceIn(0, 100),
             spectrumPalette =
                 runCatching { SpectrumPalette.valueOf(prefs.getString("spectrum_palette", null)!!) }.getOrDefault(SpectrumPalette.ACCENT),
             spectrumAudio = prefs.getBoolean("spectrum_audio", false),
@@ -410,6 +414,10 @@ class ThemeStore(
         private const val MAX_ANIMATED_BYTES = 64L * 1024 * 1024
         private const val MAX_VIDEO_BYTES = 512L * 1024 * 1024
         const val MAX_HOME_PAGES = 4
+
+        /** Shortcut bar background by default: readable over a wallpaper, still showing it. */
+        const val DEFAULT_RAIL_OPACITY = 70
+        val RAIL_OPACITIES = listOf(0, 25, 50, 70, 85, 100)
 
         /** Sent to the other LibreHU apps when the effective theme changes (extras: dark, accent). */
         const val ACTION_THEME_CHANGED = "org.librehu.action.THEME_CHANGED"
