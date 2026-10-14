@@ -61,14 +61,31 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   du numéro d'urgence (112 par défaut), contacts d'urgence, position GPS (décimal + degrés-minutes-secondes) et
   informations pour les secours (nom, infos médicales, véhicule : marque, modèle, année, couleur et plaque repris
   de LibreHU-service) ; action `org.librehu.action.SOS`. Voir [docs/sos.md](docs/sos.md).
-- **Assistant de premier démarrage** : **langue et heure** (langue d'Android, fuseau horaire, heure / fuseau
-  automatiques, format 24 h, date et heure à la main ; réglés en root par un assistant `app_process`
-  — `LocalePicker.updateLocales`, `IAlarmManager.setTimeZone` / `setTime` d'Android 9 — sans permission privilégiée
-  en plus ; sans root, l'écran d'Android s'ouvre ; aussi dans Paramètres → Langue et heure), **véhicule** (nom de la voiture, qui renomme Bluetooth, point d'accès et
-  Wi-Fi Direct, puis marque, modèle, année, couleur, plaque, énergie, côté conducteur, gardés par LibreHU-service
-  pour toutes les applis LibreHU : SOS, Android Auto, CarPlay), apparence et barre, accès Android (accueil par
-  défaut, notifications, position / appels), association Bluetooth du téléphone, mises à jour (LibreHU Apps),
-  horloge de veille, SOS ; relançable depuis Paramètres → Général.
+- **Assistant de premier démarrage**, étape par étape (chacune peut être passée et se retrouve dans les paramètres) :
+  1. **Bienvenue + SuperSU obligatoire** : avertissement (LibreHU a besoin du root par SuperSU installé dans la ROM ;
+     chaque demande SuperSU d'une appli LibreHU doit être accordée avec « Se souvenir », sinon la fonction ne fait
+     rien) et bouton **« Autoriser le root pour toutes les applis LibreHU »** : le launcher, puis LibreHU-service,
+     LibreHU Apps, la radio FM, ViPER4Android, MCU Toolkit et Android Auto (ceux qui sont installés) demandent le root
+     l'un après l'autre, donc toutes les fenêtres SuperSU arrivent ici, une seule fois ; état de chaque appli
+     (accordé, refusé, pas de réponse = SuperSU absent ou ancienne version de l'appli). Protocole : diffusion
+     `org.librehu.action.REQUEST_ROOT` envoyée au paquet (`reply_to` = le launcher), réponse
+     `org.librehu.action.ROOT_RESULT` (`package`, `granted`) ; chaque appli lance seulement `su -c id`
+     (`system/RootGrants.kt`, `RootRequestReceiver` dans chaque appli).
+  2. **Langue et heure** : langue d'Android, fuseau horaire, heure / fuseau automatiques, format 24 h, date et heure à
+     la main ; réglés en root par un assistant `app_process` (`LocalePicker.updateLocales`,
+     `IAlarmManager.setTimeZone` / `setTime` d'Android 9), sans permission privilégiée en plus ; sans root, l'écran
+     d'Android s'ouvre ; aussi dans Paramètres → Langue et heure.
+  3. **Véhicule** : nom de la voiture (qui renomme Bluetooth, point d'accès et Wi-Fi Direct), marque, modèle, année,
+     couleur, plaque, énergie, côté conducteur, gardés par LibreHU-service pour toutes les applis LibreHU (SOS,
+     Android Auto, CarPlay).
+  4. **Apparence et barre**, 5. **accès Android** (accueil par défaut, notifications, position / appels, mises à jour
+     par LibreHU Apps), 6. **horloge de veille**, 7. **SOS**.
+  8. **Appairer le téléphone** (façon « configuration rapide ») : nom Bluetooth de l'autoradio tel que le téléphone le
+     verra (celui de la voiture), Bluetooth à activer, **rendre visible 2 min**, les étapes sur le téléphone (ouvrir le
+     Bluetooth, choisir l'autoradio, vérifier le code des deux côtés, autoriser contacts et journal d'appels), les
+     appareils appairés avec le téléphone connecté en premier, mis à jour en direct ; bouton vers les réglages
+     Bluetooth d'Android (`ui/BluetoothSetup.kt`).
+  9. **Fin.** Relançable depuis Paramètres → Général.
 - **État près de l'horloge** : téléphone connecté en Bluetooth (barres de réseau, batterie, opérateur, lus sur le
   profil mains libres HFP) et **GPS de l'autoradio** (gris éteint, jaune en recherche avec le nombre de satellites
   visibles, vert position acquise avec les satellites utilisés). Désactivables (Paramètres → Personnalisation). Sous l'état
