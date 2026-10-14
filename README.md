@@ -136,8 +136,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   réglables), aussi dans le widget ; image distincte pour le **mode sombre**, ou image unique affichée telle quelle,
   inversée en mode clair ou inversée en mode sombre.
 - **Icônes LibreHU aux couleurs du thème** : les applis LibreHU déclarent une icône monochrome (meta-data
-  `org.librehu.themed_icon`), que le launcher dessine sur la couleur d'accent ; elle suit le thème clair / sombre et
-  la couleur en direct (désactivable). Les autres applis gardent leur icône.
+  `org.librehu.themed_icon` sur l'application, ou sur l'activité quand une appli a plusieurs entrées, comme « CVBS IN »
+  de LibreHU-service), que le launcher dessine sur la couleur d'accent ; elle suit le thème clair / sombre et la
+  couleur en direct (désactivable). Les autres applis gardent leur icône.
 - Actions `org.librehu.action.POWER_MENU` et `org.librehu.action.ALL_APPS` (touches de façade de LibreHU-service).
 - Barres système masquées (balayer depuis le bord pour les afficher).
 
