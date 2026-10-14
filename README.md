@@ -110,7 +110,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   téléphone ; l'autoradio envoie donc, par le téléphone lui-même (profil d'accès aux messages MAP), un SMS à son
   propre numéro : il sonne ou vibre selon ses réglages (pas en « ne pas déranger »). Numéro donné par le téléphone en
   mains libres (AT+CNUM) ou saisi dans Paramètres → Général. Le téléphone demande une fois l'accès aux messages ; un
-  SMS peut être facturé.
+  SMS peut être facturé. Le client MAP d'Android exige la permission **SEND_SMS** de l'appli qui envoie
+  (`MapClientService.sendMessage`) : accordée en root au premier essai, sinon demandée par Android.
 - **Sauvegarde des paramètres** (Paramètres → Général → Sauvegarde) : export / import dans un fichier JSON des
   réglages (thème, accueil, veille, SOS, verrouillage, TPMS) et des images importées (fond d'écran, voiture TPMS) ;
   le launcher redémarre après l'import. La disposition des widgets n'est pas incluse (leurs identifiants changent

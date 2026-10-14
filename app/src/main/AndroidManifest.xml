@@ -64,6 +64,8 @@
     <uses-permission
         android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
+    <!-- "Ring my phone": Android's MAP client wants it from the app sending the message (FindPhone). -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
     <!-- Bluetooth LE tyre sensors (TPMS): scan only, never located. -->
     <uses-permission
         android:name="android.permission.BLUETOOTH_SCAN"
