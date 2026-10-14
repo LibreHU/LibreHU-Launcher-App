@@ -17,23 +17,33 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import org.librehu.launcher.R
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeStore
+import org.librehu.launcher.system.RootGrants
 
 private enum class SetupStep(
     val title: Int,
@@ -45,12 +55,15 @@ private enum class SetupStep(
     ACCESS(R.string.setup_access),
     STANDBY(R.string.standby_title),
     SOS(R.string.sos_settings),
+    BLUETOOTH(R.string.bt_setup_title),
     DONE(R.string.setup_done),
 }
 
 /**
- * First start assistant (and Settings → General): language, time zone, date and time, the car (name and description,
- * kept by LibreHU-service for every LibreHU app), appearance and rail position, Android permissions, Bluetooth pairing, updates, standby clock, SOS. Every step can be skipped; everything stays in the settings.
+ * First start assistant (and Settings → General): SuperSU warning and root for every LibreHU app at once, language,
+ * time zone, date and time, the car (name and description, kept by LibreHU-service for every LibreHU app), appearance
+ * and rail position, Android permissions, updates, standby clock, SOS, then the phone's Bluetooth pairing step by
+ * step. Every step can be skipped; everything stays in the settings.
  */
 @Composable
 fun SetupScreen(
@@ -96,6 +109,7 @@ fun SetupScreen(
                 when (step) {
                     SetupStep.WELCOME -> {
                         SettingHint(stringResource(R.string.setup_welcome_text))
+                        RootWarning()
                     }
 
                     SetupStep.REGION -> {
@@ -119,13 +133,6 @@ fun SetupScreen(
                         )
                         SetupItem(stringResource(R.string.setup_media), stringResource(R.string.media_access), actions.grantMediaAccess)
                         val context = LocalContext.current
-                        SetupItem(stringResource(R.string.setup_bluetooth), stringResource(R.string.setup_bluetooth_hint)) {
-                            runCatching {
-                                context.startActivity(
-                                    Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                                )
-                            }
-                        }
                         context.packageManager.getLaunchIntentForPackage("org.librehu.ota")?.let { ota ->
                             SetupItem(stringResource(R.string.setup_updates), stringResource(R.string.setup_updates_hint)) {
                                 runCatching { context.startActivity(ota.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
@@ -144,6 +151,10 @@ fun SetupScreen(
 
                     SetupStep.SOS -> {
                         SosSettingsPage(actions, full = false)
+                    }
+
+                    SetupStep.BLUETOOTH -> {
+                        BluetoothSetupPage()
                     }
 
                     SetupStep.DONE -> {
@@ -185,5 +196,69 @@ private fun SetupItem(
         }
         Spacer(Modifier.size(12.dp))
         SettingChoice(stringResource(R.string.setup_open), false, onClick)
+    }
+}
+
+/**
+ * LibreHU needs root through SuperSU in the ROM, and every SuperSU request of a LibreHU app must be granted
+ * ("Remember" ticked) or that function does nothing. One button asks for all the LibreHU apps that use root, one
+ * after the other ([RootGrants]), so all the SuperSU prompts come here, once.
+ */
+@Composable
+private fun RootWarning() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val results = remember { mutableStateMapOf<String, RootGrants.Result>() }
+    var running by remember { mutableStateOf(false) }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(CarColors.SurfaceHigh)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Warning, null, tint = Color(0xFFF9AB00), modifier = Modifier.size(32.dp))
+            Spacer(Modifier.size(12.dp))
+            Text(stringResource(R.string.setup_root_title), color = CarColors.Text, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+        }
+        Text(stringResource(R.string.setup_root_text), color = CarColors.Text, fontSize = 16.sp)
+        Text(stringResource(R.string.setup_root_allow), color = CarColors.TextDim, fontSize = 15.sp)
+        SettingChoice(stringResource(if (running) R.string.setup_root_testing else R.string.setup_root_test), !running && results.isEmpty()) {
+            if (running) return@SettingChoice
+            running = true
+            results.clear()
+            RootGrants.APPS.forEach { (pkg, _) -> results[pkg] = RootGrants.Result.WAITING }
+            scope.launch {
+                RootGrants.requestAll(context) { pkg, r -> results[pkg] = r }
+                running = false
+            }
+        }
+        for ((pkg, name) in RootGrants.APPS) {
+            val r = results[pkg] ?: continue
+            if (r == RootGrants.Result.NOT_INSTALLED) continue
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(name, color = CarColors.Text, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                Text(
+                    stringResource(
+                        when (r) {
+                            RootGrants.Result.WAITING -> R.string.setup_root_waiting
+                            RootGrants.Result.ASKING -> R.string.setup_root_asking
+                            RootGrants.Result.GRANTED -> R.string.setup_root_ok
+                            RootGrants.Result.DENIED -> R.string.setup_root_denied
+                            else -> R.string.setup_root_no_answer
+                        },
+                    ),
+                    color =
+                        when (r) {
+                            RootGrants.Result.GRANTED -> CarColors.Accent
+                            RootGrants.Result.DENIED, RootGrants.Result.NO_ANSWER -> Color(0xFFF44336)
+                            else -> CarColors.TextDim
+                        },
+                    fontSize = 15.sp,
+                )
+            }
+        }
     }
 }
