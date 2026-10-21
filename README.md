@@ -28,6 +28,22 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   notification d'alerte, **widget « Pneus »** (4 pneus autour de la voiture, rouge en alerte, ouvre l'écran TPMS)
   utilisable dans les emplacements du launcher ou sur n'importe quel autre écran d'accueil. Protocole :
   [docs/tpms.md](docs/tpms.md).
+- **Météo** (Paramètres → Conduite, désactivée par défaut) : température, temps, ressenti, min / max du jour à la
+  position GPS de l'autoradio (arrondie à 0,01°, environ 1 km) par **Open-Meteo** (gratuit sans clé pour un usage non
+  commercial, ≤ 10 000 appels / jour, données CC BY 4.0), actualisée toutes les 15 min à 2 h ou après 5 km ;
+  **widget « Météo »** (toucher = actualiser) et symbole + température **dans la barre** près de l'heure (option).
+  `weather/WeatherRepo.kt`.
+- **Limitation de vitesse** (Paramètres → Conduite, désactivée par défaut) : vitesse maximale de la route lue dans
+  **OpenStreetMap** (`maxspeed`, `maxspeed:forward` / `:backward` selon le sens, valeurs implicites `FR:urban` 50,
+  `FR:rural` 80, `FR:motorway` 130, zones 30…) par l'API **Overpass** : routes à 500 m autour chargées d'un coup,
+  rechargées 300 m avant d'en sortir (au plus toutes les 10 s, attente de 60 s si le serveur est saturé) ; la voiture
+  est rattachée à la route la plus proche allant dans son sens (cap GPS), une autre route doit gagner deux fois de
+  suite. **Alerte de dépassement** : marge en km/h et/ou en %, durée minimale, 6 sons au choix (bip, double, triple,
+  carillon, alarme, son de notification) ou aucun, volume, une fois ou répétée, signal au changement de limitation,
+  vitesse GPS ou OBD. **Widget « Limitation »** (panneau, rouge en dépassement), **mode « avec la limitation »** du
+  widget Vitesse, et panneau **dans la barre** (option). Serveur Overpass au choix. Alerte de limitation seulement :
+  **aucun radar** (signaler leur position est interdit en France, art. R413-15 du Code de la route). Données OSM
+  participatives : les panneaux font foi. `speed/SpeedLimits.kt`, `speed/SpeedLimitManager.kt`.
 - **OBD plein écran** (tiroir → OBD, ou l'action `org.librehu.launcher.action.SHOW_OBD`), comme l'écran Pneus : à
   gauche la **batterie de la voiture** (tension, charge estimée moteur arrêté avec sa barre, « en charge » / « ne
   charge pas » / « surtension » moteur tournant), à droite vitesse et régime en grand puis toutes les valeurs lues
@@ -150,8 +166,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Téléphone** : « Pas de service » quand le réseau est perdu ; charge déduite (téléphone sur l'USB de l'autoradio,
   ou batterie qui remonte) : le profil HFP ne transmet ni l'état de charge ni le type de réseau (2G…5G).
 - **Widget « Vitesse »** (fourni par le launcher, emplacements ou tout écran d'accueil) : vitesse GPS de
-  l'autoradio, vitesse OBD (diffusion `org.librehu.action.OBD` de LibreHU-service avec un ELM327) ou les deux côte à
-  côte ; un toucher change de vue. Aux couleurs du thème.
+  l'autoradio, vitesse OBD (diffusion `org.librehu.action.OBD` de LibreHU-service avec un ELM327), les deux côte à
+  côte, ou la vitesse **avec le panneau de limitation** de la route (rouge en dépassement) ; un toucher change de vue.
+  Aux couleurs du thème.
 - **TPMS** : alerte sonore (bips sur le haut-parleur média, répétition réglable, bouton « Couper »), fréquence
   d'actualisation, et **capteurs Bluetooth LE** sans récepteur (formats ZEEPIN / TP630 et « BR » / SYTPMS) : onglet
   « Capteurs Bluetooth » pour les voir et les placer sur chaque pneu. Voiture vue de dessus dessinée, roues aux

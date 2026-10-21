@@ -337,6 +337,8 @@ private fun Rail(
                 if (look.showPower) SmallRailButton(Icons.Default.PowerSettingsNew, R.string.power_title) { powerMenu.value = true }
             }
         }
+        LimitChip()
+        WeatherChip()
         Clock(onClick = { controlCenter.value = true }, onLongClick = actions.standby)
     }
 }
@@ -382,6 +384,8 @@ private fun BottomRail(
         if (look.showPhoneStatus) PhoneStatusView(compact = false, label = look.phoneLabel, batteryPercent = look.phoneBatteryPercent)
         if (look.showGps) GpsStatusView { actions.requestPermissions(GPS_PERMISSIONS) }
         if (look.showPower) SmallRailButton(Icons.Default.PowerSettingsNew, R.string.power_title) { powerMenu.value = true }
+        LimitChip()
+        WeatherChip()
         Clock(onClick = { controlCenter.value = true }, onLongClick = actions.standby)
     }
 }
