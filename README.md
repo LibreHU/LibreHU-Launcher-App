@@ -65,11 +65,18 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   informations pour les secours (nom, infos médicales, véhicule : marque, modèle, année, couleur et plaque repris
   de LibreHU-service) ; action `org.librehu.action.SOS`. Voir [docs/sos.md](docs/sos.md).
 - **Assistant de premier démarrage**, étape par étape (chacune peut être passée et se retrouve dans les paramètres) :
-  1. **Bienvenue + SuperSU obligatoire** : avertissement (LibreHU a besoin du root par SuperSU installé dans la ROM ;
-     chaque demande SuperSU d'une appli LibreHU doit être accordée avec « Se souvenir », sinon la fonction ne fait
-     rien) et bouton **« Autoriser le root pour toutes les applis LibreHU »** : le launcher, puis LibreHU-service,
+  1. **Bienvenue + root** : le type de root est détecté (`system/RootManager.kt` : appli du gestionnaire, sinon
+     fichiers `/data/adb/ksud`, `/data/adb/ap`, `/data/adb/magisk`, `daemonsu`, sinon un `su` seul) et le texte
+     s'adapte :
+     - **SuperSU / Magisk** (demande à l'écran) : chaque demande d'une appli LibreHU doit être accordée pour toujours
+       (« Se souvenir » sous SuperSU, pas « une seule fois » sous Magisk) ;
+     - **KernelSU / KernelSU Next / APatch** (pas de demande : une appli non autorisée ne voit pas le root) : bouton
+       **« Ouvrir KernelSU… »**, activer chaque appli LibreHU dans l'onglet Superuser du gestionnaire, puis vérifier ;
+     - **su seul** (intégré au noyau ou à la ROM, sans gestionnaire) : rien à accorder, simple vérification ;
+     - **aucun root** : ce qui ne marchera pas, et comment en installer un ;
+     puis bouton **« Autoriser le root pour toutes les applis LibreHU »** : le launcher, puis LibreHU-service,
      LibreHU Apps, la radio FM, ViPER4Android, MCU Toolkit et Android Auto (ceux qui sont installés) demandent le root
-     l'un après l'autre, donc toutes les fenêtres SuperSU arrivent ici, une seule fois ; état de chaque appli
+     l'un après l'autre, donc toutes les demandes arrivent ici, une seule fois ; état de chaque appli
      (accordé, refusé, à mettre à jour = version sans le récepteur, détectée sans attendre, passée, pas de réponse) ;
      bouton « Passer cette appli » pendant l'attente ; les applis jamais ouvertes sont réveillées
      (`FLAG_INCLUDE_STOPPED_PACKAGES`). Protocole : diffusion
@@ -84,13 +91,19 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
      couleur, plaque, énergie, côté conducteur, gardés par LibreHU-service pour toutes les applis LibreHU (SOS,
      Android Auto, CarPlay).
   4. **Apparence et barre**, 5. **accès Android** (accueil par défaut, notifications, position / appels, mises à jour
-     par LibreHU Apps), 6. **horloge de veille**, 7. **SOS**.
-  8. **Appairer le téléphone** (façon « configuration rapide ») : nom Bluetooth de l'autoradio tel que le téléphone le
+     par LibreHU Apps).
+  6. **Fonctions LibreHU** : raccourcis vers les réglages des autres applis à voir sur un autoradio neuf ou
+     fraîchement flashé (chaque ligne n'apparaît que si l'appli est installée) : **restaurer une sauvegarde**
+     (LibreHU-service → Système), **touches au volant** (BtnRemap → Mode test des touches, appuis longs,
+     combinaisons), **menu son à la molette** (LibreHU-service → Audio, désactivé par défaut), **rétroéclairage des
+     boutons** (LibreHU-service → Lumières).
+  7. **Horloge de veille**, 8. **SOS**.
+  9. **Appairer le téléphone** (façon « configuration rapide ») : nom Bluetooth de l'autoradio tel que le téléphone le
      verra (celui de la voiture), Bluetooth à activer, **rendre visible 2 min**, les étapes sur le téléphone (ouvrir le
      Bluetooth, choisir l'autoradio, vérifier le code des deux côtés, autoriser contacts et journal d'appels), les
      appareils appairés avec le téléphone connecté en premier, mis à jour en direct ; bouton vers les réglages
      Bluetooth d'Android (`ui/BluetoothSetup.kt`).
-  9. **Fin.** Relançable depuis Paramètres → Général.
+  10. **Fin.** Relançable depuis Paramètres → Général.
 - **État près de l'horloge** : téléphone connecté en Bluetooth (barres de réseau, batterie, opérateur, lus sur le
   profil mains libres HFP) et **GPS de l'autoradio** (gris éteint, jaune en recherche avec le nombre de satellites
   visibles, vert position acquise avec les satellites utilisés). Désactivables (Paramètres → Personnalisation). Sous l'état
