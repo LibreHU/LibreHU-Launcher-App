@@ -12,12 +12,13 @@ import org.librehu.launcher.R
 import org.librehu.launcher.data.ThemeProvider
 import kotlin.math.roundToInt
 
-/** What a speed widget shows; a touch on the widget goes to the next mode. */
-enum class SpeedMode { GPS, OBD, BOTH }
+/** What a speed widget shows; a touch on the widget goes to the next mode. LIMIT: speed and the road's limit sign. */
+enum class SpeedMode { GPS, OBD, BOTH, LIMIT }
 
 /**
  * Speed widget of the launcher (its slots or any home screen): GPS speed, OBD speed (LibreHU-service with an
- * ELM327), or both side by side. Redrawn by [SpeedMonitor] on each change, in the launcher theme.
+ * ELM327), both side by side, or the speed with the road's limit ([SpeedLimitManager], red while too fast). Redrawn by
+ * [SpeedMonitor] on each change, in the launcher theme.
  */
 class SpeedWidget : AppWidgetProvider() {
     override fun onUpdate(
@@ -116,16 +117,34 @@ class SpeedWidget : AppWidgetProvider() {
                     "setBackgroundResource",
                     if (dark) R.drawable.widget_background else R.drawable.widget_background_light,
                 )
+                val limit = SpeedLimitManager.get(context).state.value
+                setViewVisibility(R.id.speed_limit, if (mode == SpeedMode.LIMIT) View.VISIBLE else View.GONE)
+                setTextViewText(R.id.speed_limit, limit.kmh?.toString() ?: "—")
                 setViewVisibility(R.id.speed_gps, if (mode == SpeedMode.OBD) View.GONE else View.VISIBLE)
-                setViewVisibility(R.id.speed_obd, if (mode == SpeedMode.GPS) View.GONE else View.VISIBLE)
+                setViewVisibility(R.id.speed_obd, if (mode == SpeedMode.GPS || mode == SpeedMode.LIMIT) View.GONE else View.VISIBLE)
                 setViewVisibility(R.id.speed_divider, if (mode == SpeedMode.BOTH) View.VISIBLE else View.GONE)
                 val big = if (mode == SpeedMode.BOTH) 44f else 64f
-                setTextViewText(R.id.speed_gps_value, shown(s.gpsKmh))
+                // With the limit: the speed it is compared with (GPS, else OBD), red while too fast.
+                val gpsShown = if (mode == SpeedMode.LIMIT) limit.speedKmh ?: s.gpsKmh else s.gpsKmh
+                setTextViewText(R.id.speed_gps_value, shown(gpsShown))
                 setTextViewTextSize(R.id.speed_gps_value, android.util.TypedValue.COMPLEX_UNIT_SP, big)
-                setTextColor(R.id.speed_gps_value, if (s.gpsKmh != null) text else dim)
+                setTextColor(
+                    R.id.speed_gps_value,
+                    when {
+                        mode == SpeedMode.LIMIT && limit.over -> 0xFFE53935.toInt()
+                        gpsShown != null -> text
+                        else -> dim
+                    },
+                )
                 setTextViewText(
                     R.id.speed_gps_label,
-                    context.getString(if (s.gpsPermission) R.string.speed_gps else R.string.speed_gps_permission),
+                    context.getString(
+                        when {
+                            !s.gpsPermission -> R.string.speed_gps_permission
+                            mode == SpeedMode.LIMIT -> R.string.speed_widget_title
+                            else -> R.string.speed_gps
+                        },
+                    ),
                 )
                 setTextColor(R.id.speed_gps_label, accent)
                 setTextColor(R.id.speed_gps_unit, dim)

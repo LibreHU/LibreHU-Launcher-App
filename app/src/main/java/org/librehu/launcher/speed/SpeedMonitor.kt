@@ -23,6 +23,17 @@ data class SpeedState(
     val gpsKmh: Float? = null,
     val obdKmh: Float? = null,
     val gpsPermission: Boolean = true,
+    /** Last GPS fix (for the road's speed limit), null without a fix. */
+    val fix: GpsFix? = null,
+)
+
+/** A GPS position: [bearing] in degrees, null when the receiver gives none (stopped). */
+data class GpsFix(
+    val lat: Double,
+    val lon: Double,
+    val bearing: Float?,
+    val accuracy: Float,
+    val time: Long,
 )
 
 /**
@@ -47,9 +58,9 @@ class SpeedMonitor private constructor(
     private val gps =
         object : LocationListener {
             override fun onLocationChanged(l: Location) {
-                if (!l.hasSpeed()) return
                 gpsAt = System.currentTimeMillis()
-                set(_state.value.copy(gpsKmh = l.speed * 3.6f))
+                val fix = GpsFix(l.latitude, l.longitude, if (l.hasBearing() && l.speed > 1.5f) l.bearing else null, l.accuracy, gpsAt)
+                set(_state.value.copy(gpsKmh = if (l.hasSpeed()) l.speed * 3.6f else _state.value.gpsKmh, fix = fix))
             }
 
             @Deprecated("Deprecated in Java")
@@ -82,7 +93,7 @@ class SpeedMonitor private constructor(
             override fun run() {
                 val now = System.currentTimeMillis()
                 var s = _state.value
-                if (s.gpsKmh != null && now - gpsAt > STALE_MS) s = s.copy(gpsKmh = null)
+                if ((s.gpsKmh != null || s.fix != null) && now - gpsAt > STALE_MS) s = s.copy(gpsKmh = null, fix = null)
                 if (s.obdKmh != null && now - obdAt > STALE_MS) s = s.copy(obdKmh = null)
                 set(s)
                 main.postDelayed(this, 2_000)

@@ -17,7 +17,7 @@ object SettingsBackup {
     private const val VERSION = 1
     private const val MAX_FILE_BYTES = 8L * 1024 * 1024
 
-    private val PREFS = listOf("launcher", "theme", "standby", "sos", "lock", "tpms")
+    private val PREFS = listOf("launcher", "theme", "standby", "sos", "lock", "tpms", "weather", "speed_limit")
 
     /** Keys that only make sense on this unit. */
     private val SKIP = setOf("slot_", "widget_")

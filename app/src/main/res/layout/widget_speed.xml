@@ -88,4 +88,19 @@
             android:textColor="#FF9AA0A6"
             android:textSize="14sp" />
     </LinearLayout>
+
+    <!-- Limit of the road (mode "with the limit"). -->
+    <TextView
+        android:id="@+id/speed_limit"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="10dp"
+        android:background="@drawable/limit_sign_small"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="—"
+        android:textColor="#FF202124"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 </LinearLayout>

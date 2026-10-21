@@ -219,6 +219,32 @@
                 android:resource="@xml/speed_widget_info" />
         </receiver>
 
+        <!-- Speed limit sign of the road (OpenStreetMap). -->
+        <receiver
+            android:name=".speed.SpeedLimitWidget"
+            android:exported="true"
+            android:label="@string/limit_widget_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/speed_limit_widget_info" />
+        </receiver>
+
+        <!-- Weather at the car's position (Open-Meteo). -->
+        <receiver
+            android:name=".weather.WeatherWidget"
+            android:exported="true"
+            android:label="@string/weather_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_info" />
+        </receiver>
+
         <receiver
             android:name=".tpms.TpmsWidget"
             android:exported="true"
