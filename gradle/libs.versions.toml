@@ -8,6 +8,7 @@ core-ktx = "1.19.0"
 coroutines = "1.11.0"
 
 [libraries]
+zxing-core = { group = "com.google.zxing", name = "core", version = "3.5.3" }
 usb-serial = { group = "com.github.mik3y", name = "usb-serial-for-android", version = "3.10.0" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
 compose-ui = { group = "androidx.compose.ui", name = "ui" }

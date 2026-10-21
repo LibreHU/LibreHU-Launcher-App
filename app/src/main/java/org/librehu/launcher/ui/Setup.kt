@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -221,6 +222,7 @@ private fun SetupItem(
 private fun LibreHuFeatures() {
     val context = LocalContext.current
     SettingHint(stringResource(R.string.setup_librehu_text))
+    PhoneAppQr()
     for ((pkg, title, hint) in FEATURES) {
         val open = context.packageManager.getLaunchIntentForPackage(pkg) ?: continue
         SetupItem(stringResource(title), stringResource(hint)) {
@@ -236,6 +238,53 @@ private val FEATURES =
         Triple("org.librehu.service", R.string.setup_feature_sound, R.string.setup_feature_sound_hint),
         Triple("org.librehu.service", R.string.setup_feature_backlight, R.string.setup_feature_backlight_hint),
     )
+
+/** Latest release of LibreHU's phone app (rolling `latest-main` release of its repository). */
+const val PHONE_APP_URL = "https://github.com/LibreHU/LibreHU-bridge-app/releases/download/latest-main/LibreHU-Bridge-main.apk"
+
+/**
+ * QR code of the phone app's latest release, to install it on the phone (it then pairs with the QR code of
+ * LibreHU-service → Bluetooth → Phone). Made here (ZXing), no network needed.
+ */
+@Composable
+private fun PhoneAppQr() {
+    val qr =
+        remember {
+            runCatching {
+                val m =
+                    com.google.zxing.qrcode.QRCodeWriter().encode(
+                        PHONE_APP_URL,
+                        com.google.zxing.BarcodeFormat.QR_CODE,
+                        480,
+                        480,
+                        mapOf(com.google.zxing.EncodeHintType.MARGIN to 2),
+                    )
+                val px = IntArray(m.width * m.height) { i -> if (m.get(i % m.width, i / m.width)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt() }
+                android.graphics.Bitmap.createBitmap(px, m.width, m.height, android.graphics.Bitmap.Config.ARGB_8888)
+            }.getOrNull()
+        }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(CarColors.SurfaceHigh)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        qr?.let {
+            androidx.compose.foundation.Image(
+                it.asImageBitmap(),
+                null,
+                Modifier.size(180.dp).clip(RoundedCornerShape(12.dp)).background(Color.White).padding(6.dp),
+            )
+            Spacer(Modifier.size(16.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.setup_phone_app), color = CarColors.Text, fontSize = 18.sp)
+            Text(stringResource(R.string.setup_phone_app_hint), color = CarColors.TextDim, fontSize = 14.sp)
+        }
+    }
+}
 
 /** Root statuses that name the root manager. */
 private val NAMED_STATUS =
