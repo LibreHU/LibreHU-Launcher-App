@@ -548,4 +548,7 @@
     <string name="limit_credit">Données : © les contributeurs d\'OpenStreetMap (ODbL), via l\'API Overpass.</string>
     <string name="limit_widget_title">Limitation</string>
     <string name="limit_widget_description">Panneau de limitation de la route (OpenStreetMap), rouge en cas de dépassement</string>
+    <string name="bridge_fahrenheit">Températures en °F</string>
+    <string name="setup_phone_app">Appli LibreHU pour le téléphone</string>
+    <string name="setup_phone_app_hint">Scannez ce QR code avec le téléphone pour télécharger la dernière version de l\'appli LibreHU (Android). Elle règle l\'autoradio depuis le téléphone et affiche batterie et OBD dans Android Auto. Ensuite, associez-la : LibreHU-service → Bluetooth → Téléphone → Appli téléphone LibreHU.</string>
 </resources>

@@ -85,4 +85,6 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.coroutines.android)
     implementation(libs.usb.serial)
+    // QR code of the phone app download (first start assistant).
+    implementation(libs.zxing.core)
 }

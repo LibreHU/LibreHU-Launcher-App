@@ -87,6 +87,11 @@
         android:name="android.hardware.usb.host"
         android:required="false" />
 
+    <!-- LibreHU apps (same signing key): LibreHU-service reads the launcher's settings pages for the phone app. -->
+    <permission
+        android:name="org.librehu.permission.BRIDGE"
+        android:protectionLevel="signature" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -198,6 +203,13 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/sos_widget_info" />
         </receiver>
+
+        <!-- Settings pages for LibreHU's phone app, read by LibreHU-service's bridge (bridge/BridgeProvider). -->
+        <provider
+            android:name=".bridge.BridgeProvider"
+            android:authorities="org.librehu.launcher.bridge"
+            android:exported="true"
+            android:permission="org.librehu.permission.BRIDGE" />
 
         <!-- Effective light / dark theme for the other LibreHU apps (read only, no private data). -->
         <provider

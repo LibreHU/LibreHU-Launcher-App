@@ -548,4 +548,7 @@
     <string name="limit_credit">Data: © OpenStreetMap contributors (ODbL), through the Overpass API.</string>
     <string name="limit_widget_title">Speed limit</string>
     <string name="limit_widget_description">Speed limit sign of the road (OpenStreetMap), red when over</string>
+    <string name="bridge_fahrenheit">Temperatures in °F</string>
+    <string name="setup_phone_app">LibreHU phone app</string>
+    <string name="setup_phone_app_hint">Scan this QR code with the phone to download the latest LibreHU app (Android). It sets the head unit from the phone and shows battery and OBD in Android Auto. Then pair it: LibreHU-service → Bluetooth → Phone → LibreHU phone app.</string>
 </resources>
