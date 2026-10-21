@@ -44,6 +44,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   widget Vitesse, et panneau **dans la barre** (option). Serveur Overpass au choix. Alerte de limitation seulement :
   **aucun radar** (signaler leur position est interdit en France, art. R413-15 du Code de la route). Données OSM
   participatives : les panneaux font foi. `speed/SpeedLimits.kt`, `speed/SpeedLimitManager.kt`.
+- **Appli téléphone LibreHU** : la page **Conduite** (météo, limitation de vitesse : interrupteurs, marge, son, essai)
+  est aussi réglable depuis le téléphone, par LibreHU-service (fournisseur `org.librehu.launcher.bridge`, permission de
+  signature `org.librehu.permission.BRIDGE`, `bridge/BridgeProvider.kt`).
 - **OBD plein écran** (tiroir → OBD, ou l'action `org.librehu.launcher.action.SHOW_OBD`), comme l'écran Pneus : à
   gauche la **batterie de la voiture** (tension, charge estimée moteur arrêté avec sa barre, « en charge » / « ne
   charge pas » / « surtension » moteur tournant), à droite vitesse et régime en grand puis toutes les valeurs lues
@@ -115,7 +118,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
      Android Auto, CarPlay).
   4. **Apparence et barre**, 5. **accès Android** (accueil par défaut, notifications, position / appels, mises à jour
      par LibreHU Apps).
-  6. **Fonctions LibreHU** : raccourcis vers les réglages des autres applis à voir sur un autoradio neuf ou
+  6. **Fonctions LibreHU** : **QR code de l'appli téléphone LibreHU** (dernière version, `latest-main` de
+     LibreHU-bridge-app, généré sur place sans réseau) à scanner avec le téléphone, puis raccourcis vers les réglages
+     des autres applis à voir sur un autoradio neuf ou
      fraîchement flashé (chaque ligne n'apparaît que si l'appli est installée) : **restaurer une sauvegarde**
      (LibreHU-service → Système), **touches au volant** (BtnRemap → Mode test des touches, appuis longs,
      combinaisons), **menu son à la molette** (LibreHU-service → Audio, désactivé par défaut), **rétroéclairage des
