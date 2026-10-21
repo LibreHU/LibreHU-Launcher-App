@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Eject
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
@@ -144,6 +145,7 @@ class LauncherActions(
     val mediaNext: () -> Unit,
     val mediaPrevious: () -> Unit,
     val mediaSeek: (Long) -> Unit = {},
+    val mediaEject: () -> Unit = {},
     val mediaOpen: () -> Unit,
     val grantMediaAccess: () -> Unit,
     val addWidget: (LauncherPrefs.Slot, ComponentName) -> Unit,
@@ -1064,6 +1066,7 @@ private fun NowPlayingContent(
             MediaButton(Icons.Default.SkipPrevious, R.string.previous, false, actions.mediaPrevious)
             MediaButton(if (np.playing) Icons.Default.Pause else Icons.Default.PlayArrow, R.string.play_pause, true, actions.mediaToggle)
             MediaButton(Icons.Default.SkipNext, R.string.next, false, actions.mediaNext)
+            if (np.canEject) MediaButton(Icons.Default.Eject, R.string.eject, false, actions.mediaEject)
         }
     }
 }

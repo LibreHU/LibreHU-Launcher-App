@@ -31,7 +31,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Carte média** : titre, pochette, ⏮ ⏯ ⏭ et **barre de progression** (temps écoulé / durée, déplaçable quand
   l'appli accepte l'avance rapide). **Musique Bluetooth** : l'AVRCP n'a pas de « aller à la position », seulement
   avance / retour rapides : le lanceur appuie dessus pas à pas en relisant la position, jusqu'à quelques secondes de
-  la cible (approximatif ; s'arrête si le lecteur du téléphone les ignore).
+  la cible (approximatif ; s'arrête si le lecteur du téléphone les ignore). **LibreHU Disc** : bouton ⏏ **Éjecter**
+  en plus (action `org.librehu.disc.action.EJECT` de sa session : arrête la lecture et ouvre le tiroir).
 - **Menu power** : verrouiller, horloge de veille, redémarrer, éteindre, redémarrer par la MCU ; boutons centrés.
 - **Fluidité** : fonds animés redessinés à 20 i/s (vagues 30, spectre 30) sans recomposer l'écran, arrêtés quand le
   lanceur n'est pas visible ; APK publié en build *release* (non débogable, compilé entièrement par Android).
