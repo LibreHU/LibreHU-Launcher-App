@@ -92,6 +92,11 @@ fun StandbyFace(
                 Spacer(Modifier.height(12.dp))
                 Text(DateFormat.getDateInstance(DateFormat.FULL).format(Date(now)), color = dim, fontSize = 26.sp)
             }
+            if (s.showCarBattery) {
+                Spacer(Modifier.height(10.dp))
+                org.librehu.launcher.ui
+                    .CarBatteryLine()
+            }
             val np = nowPlaying
             if (s.showMedia && np != null && np.playing) {
                 Spacer(Modifier.height(28.dp))

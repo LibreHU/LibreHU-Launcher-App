@@ -21,6 +21,8 @@ data class StandbySettings(
     val showMedia: Boolean = true,
     /** Phone status (signal, battery, operator / name) above the clock. */
     val showPhone: Boolean = false,
+    /** Car battery (LibreHU-service's OBD adapter) under the clock, when the adapter is connected. */
+    val showCarBattery: Boolean = true,
     /** Accent colour instead of white. */
     val accentColor: Boolean = false,
     /** Screen brightness while shown (0..1), or [KEEP_BRIGHTNESS]. */
@@ -54,6 +56,7 @@ class StandbyStore private constructor(
             .putBoolean("date", s.showDate)
             .putBoolean("media", s.showMedia)
             .putBoolean("phone", s.showPhone)
+            .putBoolean("car_battery", s.showCarBattery)
             .putBoolean("accent", s.accentColor)
             .putFloat("brightness", s.brightness)
             .putBoolean("pause_media", s.pauseMedia)
@@ -76,6 +79,7 @@ class StandbyStore private constructor(
             showDate = prefs.getBoolean("date", d.showDate),
             showMedia = prefs.getBoolean("media", d.showMedia),
             showPhone = prefs.getBoolean("phone", d.showPhone),
+            showCarBattery = prefs.getBoolean("car_battery", d.showCarBattery),
             accentColor = prefs.getBoolean("accent", d.accentColor),
             brightness = prefs.getFloat("brightness", d.brightness),
             pauseMedia = prefs.getBoolean("pause_media", d.pauseMedia),

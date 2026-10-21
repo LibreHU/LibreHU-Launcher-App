@@ -28,6 +28,12 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   notification d'alerte, **widget « Pneus »** (4 pneus autour de la voiture, rouge en alerte, ouvre l'écran TPMS)
   utilisable dans les emplacements du launcher ou sur n'importe quel autre écran d'accueil. Protocole :
   [docs/tpms.md](docs/tpms.md).
+- **OBD plein écran** (tiroir → OBD, ou l'action `org.librehu.launcher.action.SHOW_OBD`), comme l'écran Pneus : à
+  gauche la **batterie de la voiture** (tension, charge estimée moteur arrêté avec sa barre, « en charge » / « ne
+  charge pas » / « surtension » moteur tournant), à droite vitesse et régime en grand puis toutes les valeurs lues
+  par l'adaptateur ELM327 de LibreHU-service (standard et **valeurs constructeur** de la voiture choisie, base
+  ddt4all). Données : broadcast `org.librehu.action.OBD` du service (`obd/ObdLive.kt`), rien à interroger ; adaptateur,
+  valeurs, voiture et alarmes batterie se règlent dans LibreHU-service → OBD (bouton « Réglages OBD »).
 - **Carte média** : titre, pochette, ⏮ ⏯ ⏭ et **barre de progression** (temps écoulé / durée, déplaçable quand
   l'appli accepte l'avance rapide). **Musique Bluetooth** : l'AVRCP n'a pas de « aller à la position », seulement
   avance / retour rapides : le lanceur appuie dessus pas à pas en relisant la position, jusqu'à quelques secondes de
@@ -53,7 +59,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Barre de raccourcis à gauche ou en bas** (Paramètres → Personnalisation), avec un **fond réglable** : opacité
   0 à 100 % dans la couleur de surface du thème (70 % par défaut ; 0 % = fond d'écran visible tel quel).
 - **Horloge de veille** : grande horloge numérique ou analogique sur fond noir, date, titre en cours (centré sous
-  l'heure, artiste en dessous), couleur
+  l'heure, artiste en dessous), **batterie de la voiture** sous la date (tension, charge ou état de charge, quand
+  l'adaptateur OBD de LibreHU-service est connecté ; désactivable), couleur
   d'accent, luminosité réduite, léger décalage chaque minute (marquage de l'écran), pause de la lecture et reprise à
   la sortie. Déclenchée après N minutes sans toucher l'accueil, par un appui long sur l'heure de la barre, par l'action
   `org.librehu.action.STANDBY_CLOCK` (touche remappée) ou comme **économiseur d'écran Android** (DreamService). Voir
@@ -111,7 +118,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   (paliers de 20 % : le profil HFP ne donne que 6 niveaux). L'horloge de veille peut aussi afficher l'état du téléphone.
 - **Bouton marche/arrêt** : verrouiller, horloge de veille, redémarrer, éteindre (installation privilégiée ou root),
   redémarrer **via le MCU** (branches `ivi` : `ISystem.reboot()` ; `librehu-service` : API 5 `resetSoc()`).
-- **Écran de verrouillage** : horloge ou écran noir, glisser ou code ; action `org.librehu.action.LOCK` pour une
+- **Écran de verrouillage** : horloge ou écran noir, glisser ou code, **batterie de la voiture** (OBD, option de
+  l'horloge de veille) ; action `org.librehu.action.LOCK` pour une
   touche (bouton power de la façade tactile, remappage), la même touche déverrouille sans code ; revient par-dessus
   l'accueil tant qu'il n'est pas déverrouillé.
 - **Centre de contrôle** (appui sur l'heure de la barre) : heure, date, état du téléphone, luminosité (autorisation
