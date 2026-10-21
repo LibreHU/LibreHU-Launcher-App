@@ -30,6 +30,8 @@ data class NowPlaying(
     val canSeek: Boolean = false,
     /** Seeking is approximate (Bluetooth: AVRCP has no "go to position", only fast forward / rewind). */
     val seekApprox: Boolean = false,
+    /** The player opens a disc tray (LibreHU Disc's eject action). */
+    val canEject: Boolean = false,
 ) {
     /** Position now, extrapolated like Android's media notifications. */
     fun positionNow(now: Long = android.os.SystemClock.elapsedRealtime()): Long {
@@ -180,6 +182,9 @@ class MediaRepository(
 
     fun previous() = current?.transportControls?.skipToPrevious()
 
+    /** Opens the tray of the disc player (sessions that offer [EJECT_ACTION]). */
+    fun eject() = current?.transportControls?.sendCustomAction(EJECT_ACTION, null)
+
     fun open() {
         val c = current ?: return
         try {
@@ -228,12 +233,16 @@ class MediaRepository(
                         (c.playbackState?.actions ?: 0L) and PlaybackState.ACTION_SEEK_TO != 0L ||
                             (isBluetooth(c) && md.getLong(MediaMetadata.METADATA_KEY_DURATION) > 0),
                     seekApprox = isBluetooth(c) && (c.playbackState?.actions ?: 0L) and PlaybackState.ACTION_SEEK_TO == 0L,
+                    canEject = c.playbackState?.customActions.orEmpty().any { it.action == EJECT_ACTION },
                 )
             }
     }
 }
 
 private const val TOGGLE_TRUST_MS = 4000L
+
+/** Custom action of LibreHU Disc's media session: stops playback and opens the tray. */
+private const val EJECT_ACTION = "org.librehu.disc.action.EJECT"
 private const val BT_PACKAGE = "com.android.bluetooth"
 private const val BT_PLAY_STATUS = "com.android.bluetooth.a2dpsink.mbs.CUSTOM_ACTION_GET_PLAY_STATUS_NATIVE"
 private const val SEEK_TOLERANCE_MS = 5000L
