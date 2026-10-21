@@ -44,6 +44,7 @@ import org.librehu.launcher.R
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeStore
 import org.librehu.launcher.system.RootGrants
+import org.librehu.launcher.system.RootManager
 
 private enum class SetupStep(
     val title: Int,
@@ -53,6 +54,7 @@ private enum class SetupStep(
     VEHICLE(R.string.vehicle_title),
     LOOK(R.string.settings_look),
     ACCESS(R.string.setup_access),
+    LIBREHU(R.string.setup_librehu),
     STANDBY(R.string.standby_title),
     SOS(R.string.sos_settings),
     BLUETOOTH(R.string.bt_setup_title),
@@ -60,9 +62,10 @@ private enum class SetupStep(
 }
 
 /**
- * First start assistant (and Settings → General): SuperSU warning and root for every LibreHU app at once, language,
+ * First start assistant (and Settings → General): root warning (SuperSU, Magisk, KernelSU…) and root for every LibreHU app at once, language,
  * time zone, date and time, the car (name and description, kept by LibreHU-service for every LibreHU app), appearance
- * and rail position, Android permissions, updates, standby clock, SOS, then the phone's Bluetooth pairing step by
+ * and rail position, Android permissions, updates, the other LibreHU apps (backup, wheel keys, sound menu, button
+ * backlight), standby clock, SOS, then the phone's Bluetooth pairing step by
  * step. Every step can be skipped; everything stays in the settings.
  */
 @Composable
@@ -145,6 +148,10 @@ fun SetupScreen(
                         }
                     }
 
+                    SetupStep.LIBREHU -> {
+                        LibreHuFeatures()
+                    }
+
                     SetupStep.STANDBY -> {
                         StandbySettingsPage(actions, full = false)
                     }
@@ -200,16 +207,48 @@ private fun SetupItem(
 }
 
 /**
- * LibreHU needs root through SuperSU in the ROM, and every SuperSU request of a LibreHU app must be granted
- * ("Remember" ticked) or that function does nothing. One button asks for all the LibreHU apps that use root, one
- * after the other ([RootGrants]), so all the SuperSU prompts come here, once.
+ * LibreHU needs root, and every LibreHU app that uses it must be allowed or that function does nothing. The root
+ * solution is detected ([RootManager]): SuperSU / Magisk ask with a prompt per app ("Remember" / "Forever"), KernelSU
+ * (Next) and APatch never ask (each app is ticked in the manager's Superuser list, the button opens it), a bare su has
+ * nothing to grant. One button then asks for all the LibreHU apps that use root, one after the other ([RootGrants]).
  */
+/**
+ * The other LibreHU apps' settings worth a look on a new unit: restoring a backup made on the previous ROM, the
+ * steering wheel keys (BtnRemap's key test), the sound menu on the wheel (off by default) and the button backlight.
+ * Each line opens its app (shown only when installed); the hint says where the setting is.
+ */
+@Composable
+private fun LibreHuFeatures() {
+    val context = LocalContext.current
+    SettingHint(stringResource(R.string.setup_librehu_text))
+    for ((pkg, title, hint) in FEATURES) {
+        val open = context.packageManager.getLaunchIntentForPackage(pkg) ?: continue
+        SetupItem(stringResource(title), stringResource(hint)) {
+            runCatching { context.startActivity(open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        }
+    }
+}
+
+private val FEATURES =
+    listOf(
+        Triple("org.librehu.service", R.string.setup_feature_backup, R.string.setup_feature_backup_hint),
+        Triple("org.librehu.btnremap", R.string.setup_feature_keys, R.string.setup_feature_keys_hint),
+        Triple("org.librehu.service", R.string.setup_feature_sound, R.string.setup_feature_sound_hint),
+        Triple("org.librehu.service", R.string.setup_feature_backlight, R.string.setup_feature_backlight_hint),
+    )
+
+/** Root statuses that name the root manager. */
+private val NAMED_STATUS =
+    setOf(R.string.setup_root_asking, R.string.setup_root_denied, R.string.setup_root_denied_list, R.string.setup_root_no_answer)
+
 @Composable
 private fun RootWarning() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val results = remember { mutableStateMapOf<String, RootGrants.Result>() }
     var running by remember { mutableStateOf(false) }
+    val root = remember { RootManager.detect(context) }
+    val manager = root.name
     Column(
         Modifier
             .fillMaxWidth()
@@ -221,11 +260,36 @@ private fun RootWarning() {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Warning, null, tint = Color(0xFFF9AB00), modifier = Modifier.size(32.dp))
             Spacer(Modifier.size(12.dp))
-            Text(stringResource(R.string.setup_root_title), color = CarColors.Text, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+            Text(
+                when (root.kind) {
+                    RootManager.Kind.NONE -> stringResource(R.string.setup_root_title_none)
+                    RootManager.Kind.PLAIN -> stringResource(R.string.setup_root_title_plain)
+                    else -> stringResource(R.string.setup_root_title, manager)
+                },
+                color = CarColors.Text,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+            )
         }
         Text(stringResource(R.string.setup_root_text), color = CarColors.Text, fontSize = 16.sp)
-        Text(stringResource(R.string.setup_root_allow), color = CarColors.TextDim, fontSize = 15.sp)
-        SettingChoice(stringResource(if (running) R.string.setup_root_testing else R.string.setup_root_test), !running && results.isEmpty()) {
+        Text(
+            when (root.kind) {
+                RootManager.Kind.PROMPT -> stringResource(R.string.setup_root_allow, manager)
+                RootManager.Kind.ALLOWLIST -> stringResource(R.string.setup_root_allow_list, manager)
+                RootManager.Kind.PLAIN -> stringResource(R.string.setup_root_allow_plain)
+                RootManager.Kind.NONE -> stringResource(R.string.setup_root_allow_none)
+            },
+            color = CarColors.TextDim,
+            fontSize = 15.sp,
+        )
+        root.pkg?.let { pkg -> context.packageManager.getLaunchIntentForPackage(pkg) }?.let { open ->
+            if (root.kind == RootManager.Kind.ALLOWLIST) {
+                SettingChoice(stringResource(R.string.setup_root_open, manager), false) {
+                    runCatching { context.startActivity(open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                }
+            }
+        }
+        SettingChoice(if (running) stringResource(R.string.setup_root_testing, manager.ifEmpty { "su" }) else stringResource(R.string.setup_root_test), !running && results.isEmpty()) {
             if (running) return@SettingChoice
             running = true
             results.clear()
@@ -243,18 +307,18 @@ private fun RootWarning() {
             if (r == RootGrants.Result.NOT_INSTALLED) continue
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(name, color = CarColors.Text, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                val status =
+                    when (r) {
+                        RootGrants.Result.WAITING -> R.string.setup_root_waiting
+                        RootGrants.Result.ASKING -> if (root.kind == RootManager.Kind.PROMPT) R.string.setup_root_asking else R.string.setup_root_checking
+                        RootGrants.Result.GRANTED -> R.string.setup_root_ok
+                        RootGrants.Result.DENIED -> if (root.kind == RootManager.Kind.ALLOWLIST) R.string.setup_root_denied_list else R.string.setup_root_denied
+                        RootGrants.Result.SKIPPED -> R.string.setup_root_skipped
+                        RootGrants.Result.OUTDATED -> R.string.setup_root_outdated
+                        else -> R.string.setup_root_no_answer
+                    }
                 Text(
-                    stringResource(
-                        when (r) {
-                            RootGrants.Result.WAITING -> R.string.setup_root_waiting
-                            RootGrants.Result.ASKING -> R.string.setup_root_asking
-                            RootGrants.Result.GRANTED -> R.string.setup_root_ok
-                            RootGrants.Result.DENIED -> R.string.setup_root_denied
-                            RootGrants.Result.SKIPPED -> R.string.setup_root_skipped
-                            RootGrants.Result.OUTDATED -> R.string.setup_root_outdated
-                            else -> R.string.setup_root_no_answer
-                        },
-                    ),
+                    if (status in NAMED_STATUS) stringResource(status, manager.ifEmpty { "su" }) else stringResource(status),
                     color =
                         when (r) {
                             RootGrants.Result.GRANTED -> CarColors.Accent
