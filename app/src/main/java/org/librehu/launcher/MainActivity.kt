@@ -193,6 +193,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch { snapshotFlow { screen.value }.collect { reportHome() } }
         hideSystemBars()
         if (intent?.action == TpmsWidget.ACTION_SHOW_TPMS) screen.value = Screen.TPMS
+        if (intent?.action == ACTION_SHOW_OBD) screen.value = Screen.OBD
         intent?.let(::handleShortcut)
         if (!prefs.setupDone) screen.value = Screen.SETUP
 
@@ -322,6 +323,7 @@ class MainActivity : ComponentActivity() {
         if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED) TpmsManager.get(this).connect()
         // TPMS widget tapped.
         if (intent.action == TpmsWidget.ACTION_SHOW_TPMS) screen.value = Screen.TPMS
+        if (intent.action == ACTION_SHOW_OBD) screen.value = Screen.OBD
         handleShortcut(intent)
     }
 
@@ -514,6 +516,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private companion object {
+        /** Opens the OBD screen (e.g. from another app or a key mapping). */
+        const val ACTION_SHOW_OBD = "org.librehu.launcher.action.SHOW_OBD"
         const val REQUEST_CONFIGURE = 2
         const val ACTION_POWER_MENU = "org.librehu.action.POWER_MENU"
         const val ACTION_ALL_APPS = "org.librehu.action.ALL_APPS"
