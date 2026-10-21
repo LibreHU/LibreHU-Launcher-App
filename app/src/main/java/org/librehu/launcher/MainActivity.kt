@@ -47,7 +47,9 @@ import org.librehu.launcher.lock.LockStore
 import org.librehu.launcher.power.PowerActions
 import org.librehu.launcher.sos.SosActivity
 import org.librehu.launcher.sos.SosStore
+import org.librehu.launcher.speed.SpeedLimitManager
 import org.librehu.launcher.speed.SpeedWidget
+import org.librehu.launcher.weather.WeatherRepo
 import org.librehu.launcher.standby.StandbyActivity
 import org.librehu.launcher.standby.StandbyStore
 import org.librehu.launcher.status.GpsStatusWatcher
@@ -166,6 +168,18 @@ class MainActivity : ComponentActivity() {
         themeController.start(lifecycleScope)
         TpmsManager.get(this).start()
         SpeedWidget.ensureRunning(this)
+        // Weather and the road's speed limit (Settings → Driving): followed while on, for the bar and the widgets.
+        WeatherRepo.get(this).apply {
+            onChange = { org.librehu.launcher.weather.WeatherWidget.refresh(applicationContext) }
+            start()
+        }
+        SpeedLimitManager.get(this).apply {
+            onChange = {
+                org.librehu.launcher.speed.SpeedLimitWidget.refresh(applicationContext)
+                SpeedWidget.refresh(applicationContext)
+            }
+            start()
+        }
         AndroidAutoLink.start(this) // Open Headunit's session and next maneuver for the dashboard
         Thread({ VehicleLink.start(this) }, "vehicle").start() // the car's description from LibreHU-service
         apps.start()

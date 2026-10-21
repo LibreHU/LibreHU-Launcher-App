@@ -81,6 +81,7 @@ private enum class SettingsTab(
     STANDBY(R.string.standby_title),
     SOS(R.string.sos_settings),
     LOCK(R.string.lock_title),
+    DRIVING(R.string.driving_title),
     REGION(R.string.region_title),
     GENERAL(R.string.settings_general),
 }
@@ -111,6 +112,7 @@ fun SettingsScreen(
             SettingsTab.STANDBY -> StandbySettingsPage(actions)
             SettingsTab.SOS -> SosSettingsPage(actions)
             SettingsTab.LOCK -> LockSettingsPage(actions)
+            SettingsTab.DRIVING -> DrivingSettingsPage(actions)
             SettingsTab.REGION -> RegionSettingsPage()
             SettingsTab.GENERAL -> GeneralSettings(actions)
         }
