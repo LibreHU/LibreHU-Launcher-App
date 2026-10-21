@@ -67,6 +67,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   **Wikimedia Commons**, ou **photo au hasard** (Lorem Picsum, photos Unsplash) ; nouvelle image chaque jour, toutes les
   6 heures ou à chaque démarrage, et bouton « Nouvelle image maintenant ». Téléchargée seulement avec du réseau
   (environ 0,5 Mo), la dernière reste sans réseau ; titre et crédit de l'image en petit dans un coin (désactivable).
+- **Style** (Paramètres → Personnalisation) : **Moderne** ou **rétro** — **VFD ambre** (afficheur fluorescent des
+  autoradios des années 80), **LCD vert**, **cassette** (tons chauds des années 70) ; chaque style a ses couleurs en
+  clair et en sombre (jour / nuit et phares comme d'habitude), police à chasse fixe partout, et la nuit **lignes de
+  balayage** sur tout l'écran pour l'ambre et le vert (un dessin en cache, sans animation : pas de coût en continu).
 - **Fonds d'écran** (Paramètres) : aucun, animations intégrées à la couleur d'accent (aurore, étoiles, vagues),
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
   focus audio), ou **fond Android / live wallpaper** affiché derrière le launcher (`FLAG_SHOW_WALLPAPER`). Les

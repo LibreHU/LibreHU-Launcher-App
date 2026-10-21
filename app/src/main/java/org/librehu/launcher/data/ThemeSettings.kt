@@ -97,6 +97,8 @@ enum class SpectrumPalette(
 data class ThemeSettings(
     val mode: ThemeMode = ThemeMode.AUTO,
     val accent: Accent = Accent.BLUE,
+    /** Modern or retro look (colours, font, scan lines). */
+    val style: org.librehu.launcher.ui.ThemeStyle = org.librehu.launcher.ui.ThemeStyle.MODERN,
     /** Also switch the whole system (other apps) to light / dark. Needs MODIFY_DAY_NIGHT_MODE (privileged). */
     val systemWide: Boolean = true,
     val wallpaper: WallpaperKind = WallpaperKind.NONE,
@@ -162,6 +164,7 @@ class ThemeStore(
             .edit()
             .putString("mode", s.mode.name)
             .putString("accent", s.accent.name)
+            .putString("style", s.style.name)
             .putBoolean("system_wide", s.systemWide)
             .putString("wallpaper", s.wallpaper.name)
             .putString("rail", s.rail.name)
@@ -380,6 +383,9 @@ class ThemeStore(
         return ThemeSettings(
             mode = runCatching { ThemeMode.valueOf(prefs.getString("mode", null)!!) }.getOrDefault(ThemeMode.AUTO),
             accent = runCatching { Accent.valueOf(prefs.getString("accent", null)!!) }.getOrDefault(Accent.BLUE),
+            style =
+                runCatching { org.librehu.launcher.ui.ThemeStyle.valueOf(prefs.getString("style", null)!!) }
+                    .getOrDefault(org.librehu.launcher.ui.ThemeStyle.MODERN),
             systemWide = prefs.getBoolean("system_wide", true),
             wallpaper = kind,
             rail = runCatching { RailPosition.valueOf(prefs.getString("rail", null)!!) }.getOrDefault(RailPosition.LEFT),
