@@ -15,6 +15,7 @@
     <string name="media_access">Tap to allow notification access: it lets the launcher show and control what is playing.</string>
     <string name="nothing_playing">Nothing playing</string>
     <string name="previous">Previous</string>
+    <string name="eject">Eject</string>
     <string name="next">Next</string>
     <string name="play_pause">Play / pause</string>
     <string name="pin_hint">Long press an app to pin it to the side rail.</string>

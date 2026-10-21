@@ -16,6 +16,7 @@ import android.media.AudioManager
 import android.media.ToneGenerator
 import android.net.Uri
 import android.os.Build
+import android.os.SystemClock
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -189,6 +190,14 @@ class TpmsManager private constructor(
     private val heartbeat =
         object : Runnable {
             override fun run() {
+                // Receiver silent for long after it had answered: the link is dead although the device is there
+                val now = SystemClock.elapsedRealtime()
+                if (port != null && lastFrameAt > connectedAt && now - lastFrameAt > SILENCE_MS) {
+                    Log.w(TAG, "TPMS receiver silent for ${(now - lastFrameAt) / 1000} s: reconnecting")
+                    disconnect()
+                    scheduleReconnect()
+                    return
+                }
                 write(TpmsProtocol.heartbeat())
                 main.postDelayed(this, HEARTBEAT_MS)
             }
@@ -207,7 +216,10 @@ class TpmsManager private constructor(
 
                     UsbManager.ACTION_USB_DEVICE_DETACHED -> {
                         val d: UsbDevice? = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
-                        if (d != null && d.deviceName == _state.value.device) disconnect()
+                        if (d != null && d.deviceName == _state.value.device) {
+                            main.removeCallbacks(reconnect)
+                            disconnect()
+                        }
                     }
                 }
             }
@@ -450,17 +462,41 @@ class TpmsManager private constructor(
 
                         override fun onRunError(e: Exception) {
                             Log.w(TAG, "TPMS read: ${e.message}")
-                            main.post { disconnect() }
+                            main.post {
+                                disconnect()
+                                // Still plugged (a USB hiccup, the starter): opened again on its own
+                                scheduleReconnect()
+                            }
                         }
                     },
                 ).also { it.start() }
+            connectedAt = SystemClock.elapsedRealtime()
+            main.removeCallbacks(reconnect)
             _state.value = _state.value.copy(connected = true, device = device.deviceName, message = "")
             write(TpmsProtocol.handshake((System.currentTimeMillis() and 0xFF).toInt()))
             main.post(heartbeat)
         } catch (e: Exception) {
             Log.w(TAG, "TPMS open: ${e.message}")
             disconnect()
+            scheduleReconnect()
         }
+    }
+
+    /** Elapsed time of the opening and of the last frame received (watchdog of [heartbeat]). */
+    private var connectedAt = 0L
+    private var lastFrameAt = 0L
+
+    private val reconnect =
+        Runnable {
+            if (!started || port != null) return@Runnable
+            connect()
+            // Adapter still there but not opened yet: again later (it is dropped on detach)
+            if (port == null && prober.findAllDrivers(usb).isNotEmpty()) scheduleReconnect(RETRY_MS)
+        }
+
+    private fun scheduleReconnect(delay: Long = RECONNECT_MS) {
+        main.removeCallbacks(reconnect)
+        main.postDelayed(reconnect, delay)
     }
 
     fun disconnect() {
@@ -533,6 +569,7 @@ class TpmsManager private constructor(
     }
 
     private fun onFrame(f: TpmsFrame) {
+        lastFrameAt = SystemClock.elapsedRealtime()
         val s = _state.value
         when (f) {
             is TpmsFrame.Tyre -> {
@@ -624,6 +661,9 @@ class TpmsManager private constructor(
         private const val NOTIFICATION_BASE = 100
         private const val HEARTBEAT_MS = 2000L
         private const val WRITE_TIMEOUT_MS = 200
+        private const val RECONNECT_MS = 3_000L
+        private const val RETRY_MS = 5_000L
+        private const val SILENCE_MS = 90_000L
         private const val CAR_MAX_PX = 800
         private const val CAR_MAX_BYTES = 40 * 1024 * 1024
 

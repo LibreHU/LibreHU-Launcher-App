@@ -225,6 +225,7 @@ class MainActivity : ComponentActivity() {
                 mediaNext = media::next,
                 mediaPrevious = media::previous,
                 mediaSeek = media::seekTo,
+                mediaEject = { media.eject() },
                 mediaOpen = media::open,
                 grantMediaAccess = { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) },
                 addWidget = ::addWidget,
