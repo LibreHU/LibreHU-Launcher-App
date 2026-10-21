@@ -436,6 +436,9 @@ fun StandbySettingsPage(
         SettingSwitch(stringResource(R.string.standby_phone), stringResource(R.string.standby_phone_hint), s.showPhone) { on ->
             store.update { it.copy(showPhone = on) }
         }
+        SettingSwitch(stringResource(R.string.standby_car_battery), stringResource(R.string.standby_car_battery_hint), s.showCarBattery) { on ->
+            store.update { it.copy(showCarBattery = on) }
+        }
         SettingSwitch(stringResource(R.string.standby_accent), null, s.accentColor) { on -> store.update { it.copy(accentColor = on) } }
         SettingSwitch(stringResource(R.string.standby_pause), stringResource(R.string.standby_pause_hint), s.pauseMedia) { on ->
             store.update { it.copy(pauseMedia = on) }

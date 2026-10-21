@@ -188,6 +188,13 @@ class LockActivity : ComponentActivity() {
                     Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    // The clock look shows it under the clock already.
+                    if (s.look != LockLook.CLOCK && standby.showCarBattery) {
+                        org.librehu.launcher.ui
+                            .CarBatteryLine()
+                        androidx.compose.foundation.layout
+                            .Spacer(Modifier.padding(bottom = 16.dp))
+                    }
                     if (s.pin.isEmpty()) {
                         SlideToUnlock { unlock() }
                     } else {

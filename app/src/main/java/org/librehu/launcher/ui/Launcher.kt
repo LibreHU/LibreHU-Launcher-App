@@ -59,6 +59,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.TurnLeft
 import androidx.compose.material.icons.filled.TurnRight
 import androidx.compose.material.icons.filled.Visibility
@@ -126,7 +127,7 @@ import org.librehu.launcher.tpms.TpmsManager
 import java.text.DateFormat
 import java.util.Date
 
-enum class Screen { HOME, APPS, SETTINGS, TPMS, SETUP }
+enum class Screen { HOME, APPS, SETTINGS, TPMS, OBD, SETUP }
 
 class LauncherActions(
     val launch: (ComponentName) -> Unit,
@@ -212,6 +213,7 @@ fun LauncherScreen(
             Screen.APPS -> AppGrid(apps, pins, look, actions) { menuFor = it }
             Screen.SETTINGS -> SettingsScreen(theme, themeController, actions, apps)
             Screen.TPMS -> TpmsScreen()
+            Screen.OBD -> ObdScreen()
             Screen.SETUP -> Unit
         }
     }
@@ -1186,6 +1188,9 @@ private fun AppGrid(
             }
         }
     val icon = look.drawerIconSize.coerceIn(48, 104)
+    val appContext = LocalContext.current
+    // OBD screen: values of LibreHU-service's ELM327 adapter.
+    val obdAvailable = remember { appContext.packageManager.getLaunchIntentForPackage("org.librehu.service") != null }
     Column(
         modifier =
             Modifier
@@ -1252,6 +1257,16 @@ private fun AppGrid(
                             Modifier.size(icon.dp).clip(CircleShape).background(CarColors.Accent),
                             contentAlignment = Alignment.Center,
                         ) { Icon(Icons.Default.Settings, null, tint = CarColors.OnAccent, modifier = Modifier.size((icon * 0.55f).dp)) }
+                    }
+                }
+                if (obdAvailable) {
+                    item(key = "obd") {
+                        GridTile(stringResource(R.string.obd_title), look.drawerLabels, onClick = { actions.show(Screen.OBD) }) {
+                            Box(
+                                Modifier.size(icon.dp).clip(CircleShape).background(CarColors.SurfaceHigh),
+                                contentAlignment = Alignment.Center,
+                            ) { Icon(Icons.Default.Speed, null, tint = CarColors.Accent, modifier = Modifier.size((icon * 0.55f).dp)) }
+                        }
                     }
                 }
                 item(key = "tpms") {
