@@ -252,6 +252,8 @@ fun LauncherScreen(
                 }
             }
         }
+        // Retro display styles at night: scan lines over the whole screen.
+        if (CarColors.palette.scanLines) ScanLines(Modifier.fillMaxSize())
     }
     if (controlCenter.value) {
         ControlCenter(themeController, theme, actions, onPowerMenu = ::showPowerMenu) { controlCenter.value = false }

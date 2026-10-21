@@ -149,6 +149,17 @@ fun LookSettings(
     SettingHint(
         stringResource(R.string.theme_auto_hint) + "  " + stringResource(if (dark) R.string.theme_now_dark else R.string.theme_now_light),
     )
+    SettingSection(stringResource(R.string.theme_style))
+    SettingChoices(
+        listOf(
+            ThemeStyle.MODERN to stringResource(R.string.theme_style_modern),
+            ThemeStyle.RETRO_AMBER to stringResource(R.string.theme_style_amber),
+            ThemeStyle.RETRO_GREEN to stringResource(R.string.theme_style_green),
+            ThemeStyle.RETRO_CASSETTE to stringResource(R.string.theme_style_cassette),
+        ),
+        s.style,
+    ) { st -> actions.setTheme { it.copy(style = st) } }
+    if (s.style != ThemeStyle.MODERN) SettingHint(stringResource(R.string.theme_style_hint))
     if (full) {
         SettingSwitch(
             stringResource(R.string.theme_system_wide),

@@ -551,4 +551,10 @@
     <string name="bridge_fahrenheit">Températures en °F</string>
     <string name="setup_phone_app">Appli LibreHU pour le téléphone</string>
     <string name="setup_phone_app_hint">Scannez ce QR code avec le téléphone pour télécharger la dernière version de l\'appli LibreHU (Android). Elle règle l\'autoradio depuis le téléphone et affiche batterie et OBD dans Android Auto. Ensuite, associez-la : LibreHU-service → Bluetooth → Téléphone → Appli téléphone LibreHU.</string>
+    <string name="theme_style">Style</string>
+    <string name="theme_style_modern">Moderne</string>
+    <string name="theme_style_amber">Rétro VFD ambre</string>
+    <string name="theme_style_green">Rétro LCD vert</string>
+    <string name="theme_style_cassette">Rétro cassette</string>
+    <string name="theme_style_hint">Couleurs du style (la couleur d\'accent n\'est pas utilisée), police à chasse fixe ; jour / nuit et phares comme d\'habitude. Ambre et vert : lignes de balayage la nuit, comme un afficheur.</string>
 </resources>
