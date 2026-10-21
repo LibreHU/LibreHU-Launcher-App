@@ -136,7 +136,11 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   « Capteurs Bluetooth » pour les voir et les placer sur chaque pneu. Voiture vue de dessus dessinée, roues aux
   couleurs de l'état des pneus (clignotent en alerte), ou **image de sa propre voiture** (PNG importé, essieux
   réglables), aussi dans le widget ; image distincte pour le **mode sombre**, ou image unique affichée telle quelle,
-  inversée en mode clair ou inversée en mode sombre.
+  inversée en mode clair ou inversée en mode sombre. **Connexion tenue** : récepteur USB rouvert seul après une
+  erreur de lecture (coupure USB au démarrage du moteur…) toutes les 3 à 5 s tant qu'il est branché, et reconnecté
+  s'il ne répond plus pendant 90 s ; scan Bluetooth LE continu relancé toutes les 10 min (Android 7+ rend
+  « opportuniste », presque muet, un scan de plus de 30 min) et réessayé toutes les 10 s quand le Bluetooth n'est pas
+  encore allumé.
 - **Icônes LibreHU aux couleurs du thème** : les applis LibreHU déclarent une icône monochrome (meta-data
   `org.librehu.themed_icon` sur l'application, ou sur l'activité quand une appli a plusieurs entrées, comme « CVBS IN »
   de LibreHU-service), que le launcher dessine sur la couleur d'accent ; elle suit le thème clair / sombre et la

@@ -163,12 +163,17 @@ class TpmsBleScanner(
             override fun run() {
                 if (!running) return
                 if (refreshSeconds < BURST_THRESHOLD_S) {
+                    // Continuous, but started again every few minutes: Android 7+ turns a scan running for more
+                    // than 30 min into an "opportunistic" one, which gets almost nothing (sensors seemed lost).
+                    // Also retried when Bluetooth was not on yet (start of the head unit) or the scan stopped.
+                    stopScan()
                     startScan()
+                    main.postDelayed(this, if (scanning) CONTINUOUS_RESTART_MS else RETRY_MS)
                     return
                 }
                 startScan()
                 main.postDelayed({ stopScan() }, BURST_MS)
-                main.postDelayed(this, refreshSeconds * 1000L)
+                main.postDelayed(this, if (scanning) refreshSeconds * 1000L else RETRY_MS)
             }
         }
 
@@ -190,6 +195,7 @@ class TpmsBleScanner(
         if (scanning) return
         val scanner = BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }?.bluetoothLeScanner
         if (scanner == null) {
+            scanning = false
             onError("Bluetooth off")
             return
         }
@@ -213,5 +219,9 @@ class TpmsBleScanner(
     private companion object {
         const val BURST_MS = 8_000L
         const val BURST_THRESHOLD_S = 15
+
+        /** Well under the 30 min after which Android downgrades a scan, and over 6 s (5 starts / 30 s at most). */
+        const val CONTINUOUS_RESTART_MS = 10 * 60_000L
+        const val RETRY_MS = 10_000L
     }
 }
