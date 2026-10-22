@@ -557,4 +557,6 @@
     <string name="theme_style_green">Rétro LCD vert</string>
     <string name="theme_style_cassette">Rétro cassette</string>
     <string name="theme_style_hint">Couleurs du style (la couleur d\'accent n\'est pas utilisée), police à chasse fixe ; jour / nuit et phares comme d\'habitude. Ambre et vert : lignes de balayage la nuit, comme un afficheur.</string>
+    <string name="aa_low_latency">Android Auto : vidéo basse latence</string>
+    <string name="aa_low_latency_hint">Mode basse latence du décodeur vidéo MediaTek (vdec-lowlatency, Android 9 n\'a pas la clé officielle), en plein écran comme dans la carte : moins de retard entre le téléphone et l\'écran. Réglage d\'Open Headunit LibreHU, retiré tout seul si le décodeur le refuse ; vaut pour la prochaine connexion. À couper si l\'image reste noire ou saccade.</string>
 </resources>
