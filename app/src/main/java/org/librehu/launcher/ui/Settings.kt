@@ -244,6 +244,7 @@ fun LookSettings(
         SettingSwitch(stringResource(R.string.aa_live_video), stringResource(R.string.aa_live_video_hint), s.aaLiveVideo) { on ->
             actions.setTheme { it.copy(aaLiveVideo = on) }
         }
+        AaLowLatencySwitch()
 
         SettingSection(stringResource(R.string.drawer_title))
         SettingChoices(
@@ -882,4 +883,20 @@ fun SettingText(
         keyboardOptions = KeyboardOptions(keyboardType = keyboard),
         modifier = Modifier.fillMaxWidth(),
     )
+}
+
+/**
+ * Android Auto's decoder low-latency mode (Open Headunit LibreHU, `debug-video-low-latency`), for the full screen and
+ * the dashboard card alike: read and written through the fork's settings commands. Hidden when the fork does not answer.
+ */
+@Composable
+private fun AaLowLatencySwitch() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var on by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Boolean?>(null) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { on = org.librehu.launcher.data.AndroidAutoLink.videoLowLatency(context) }
+    val value = on ?: return
+    SettingSwitch(stringResource(R.string.aa_low_latency), stringResource(R.string.aa_low_latency_hint), value) { v ->
+        scope.launch { if (org.librehu.launcher.data.AndroidAutoLink.setVideoLowLatency(context, v)) on = v }
+    }
 }
