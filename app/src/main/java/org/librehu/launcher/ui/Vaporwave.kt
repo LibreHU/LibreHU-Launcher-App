@@ -105,7 +105,7 @@ internal fun Vaporwave() {
 }
 
 /** A mountain ridge: (x, height) pairs, 0 to 1 across the screen, heights in screen heights. */
-private fun ridge(
+internal fun ridge(
     rnd: Random,
     peaks: Int,
     low: Float,
@@ -141,7 +141,7 @@ private fun DrawScope.mountains(
 }
 
 /** A palm tree silhouette leaning towards [lean] (-1 left, 1 right), its fronds swaying a little. */
-private fun DrawScope.palm(
+internal fun DrawScope.palm(
     foot: Offset,
     height: Float,
     lean: Float,

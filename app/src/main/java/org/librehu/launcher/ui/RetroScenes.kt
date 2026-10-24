@@ -70,14 +70,7 @@ internal fun RetroScene(kind: WallpaperKind) {
                     val c = canvas.nativeCanvas
                     c.drawBitmap(grid, 0f, 0f, null)
                     m.v.fill(0f)
-                    val s = time.value
-                    when (if (kind == WallpaperKind.RETRO_DEMO) DEMO[(s / DEMO_S).toInt() % DEMO.size] else kind) {
-                        WallpaperKind.RETRO_ANALYZER -> analyzer(m, s, state)
-                        WallpaperKind.RETRO_CASSETTE -> cassette(m, s)
-                        WallpaperKind.RETRO_ROAD -> road(m, s)
-                        WallpaperKind.RETRO_RALLY -> rally(m, s, state)
-                        else -> dolphins(m, s)
-                    }
+                    retroFrame(kind, m, time.value, state)
                     counts.fill(0)
                     val half = dot / 2
                     for (y in 0 until m.h) {
@@ -98,9 +91,25 @@ internal fun RetroScene(kind: WallpaperKind) {
     )
 }
 
-private const val COLS = 256
+/** The dots of [kind] at [s] seconds into [m] (cleared before): the usual drawing and the GPU one share it. */
+internal fun retroFrame(
+    kind: WallpaperKind,
+    m: Matrix,
+    s: Float,
+    state: SceneState,
+) {
+    when (if (kind == WallpaperKind.RETRO_DEMO) DEMO[(s / DEMO_S).toInt() % DEMO.size] else kind) {
+        WallpaperKind.RETRO_ANALYZER -> analyzer(m, s, state)
+        WallpaperKind.RETRO_CASSETTE -> cassette(m, s)
+        WallpaperKind.RETRO_ROAD -> road(m, s)
+        WallpaperKind.RETRO_RALLY -> rally(m, s, state)
+        else -> dolphins(m, s)
+    }
+}
+
+internal const val COLS = 256
 private const val DOT = 0.82f
-private const val LEVELS = 8
+internal const val LEVELS = 8
 private const val FPS = 15
 private const val DEMO_S = 20f
 private val DEMO =
@@ -121,14 +130,14 @@ private fun seconds(): State<Float> {
 }
 
 /** What a scene keeps from one frame to the next (peaks of the analyser, the rally's dust). */
-private class SceneState {
+internal class SceneState {
     val peaks = FloatArray(64)
     val dust = ArrayList<FloatArray>()
     var lastS = 0f
 }
 
 /** Brightness of each dot, 0..1, with smoothed (anti-aliased) drawing. */
-private class Matrix(
+internal class Matrix(
     val w: Int,
     val h: Int,
 ) {
