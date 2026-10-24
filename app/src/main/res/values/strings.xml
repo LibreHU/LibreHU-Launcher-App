@@ -95,6 +95,7 @@
     <string name="wallpaper_retro_analyzer">Display: spectrum analyser</string>
     <string name="wallpaper_retro_cassette">Display: cassette</string>
     <string name="wallpaper_retro_road">Display: night road</string>
+    <string name="wallpaper_retro_rally">Display: old-school rally</string>
     <string name="wallpaper_retro_demo">Display: demo mode</string>
     <string name="wallpaper_video">Video</string>
     <string name="wallpaper_system">Android / live wallpaper</string>
@@ -572,10 +573,15 @@
     <string name="setup_bridge_connected">Connected: %1$s</string>
     <string name="theme_style">Style</string>
     <string name="theme_style_modern">Modern</string>
-    <string name="theme_style_amber">Retro amber VFD</string>
-    <string name="theme_style_green">Retro green LCD</string>
-    <string name="theme_style_cassette">Retro cassette</string>
-    <string name="theme_style_hint">The style\'s own colours (the accent colour is not used), fixed-width font; day / night and headlights as usual. Amber and green: scan lines at night, like a display.</string>
+    <string name="theme_style_retro">Retro display</string>
+    <string name="theme_font">Font</string>
+    <string name="theme_font_normal">Normal</string>
+    <string name="theme_font_segment">Segment display</string>
+    <string name="theme_font_hint">Segment display: capitals without accents, as on a car stereo (LibreHU Seg14). Any style, and every LibreHU app follows.</string>
+    <string name="rgb_red">Red</string>
+    <string name="rgb_green">Green</string>
+    <string name="rgb_blue">Blue</string>
+    <string name="theme_style_hint">The colours of a car stereo display in the accent colour (the colour wheel: any colour, in red, green and blue); day / night and headlights as usual; scan lines at night, like a display.</string>
     <string name="aa_low_latency">Android Auto: low-latency video</string>
     <string name="aa_low_latency_hint">Low-latency mode of the MediaTek video decoder (vdec-lowlatency, Android 9 lacks the official key), full screen and in the card alike: less delay between the phone and the screen. An Open Headunit LibreHU setting, dropped by itself when the decoder refuses it; applies to the next connection. Switch off if the picture stays black or stutters.</string>
     <string name="standby_obd">OBD values on the clock</string>
