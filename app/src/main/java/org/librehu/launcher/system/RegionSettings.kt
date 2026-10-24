@@ -99,15 +99,28 @@ object RegionSettings {
         return root("CLASSPATH=$apk app_process /system/bin ${SystemHelper::class.java.name} $args")
     }
 
+    /** [command] as root; its output read on its own thread, so that the 20 s timeout holds even if it hangs. */
     private fun root(command: String): Boolean =
         try {
             val p = ProcessBuilder("su", "-c", command).redirectErrorStream(true).start()
             p.outputStream.close()
-            val out = p.inputStream.bufferedReader().readText()
+            val out = StringBuilder()
+            val reader =
+                Thread {
+                    try {
+                        val text = p.inputStream.bufferedReader().readText()
+                        synchronized(out) { out.append(text) }
+                    } catch (_: Exception) {
+                    }
+                }.apply {
+                    isDaemon = true
+                    start()
+                }
             val done = p.waitFor(20, TimeUnit.SECONDS)
             if (!done) p.destroy()
+            reader.join(if (done) 2_000 else 500)
             val ok = done && p.exitValue() == 0
-            if (!ok) Log.w(TAG, "su $command: $out")
+            if (!ok) Log.w(TAG, "su $command: ${if (done) synchronized(out) { out.toString() } else "timeout"}")
             ok
         } catch (e: Exception) {
             Log.w(TAG, "su $command: ${e.message}")
