@@ -30,13 +30,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import org.librehu.launcher.standby.ObdClockStyle
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -75,6 +74,7 @@ import org.librehu.launcher.sos.SosContact
 import org.librehu.launcher.sos.SosSettings
 import org.librehu.launcher.sos.SosStore
 import org.librehu.launcher.standby.ClockStyle
+import org.librehu.launcher.standby.ObdClockStyle
 import org.librehu.launcher.standby.StandbySettings
 import org.librehu.launcher.standby.StandbyStore
 
@@ -319,6 +319,7 @@ fun LookSettings(
         for ((kind, label) in RETRO_SCENES) {
             SettingChoice(stringResource(label), w == kind) { actions.setWallpaper(kind) }
         }
+        SettingChoice(stringResource(R.string.wallpaper_vaporwave), w == WallpaperKind.VAPORWAVE) { actions.setWallpaper(WallpaperKind.VAPORWAVE) }
         SettingChoice(stringResource(R.string.wallpaper_online), w == WallpaperKind.ONLINE) { actions.setWallpaper(WallpaperKind.ONLINE) }
         if (full) {
             SettingChoice(

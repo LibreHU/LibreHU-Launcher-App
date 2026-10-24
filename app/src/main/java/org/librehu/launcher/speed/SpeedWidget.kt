@@ -8,9 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.view.View
 import android.widget.RemoteViews
-import org.librehu.launcher.R
-import org.librehu.launcher.data.ThemeProvider
 import kotlin.math.roundToInt
+import org.librehu.launcher.R
+import org.librehu.launcher.data.SegmentViews
+import org.librehu.launcher.data.ThemeProvider
+import org.librehu.launcher.data.WidgetLook
 
 /** What a speed widget shows; a touch on the widget goes to the next mode. LIMIT: speed and the road's limit sign. */
 enum class SpeedMode { GPS, OBD, BOTH, LIMIT }
@@ -103,20 +105,15 @@ class SpeedWidget : AppWidgetProvider() {
             id: Int,
             s: SpeedState,
         ): RemoteViews {
-            val theme = context.getSharedPreferences(ThemeProvider.EFFECTIVE, Context.MODE_PRIVATE)
-            val dark = theme.getBoolean("dark", true)
-            val accent = theme.getInt("accent", 0).takeIf { it != 0 } ?: if (dark) 0xFF8AB4F8.toInt() else 0xFF1A73E8.toInt()
-            val text = if (dark) 0xFFE8EAED.toInt() else 0xFF202124.toInt()
-            val dim = if (dark) 0xFF9AA0A6.toInt() else 0xFF5F6368.toInt()
+            val look = WidgetLook(context)
+            val accent = look.accent
+            val text = look.text
+            val dim = look.dim
             val mode = mode(context, id)
 
             fun shown(v: Float?) = v?.roundToInt()?.toString() ?: "—"
-            return RemoteViews(context.packageName, R.layout.widget_speed).apply {
-                setInt(
-                    R.id.speed_root,
-                    "setBackgroundResource",
-                    if (dark) R.drawable.widget_background else R.drawable.widget_background_light,
-                )
+            return SegmentViews(context, R.layout.widget_speed, look.segment).apply {
+                look.background(this, R.id.speed_root)
                 val limit = SpeedLimitManager.get(context).state.value
                 setViewVisibility(R.id.speed_limit, if (mode == SpeedMode.LIMIT) View.VISIBLE else View.GONE)
                 setTextViewText(R.id.speed_limit, limit.kmh?.toString() ?: "—")
