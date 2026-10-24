@@ -27,3 +27,15 @@ Différence voulue : pas de blocage des touches ni de coupure du son par défaut
 reproduit l'action 6 de Jancar).
 
 Exemple : `adb shell am start -a org.librehu.action.STANDBY_CLOCK`.
+
+## Valeurs OBD sous l'horloge
+
+Réglages → Horloge de veille → **Valeurs OBD sur l'horloge** : jusqu'à 6 valeurs, dans l'ordre de la liste (flèche
+pour monter, croix pour retirer), choisies parmi les valeurs standard de LibreHU-service (vitesse, régime, liquide de
+refroidissement, huile, air d'admission / extérieur, charge, papillon, carburant, consommation, débit d'air,
+pressions, avance, tension du calculateur, temps moteur, distances) et les valeurs constructeur qu'il lit à ce moment
+(`car:<calculateur>/<valeur>`, base ddt4all). Affichage **sur une ligne** ou **en tuiles**, noms affichables ou non.
+Rien n'est affiché quand l'adaptateur n'est pas connecté ; une valeur pas reçue affiche « — ». Les mêmes valeurs
+apparaissent sur l'écran de verrouillage (styles autres que l'horloge, qui les montre déjà). Les valeurs lues par
+l'adaptateur se choisissent dans LibreHU-service → OBD.
+

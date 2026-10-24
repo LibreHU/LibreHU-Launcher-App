@@ -195,6 +195,15 @@ class LockActivity : ComponentActivity() {
                         androidx.compose.foundation.layout
                             .Spacer(Modifier.padding(bottom = 16.dp))
                     }
+                    if (s.look != LockLook.CLOCK && standby.obdValues.isNotEmpty()) {
+                        org.librehu.launcher.ui.ObdClockValues(
+                            standby.obdValues,
+                            standby.obdStyle == org.librehu.launcher.standby.ObdClockStyle.TILES,
+                            standby.obdLabels,
+                        )
+                        androidx.compose.foundation.layout
+                            .Spacer(Modifier.padding(bottom = 16.dp))
+                    }
                     if (s.pin.isEmpty()) {
                         SlideToUnlock { unlock() }
                     } else {

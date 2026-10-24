@@ -86,7 +86,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   0 à 100 % dans la couleur de surface du thème (70 % par défaut ; 0 % = fond d'écran visible tel quel).
 - **Horloge de veille** : grande horloge numérique ou analogique sur fond noir, date, titre en cours (centré sous
   l'heure, artiste en dessous), **batterie de la voiture** sous la date (tension, charge ou état de charge, quand
-  l'adaptateur OBD de LibreHU-service est connecté ; désactivable), couleur
+  l'adaptateur OBD de LibreHU-service est connecté ; désactivable), **jusqu'à 6 valeurs OBD au choix** (vitesse,
+  régime, températures, carburant… et valeurs constructeur ddt4all ; dans l'ordre voulu, en ligne ou en tuiles,
+  avec ou sans noms ; aussi sur l'écran de verrouillage), couleur
   d'accent, luminosité réduite, léger décalage chaque minute (marquage de l'écran), pause de la lecture et reprise à
   la sortie. Déclenchée après N minutes sans toucher l'accueil, par un appui long sur l'heure de la barre, par l'action
   `org.librehu.action.STANDBY_CLOCK` (touche remappée) ou comme **économiseur d'écran Android** (DreamService). Voir
