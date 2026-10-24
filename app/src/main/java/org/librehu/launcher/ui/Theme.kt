@@ -31,7 +31,7 @@ enum class Accent(
     fun color(dark: Boolean) = Color(if (dark) onDark else onLight)
 }
 
-/** Look of the launcher: the usual one, or a retro one (its own colours, fixed-width font, scan lines on screens). */
+/** Look of the launcher: the usual one, or a retro one (its own colours, segment display font, scan lines on screens). */
 enum class ThemeStyle {
     MODERN,
 
@@ -225,10 +225,13 @@ internal fun ColorScheme.withCarRoles(
     )
 }
 
-/** Fixed-width font everywhere for the retro styles (the system's monospace: no font file to ship). */
+/**
+ * Segment display font everywhere for the retro styles: DSEG14, the one of LibreHU-Disc's retro display, with the
+ * accented letters drawn bare (capitals without accents, as on a car stereo's display; tools/make_retro_font.py).
+ */
 private val RetroTypography: androidx.compose.material3.Typography =
     androidx.compose.material3.Typography().run {
-        val f = androidx.compose.ui.text.font.FontFamily.Monospace
+        val f = androidx.compose.ui.text.font.FontFamily(androidx.compose.ui.text.font.Font(org.librehu.launcher.R.font.librehu_seg14))
         copy(
             displayLarge = displayLarge.copy(fontFamily = f),
             displayMedium = displayMedium.copy(fontFamily = f),
