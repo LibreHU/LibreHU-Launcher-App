@@ -49,7 +49,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   `vdec-lowlatency` sur le décodeur MediaTek, en plein écran comme dans la carte (`data/AndroidAutoLink.kt`).
 - **Appli téléphone LibreHU** : la page **Conduite** (météo, limitation de vitesse : interrupteurs, marge, son, essai)
   est aussi réglable depuis le téléphone, par LibreHU-service (fournisseur `org.librehu.launcher.bridge`, permission de
-  signature `org.librehu.permission.BRIDGE`, `bridge/BridgeProvider.kt`).
+  signature `org.librehu.permission.BRIDGE` vérifiée dans `call()` même : Android ne contrôle pas la permission d'un
+  fournisseur pour `call()`, `bridge/BridgeProvider.kt`).
 - **OBD plein écran** (tiroir → OBD, ou l'action `org.librehu.launcher.action.SHOW_OBD`), comme l'écran Pneus : à
   gauche la **batterie de la voiture** (tension, charge estimée moteur arrêté avec sa barre, « en charge » / « ne
   charge pas » / « surtension » moteur tournant), à droite vitesse et régime en grand puis toutes les valeurs lues
