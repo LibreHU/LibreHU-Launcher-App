@@ -69,9 +69,10 @@ fun StandbyFace(
     }
     val dx by animateDpAsState((shift.x * 40).dp, tween(2000), label = "dx")
     val dy by animateDpAsState((shift.y * 24).dp, tween(2000), label = "dy")
-    val color = if (s.accentColor) CarColors.Accent else Color(0xFFE8EAED)
-    val dim = Color(0xFF9AA0A6)
-    Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+    val night = org.librehu.launcher.ui.nightLook()
+    val color = if (s.accentColor) CarColors.Accent else night.text
+    val dim = night.dim
+    Box(Modifier.fillMaxSize().background(night.background), contentAlignment = Alignment.Center) {
         Column(Modifier.offset(dx, dy), horizontalAlignment = Alignment.CenterHorizontally) {
             if (s.showPhone) {
                 val context = androidx.compose.ui.platform.LocalContext.current
@@ -135,6 +136,8 @@ fun StandbyFace(
                 }
             }
         }
+        // The retro display at night: its scan lines over the clock.
+        if (night.retro) org.librehu.launcher.ui.ScanLines(Modifier.fillMaxSize())
     }
 }
 

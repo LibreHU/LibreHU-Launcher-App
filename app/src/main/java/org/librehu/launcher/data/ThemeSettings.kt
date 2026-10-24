@@ -49,6 +49,7 @@ enum class WallpaperKind {
     RETRO_CASSETTE,
     RETRO_ROAD,
     RETRO_RALLY,
+    RETRO_GALAXY,
 
     /** All of them, one after the other (a head unit's demo mode). */
     RETRO_DEMO,

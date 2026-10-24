@@ -103,6 +103,7 @@ internal fun retroFrame(
         WallpaperKind.RETRO_CASSETTE -> cassette(m, s)
         WallpaperKind.RETRO_ROAD -> road(m, s)
         WallpaperKind.RETRO_RALLY -> rally(m, s, state)
+        WallpaperKind.RETRO_GALAXY -> galaxy(m, s)
         else -> dolphins(m, s)
     }
 }
@@ -113,7 +114,14 @@ internal const val LEVELS = 8
 private const val FPS = 15
 private const val DEMO_S = 20f
 private val DEMO =
-    listOf(WallpaperKind.RETRO_DOLPHIN, WallpaperKind.RETRO_RALLY, WallpaperKind.RETRO_ANALYZER, WallpaperKind.RETRO_CASSETTE, WallpaperKind.RETRO_ROAD)
+    listOf(
+        WallpaperKind.RETRO_DOLPHIN,
+        WallpaperKind.RETRO_RALLY,
+        WallpaperKind.RETRO_GALAXY,
+        WallpaperKind.RETRO_ANALYZER,
+        WallpaperKind.RETRO_CASSETTE,
+        WallpaperKind.RETRO_ROAD,
+    )
 
 /** Seconds since the scene started, refreshed [FPS] times a second. */
 @Composable
@@ -621,6 +629,129 @@ private fun road(
     m.ellipse(ax - 4, ay, 1.4f, 1f, 1f)
     m.ellipse(ax + 4, ay, 1.4f, 1f, 1f)
 }
+
+// --- Galaxy --------------------------------------------------------------------------------------------------------
+
+/** A number in 0..1 that looks random but is always the same for [i] (stars, scatter). */
+private fun rnd(i: Int): Float {
+    var x = i * 374761393 + 668265263
+    x = (x xor (x ushr 13)) * 1274126177
+    return ((x xor (x ushr 16)) and 0xFFFFFF) / 16777216f
+}
+
+/**
+ * Deep space as a display would draw it: a spiral galaxy turning slowly, twinkling stars, a ringed planet, shooting
+ * stars now and then, and every 30 s a jump to hyperspace (stars stretched into streaks rushing past) before the
+ * galaxy comes back.
+ */
+private fun galaxy(
+    m: Matrix,
+    s: Float,
+) {
+    val cycle = s % HYPER_EVERY
+    // 0 → 1 → 0 around the jump: the galaxy fades out, the streaks fade in.
+    val jump =
+        when {
+            cycle < HYPER_EVERY - HYPER_S -> 0f
+            else -> sin(PI.toFloat() * (cycle - (HYPER_EVERY - HYPER_S)) / HYPER_S)
+        }
+    val k = 1f - jump
+    if (k > 0.02f) {
+        // Stars, twinkling each at its own pace.
+        for (i in 0 until 150) {
+            val tw = 0.55f + 0.45f * sin(s * (0.8f + rnd(i + 500) * 2.5f) + rnd(i + 900) * 6.28f)
+            m.set((rnd(i) * m.w).toInt(), (rnd(i + 300) * m.h).toInt(), k * tw * (0.25f + 0.6f * rnd(i + 700)))
+        }
+        // The galaxy: two arms of a logarithmic spiral seen at a slant, a bright core.
+        val gx = m.w * 0.36f
+        val gy = m.h * 0.52f
+        val rot = s * 0.08f
+        val tilt = 0.45f
+        val radius = m.h * 0.48f
+        for (arm in 0 until 2) {
+            for (i in 0 until 340) {
+                val t = i / 340f
+                // Opening as it winds (logarithmic spiral), a little more than one turn per arm.
+                val ang = arm * PI.toFloat() + t * 2.3f * PI.toFloat() + rot
+                val r = radius * (0.07f + 0.93f * t * t)
+                val spread = (rnd(i * 7 + arm) - 0.5f) * (1.5f + 10f * t)
+                val x = gx + cos(ang) * r + cos(ang + 1.57f) * spread
+                val y = gy + (sin(ang) * r + sin(ang + 1.57f) * spread) * tilt
+                m.plot(x, y, k * (1f - 0.75f * t) * (0.5f + 0.5f * rnd(i * 3 + arm * 11)))
+            }
+        }
+        // Faint dust between the arms.
+        for (i in 0 until 160) {
+            val ang = rnd(i + 3100) * 2 * PI.toFloat() + rot
+            val r = radius * 0.85f * sqrt(rnd(i + 3300))
+            m.plot(gx + cos(ang) * r, gy + sin(ang) * r * tilt, k * 0.22f)
+        }
+        m.ellipse(gx, gy, 9f, 4f, k * 0.45f)
+        m.ellipse(gx, gy, 4.5f, 2.2f, k)
+        // The ringed planet: the back of its ring, hidden by the planet, then the planet lit from the left, then the front of the ring.
+        val px = m.w * 0.8f
+        val py = m.h * 0.3f
+        val pr = m.h * 0.11f
+        fun ring(front: Boolean) {
+            for (i in 0 until 160) {
+                val th = i / 160f * 2 * PI.toFloat()
+                if ((sin(th) > 0) != front) continue
+                val rx = cos(th) * pr * 2.1f
+                val ry = sin(th) * pr * 0.55f
+                // Tilted by -0.3 rad.
+                m.plot(px + rx * 0.955f - ry * -0.296f, py + rx * -0.296f + ry * 0.955f, k * 0.85f)
+            }
+        }
+        ring(front = false)
+        m.erase = true
+        m.ellipse(px, py, pr + 0.6f, pr + 0.6f)
+        m.erase = false
+        for (y in (py - pr).toInt()..(py + pr).toInt()) {
+            for (x in (px - pr).toInt()..(px + pr).toInt()) {
+                val dx = (x - px) / pr
+                val dy = (y - py) / pr
+                val d2 = dx * dx + dy * dy
+                if (d2 > 1f) continue
+                val nz = sqrt(1f - d2)
+                // Light from the upper left, a few bands across the planet.
+                val light = (-dx * 0.6f - dy * 0.4f + nz * 0.7f).coerceIn(0f, 1f)
+                val band = if (((dy + 1f) * 4.5f).toInt() % 2 == 0) 1f else 0.8f
+                m.set(x, y, k * (0.12f + 0.8f * light * band))
+            }
+        }
+        ring(front = true)
+        // A shooting star every few seconds, from a place of its own.
+        val n = (s / 3.7f).toInt()
+        val age = s / 3.7f - n
+        if (age < 0.3f) {
+            val sx = m.w * (0.1f + 0.8f * rnd(n * 13))
+            val sy = m.h * (0.05f + 0.35f * rnd(n * 17))
+            val dir = if (rnd(n * 19) < 0.5f) -1f else 1f
+            val head = age / 0.3f
+            for (j in 0 until 14) {
+                val f = head - j * 0.025f
+                if (f < 0) break
+                m.plot(sx + dir * f * m.w * 0.35f, sy + f * m.h * 0.22f, k * (1f - j / 14f))
+            }
+        }
+    }
+    if (jump > 0.02f) {
+        // Hyperspace: streaks from the centre, longer and brighter the closer they come.
+        val cx = m.w / 2f
+        val cy = m.h / 2f
+        val far = sqrt(cx * cx + cy * cy)
+        for (i in 0 until 110) {
+            val a = rnd(i + 1300) * 2 * PI.toFloat()
+            val d = ((rnd(i + 1700) + s * (0.5f + rnd(i + 2100))) % 1f)
+            val r1 = far * d * d
+            val r0 = r1 * (1f - 0.35f * jump)
+            m.line(cx + cos(a) * r0, cy + sin(a) * r0, cx + cos(a) * r1, cy + sin(a) * r1, jump * (0.3f + 0.7f * d))
+        }
+    }
+}
+
+private const val HYPER_EVERY = 30f
+private const val HYPER_S = 4f
 
 // --- Rally ---------------------------------------------------------------------------------------------------------
 

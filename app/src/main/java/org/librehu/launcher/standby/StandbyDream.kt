@@ -44,6 +44,7 @@ class StandbyDream :
         val repo = MediaRepository(this).also { media = it }
         window.decorView.setViewTreeLifecycleOwner(this)
         window.decorView.setViewTreeSavedStateRegistryOwner(this)
+        org.librehu.launcher.data.ThemeController.restore(this)
         setContentView(
             ComposeView(this).apply {
                 setViewTreeLifecycleOwner(this@StandbyDream)
