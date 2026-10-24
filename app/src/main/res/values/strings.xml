@@ -91,6 +91,11 @@
     <string name="wallpaper_aurora">Aurora</string>
     <string name="wallpaper_stars">Stars</string>
     <string name="wallpaper_waves">Waves</string>
+    <string name="wallpaper_retro_dolphin">Display: dolphins</string>
+    <string name="wallpaper_retro_analyzer">Display: spectrum analyser</string>
+    <string name="wallpaper_retro_cassette">Display: cassette</string>
+    <string name="wallpaper_retro_road">Display: night road</string>
+    <string name="wallpaper_retro_demo">Display: demo mode</string>
     <string name="wallpaper_video">Video</string>
     <string name="wallpaper_system">Android / live wallpaper</string>
     <string name="wallpaper_live_choose">Choose the Android wallpaper…</string>

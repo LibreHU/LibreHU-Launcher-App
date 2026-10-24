@@ -295,6 +295,10 @@ fun LookSettings(
         SettingChoice(stringResource(R.string.wallpaper_aurora), w == WallpaperKind.AURORA) { actions.setWallpaper(WallpaperKind.AURORA) }
         SettingChoice(stringResource(R.string.wallpaper_stars), w == WallpaperKind.STARS) { actions.setWallpaper(WallpaperKind.STARS) }
         SettingChoice(stringResource(R.string.wallpaper_waves), w == WallpaperKind.WAVES) { actions.setWallpaper(WallpaperKind.WAVES) }
+        // Car stereo display animations (dot matrix), in the theme's colours: made for the retro styles.
+        for ((kind, label) in RETRO_SCENES) {
+            SettingChoice(stringResource(label), w == kind) { actions.setWallpaper(kind) }
+        }
         SettingChoice(stringResource(R.string.wallpaper_online), w == WallpaperKind.ONLINE) { actions.setWallpaper(WallpaperKind.ONLINE) }
         if (full) {
             SettingChoice(
@@ -976,3 +980,13 @@ private fun AaLowLatencySwitch() {
         scope.launch { if (org.librehu.launcher.data.AndroidAutoLink.setVideoLowLatency(context, v)) on = v }
     }
 }
+
+/** Car stereo display animations offered as wallpapers. */
+private val RETRO_SCENES =
+    listOf(
+        WallpaperKind.RETRO_DOLPHIN to R.string.wallpaper_retro_dolphin,
+        WallpaperKind.RETRO_ANALYZER to R.string.wallpaper_retro_analyzer,
+        WallpaperKind.RETRO_CASSETTE to R.string.wallpaper_retro_cassette,
+        WallpaperKind.RETRO_ROAD to R.string.wallpaper_retro_road,
+        WallpaperKind.RETRO_DEMO to R.string.wallpaper_retro_demo,
+    )

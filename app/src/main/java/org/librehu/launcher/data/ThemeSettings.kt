@@ -42,9 +42,20 @@ enum class WallpaperKind {
 
     /** A picture from the internet, renewed by itself ([OnlineSource], [OnlineRefresh]). */
     ONLINE,
+
+    /** Car stereo display animations of the 1990s-2000s on a dot matrix ([org.librehu.launcher.ui.RetroScene]). */
+    RETRO_DOLPHIN,
+    RETRO_ANALYZER,
+    RETRO_CASSETTE,
+    RETRO_ROAD,
+
+    /** The four, one after the other (a head unit's demo mode). */
+    RETRO_DEMO,
     ;
 
-    val builtIn get() = this == AURORA || this == STARS || this == WAVES || this == SPECTRUM
+    val retroScene get() = name.startsWith("RETRO_")
+
+    val builtIn get() = this == AURORA || this == STARS || this == WAVES || this == SPECTRUM || retroScene
 }
 
 /** Where the internet wallpaper comes from. */
@@ -425,7 +436,7 @@ class ThemeStore(
         const val DEFAULT_RAIL_OPACITY = 70
         val RAIL_OPACITIES = listOf(0, 25, 50, 70, 85, 100)
 
-        /** Sent to the other LibreHU apps when the effective theme changes (extras: dark, accent). */
+        /** Sent to the other LibreHU apps when the effective theme changes (extras: dark, accent, style and palette, see [ThemeProvider]). */
         const val ACTION_THEME_CHANGED = "org.librehu.action.THEME_CHANGED"
 
         fun themeIntent(
