@@ -35,6 +35,7 @@ class ThemeController(
     val systemWideAllowed: StateFlow<Boolean> = _systemWideAllowed.asStateFlow()
 
     fun start(scope: CoroutineScope) {
+        running = true
         scope.launch {
             while (true) {
                 delay(60_000)
@@ -75,8 +76,23 @@ class ThemeController(
 
     private fun currentHour() = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
-    private companion object {
-        const val NIGHT_FROM = 19
-        const val NIGHT_TO = 7
+    companion object {
+        /** A controller keeps [CarColors] up to date (the launcher's screen was created in this process). */
+        @Volatile
+        private var running = false
+
+        /**
+         * The palette from the saved settings and the last light / dark published, for the screens that can start in
+         * a process without the launcher's screen (screen saver, lock screen after a restart).
+         */
+        fun restore(context: Context) {
+            if (running) return
+            val s = ThemeStore.get(context).settings.value
+            val dark = context.getSharedPreferences(ThemeProvider.EFFECTIVE, Context.MODE_PRIVATE).getBoolean("dark", true)
+            CarColors.palette = CarPalette.of(dark, s.accentColor(dark), translucent = s.hasWallpaper, style = s.style, segment = s.segmentFont)
+        }
+
+        private const val NIGHT_FROM = 19
+        private const val NIGHT_TO = 7
     }
 }

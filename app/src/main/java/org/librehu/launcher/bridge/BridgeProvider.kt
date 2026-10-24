@@ -419,6 +419,7 @@ class BridgeProvider : BridgeKitProvider() {
                 WallpaperKind.RETRO_CASSETTE to R.string.wallpaper_retro_cassette,
                 WallpaperKind.RETRO_ROAD to R.string.wallpaper_retro_road,
                 WallpaperKind.RETRO_RALLY to R.string.wallpaper_retro_rally,
+                WallpaperKind.RETRO_GALAXY to R.string.wallpaper_retro_galaxy,
                 WallpaperKind.RETRO_DEMO to R.string.wallpaper_retro_demo,
                 WallpaperKind.VAPORWAVE to R.string.wallpaper_vaporwave,
                 WallpaperKind.ONLINE to R.string.wallpaper_online,

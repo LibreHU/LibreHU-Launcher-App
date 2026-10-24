@@ -284,3 +284,25 @@ fun ScanLines(modifier: androidx.compose.ui.Modifier) {
         },
     )
 }
+
+/**
+ * Colours of the screens that stay dark (standby clock, lock screen): black and white in the modern style, the retro
+ * display's night colours (from the accent, segment font, scan lines) in the retro style.
+ */
+class NightLook(
+    val retro: Boolean,
+    val background: Color,
+    val text: Color,
+    val dim: Color,
+    /** Panel behind the PIN pad, keys and the slider's track. */
+    val panel: Color,
+    val key: Color,
+)
+
+@Composable
+fun nightLook(): NightLook {
+    val p = CarColors.palette
+    if (!p.retro) return NightLook(false, Color.Black, Color(0xFFE8EAED), Color(0xFF9AA0A6), Color(0xCC202124), Color(0x33FFFFFF))
+    val n = if (p.dark) p else androidx.compose.runtime.remember(p.accent, p.segment) { CarPalette.of(true, p.accent, style = ThemeStyle.RETRO, segment = p.segment) }
+    return NightLook(true, n.background, n.text, n.textDim, n.surface, n.surfaceHigh)
+}

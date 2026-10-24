@@ -146,7 +146,7 @@ fun Wallpaper(theme: ThemeStore) {
             Spectrum(s.spectrumPalette, s.spectrumAudio)
         }
 
-        WallpaperKind.RETRO_DOLPHIN, WallpaperKind.RETRO_ANALYZER, WallpaperKind.RETRO_CASSETTE, WallpaperKind.RETRO_ROAD, WallpaperKind.RETRO_RALLY, WallpaperKind.RETRO_DEMO -> {
+        WallpaperKind.RETRO_DOLPHIN, WallpaperKind.RETRO_ANALYZER, WallpaperKind.RETRO_CASSETTE, WallpaperKind.RETRO_ROAD, WallpaperKind.RETRO_RALLY, WallpaperKind.RETRO_GALAXY, WallpaperKind.RETRO_DEMO -> {
             RetroScene(s.wallpaper)
         }
 

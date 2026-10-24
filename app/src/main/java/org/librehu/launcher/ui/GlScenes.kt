@@ -6,7 +6,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -66,13 +65,6 @@ internal fun GlWallpaper(kind: WallpaperKind) {
             },
         )
         AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
-        // The palm trees of the vaporwave sunset: still silhouettes drawn once over the GPU picture.
-        if (kind == WallpaperKind.VAPORWAVE) {
-            Canvas(Modifier.fillMaxSize()) {
-                palm(androidx.compose.ui.geometry.Offset(size.width * 0.08f, size.height * 0.98f), size.height * 0.62f, -1f, 0f)
-                palm(androidx.compose.ui.geometry.Offset(size.width * 0.93f, size.height * 1.02f), size.height * 0.55f, 1f, 1.3f)
-            }
-        }
     }
 }
 
@@ -135,9 +127,11 @@ internal class GlSceneRenderer(
     private var dots: ByteBuffer? = null
     private val state = SceneState()
 
-    // Vaporwave: the two mountain ridges (same as the usual drawing).
+    // Vaporwave: the two mountain ridges (same as the usual drawing), and the palm trees' triangles of each frame.
     private val far = ridge(Random(7), 15, 0.10f, 0.24f)
     private val near = ridge(Random(11), 9, 0.05f, 0.15f)
+    private var palmProgram = 0
+    private val palms = PalmMesh()
 
     fun setColors(
         accent: Color,
@@ -152,6 +146,7 @@ internal class GlSceneRenderer(
         config: EGLConfig?,
     ) {
         program = link(VERTEX, header() + fragment())
+        if (kind == WallpaperKind.VAPORWAVE) palmProgram = link(PALM_VERTEX, PALM_FRAGMENT)
         if (kind.retroScene) {
             val t = IntArray(1)
             GLES20.glGenTextures(1, t, 0)
@@ -201,6 +196,23 @@ internal class GlSceneRenderer(
         GLES20.glEnableVertexAttribArray(aPos)
         GLES20.glVertexAttribPointer(aPos, 2, GLES20.GL_FLOAT, false, 0, quad)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+        GLES20.glDisableVertexAttribArray(aPos)
+        if (kind == WallpaperKind.VAPORWAVE && palmProgram != 0) drawPalms(s)
+    }
+
+    /** The two palm trees swaying, as in Vaporwave.kt: their shapes in triangles, one flat colour. */
+    private fun drawPalms(s: Float) {
+        val w = width.toFloat()
+        val h = height.toFloat()
+        palms.clear()
+        palms.palm(w * 0.08f, h * 0.98f, h * 0.62f, -1f, s, density)
+        palms.palm(w * 0.93f, h * 1.02f, h * 0.55f, 1f, s + 1.3f, density)
+        GLES20.glUseProgram(palmProgram)
+        GLES20.glUniform2f(GLES20.glGetUniformLocation(palmProgram, "uRes"), w, h)
+        val aPos = GLES20.glGetAttribLocation(palmProgram, "aPos")
+        GLES20.glEnableVertexAttribArray(aPos)
+        GLES20.glVertexAttribPointer(aPos, 2, GLES20.GL_FLOAT, false, 0, palms.buffer())
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, palms.vertices)
         GLES20.glDisableVertexAttribArray(aPos)
     }
 
@@ -275,6 +287,18 @@ internal class GlSceneRenderer(
 
     private companion object {
         const val TAG = "LibreHU-GlScenes"
+
+        /** Palm trees: positions in pixels from the top left. */
+        const val PALM_VERTEX = """
+            attribute vec2 aPos;
+            uniform vec2 uRes;
+            void main() { gl_Position = vec4(aPos.x / uRes.x * 2.0 - 1.0, 1.0 - aPos.y / uRes.y * 2.0, 0.0, 1.0); }
+        """
+
+        const val PALM_FRAGMENT = """
+            precision mediump float;
+            void main() { gl_FragColor = vec4(0.027, 0.004, 0.059, 1.0); }
+        """
 
         const val VERTEX = """
             attribute vec2 aPos;
@@ -489,5 +513,124 @@ internal class GlSceneRenderer(
                 gl_FragColor = vec4(col, 1.0);
             }
         """
+    }
+}
+
+/** Triangles of the vaporwave palm trees (the same shapes as [palm] in Vaporwave.kt), rebuilt each frame. */
+private class PalmMesh {
+    private var data = FloatArray(4096)
+    private var n = 0
+    private var direct: FloatBuffer = ByteBuffer.allocateDirect(data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+
+    val vertices get() = n / 2
+
+    fun clear() {
+        n = 0
+    }
+
+    fun buffer(): FloatBuffer {
+        if (direct.capacity() < n) direct = ByteBuffer.allocateDirect(data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+        direct.position(0)
+        direct.put(data, 0, n)
+        direct.position(0)
+        return direct
+    }
+
+    private fun v(
+        x: Float,
+        y: Float,
+    ) {
+        if (n + 2 > data.size) data = data.copyOf(data.size * 2)
+        data[n++] = x
+        data[n++] = y
+    }
+
+    private fun tri(
+        a: FloatArray,
+        b: FloatArray,
+        c: FloatArray,
+    ) {
+        v(a[0], a[1])
+        v(b[0], b[1])
+        v(c[0], c[1])
+    }
+
+    /** Quadratic curve from [p0] to [p2] through the pull of [c], [steps] + 1 points. */
+    private fun curve(
+        p0: FloatArray,
+        c: FloatArray,
+        p2: FloatArray,
+        steps: Int,
+    ): List<FloatArray> =
+        (0..steps).map { i ->
+            val t = i / steps.toFloat()
+            val u = 1 - t
+            floatArrayOf(u * u * p0[0] + 2 * u * t * c[0] + t * t * p2[0], u * u * p0[1] + 2 * u * t * c[1] + t * t * p2[1])
+        }
+
+    /** The band between two curves of as many points, point i against point i. */
+    private fun band(
+        a: List<FloatArray>,
+        b: List<FloatArray>,
+    ) {
+        for (i in 0 until a.size - 1) {
+            tri(a[i], a[i + 1], b[i])
+            tri(b[i], a[i + 1], b[i + 1])
+        }
+    }
+
+    private fun line(
+        x0: Float,
+        y0: Float,
+        x1: Float,
+        y1: Float,
+        width: Float,
+    ) {
+        val dx = x1 - x0
+        val dy = y1 - y0
+        val l = kotlin.math.hypot(dx, dy).coerceAtLeast(0.001f)
+        val nx = -dy / l * width / 2
+        val ny = dx / l * width / 2
+        val a = floatArrayOf(x0 + nx, y0 + ny)
+        val b = floatArrayOf(x0 - nx, y0 - ny)
+        val c = floatArrayOf(x1 + nx, y1 + ny)
+        val d = floatArrayOf(x1 - nx, y1 - ny)
+        tri(a, b, c)
+        tri(c, b, d)
+    }
+
+    fun palm(
+        footX: Float,
+        footY: Float,
+        height: Float,
+        lean: Float,
+        s: Float,
+        density: Float,
+    ) {
+        val topX = footX + lean * height * 0.18f
+        val topY = footY - height
+        val left = curve(floatArrayOf(footX - height * 0.035f, footY), floatArrayOf(footX + lean * height * 0.02f, footY - height * 0.55f), floatArrayOf(topX - height * 0.012f, topY), 12)
+        val right = curve(floatArrayOf(footX + height * 0.035f, footY), floatArrayOf(footX + lean * height * 0.06f, footY - height * 0.55f), floatArrayOf(topX + height * 0.012f, topY), 12)
+        band(left, right)
+        val sway = kotlin.math.sin(s * 0.9f) * 0.05f
+        val leaflet = kotlin.math.max(1f, 2.2f * density)
+        for (i in 0 until 7) {
+            val a = (-Math.PI / 2 + (i - 3) * 0.48 + sway).toFloat()
+            val len = height * (0.46f - kotlin.math.abs(i - 3) * 0.03f)
+            val endX = topX + kotlin.math.cos(a) * len
+            val endY = topY + kotlin.math.sin(a) * len * 0.45f + len * 0.42f
+            val midX = topX + kotlin.math.cos(a) * len * 0.55f
+            val midY = topY + kotlin.math.sin(a) * len * 0.55f - len * 0.08f
+            val upper = curve(floatArrayOf(topX, topY), floatArrayOf(midX, midY - len * 0.06f), floatArrayOf(endX, endY), 10)
+            val lower = curve(floatArrayOf(topX, topY + len * 0.03f), floatArrayOf(midX, midY + len * 0.06f), floatArrayOf(endX, endY), 10)
+            band(upper, lower)
+            for (j in 1..6) {
+                val t = j / 7f
+                val px = topX + (endX - topX) * t
+                val py = topY + (endY - topY) * t - kotlin.math.sin(t * Math.PI.toFloat()) * len * 0.12f
+                line(px, py, px + kotlin.math.cos(a + 1.2f) * len * 0.1f, py + len * 0.1f, leaflet)
+                line(px, py, px + kotlin.math.cos(a - 1.2f) * len * 0.1f, py + len * 0.1f, leaflet)
+            }
+        }
     }
 }

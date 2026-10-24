@@ -141,7 +141,7 @@ private fun DrawScope.mountains(
 }
 
 /** A palm tree silhouette leaning towards [lean] (-1 left, 1 right), its fronds swaying a little. */
-internal fun DrawScope.palm(
+private fun DrawScope.palm(
     foot: Offset,
     height: Float,
     lean: Float,

@@ -91,7 +91,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   mêmes extras dans `THEME_CHANGED`).
   **Widgets compris** (ceux du launcher et ceux des applis) : couleurs rétro, et police à segments dessinée en image
   (`SegmentViews`, images `<id>_seg` ajoutées par `tools/segment_widgets.py` : un widget Android 9 ne peut pas
-  utiliser la police d'une appli).
+  utiliser la police d'une appli ; chaque texte est mis en page à la taille du widget, coupé avec « … » si besoin).
+  Le launcher donne à chaque widget la taille de sa case (`updateAppWidgetSize`).
+  **Écran de verrouillage et horloge de veille** (écran de veille compris) : en style rétro, les couleurs de nuit de
+  l'afficheur (tirées de l'accent), la police choisie et les lignes de balayage ; sinon noir et blanc comme avant.
 - **Fonds d'écran** (Paramètres) : aucun, animations intégrées à la couleur d'accent (aurore, étoiles, vagues),
   **afficheur d'autoradio des années 90-2000** en matrice de points fine (256 points de large, 8 niveaux de luminosité
   par point comme un écran OEL, formes lissées, points éteints visibles ; 15 images/s ; grille des points éteints
@@ -100,7 +103,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   éclaboussures, ronds dans l'eau ; dans l'esprit des autoradios Pioneer à écran organique EL du début des années
   2000 ; dessin original, aucune image de marque), **rallye old school** (vue arrière façon jeux d'arcade des années
   90 : piste en gravier dans une forêt de pins, glisse en contre-braquage, poussière, temps de la spéciale),
-  **analyseur de spectre** (32 bandes à segments, crêtes qui retombent, vu-mètres G / D), **cassette** (C-90 :
+  **espace** (galaxie spirale qui tourne lentement, étoiles qui scintillent, planète à anneaux éclairée de côté,
+  étoiles filantes, et toutes les 30 s un saut dans l'**hyperespace** : étoiles étirées en traînées), **analyseur de spectre** (32 bandes à segments, crêtes qui retombent, vu-mètres G / D), **cassette** (C-90 :
   bobines vues par la fenêtre, dents des moyeux qui tournent, bande vers les têtes, PLAY et compteur), **route de
   nuit** (virages, pointillés, feux d'une voiture devant) et **mode démo** qui les enchaîne toutes les 20 s ;
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
@@ -111,7 +115,7 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   graphique** (shaders OpenGL ES 2, `ui/GlScenes.kt`) au lieu de forme par forme. Les animations d'afficheur calculent
   toujours leurs 256 points de large sur le processeur (sur le fil OpenGL), puis les donnent au GPU en petite
   texture ; images demandées 30 fois par seconde (15 pour l'afficheur), pas à 60 Hz ; arrêt quand le launcher n'est
-  plus visible. Les palmiers du vaporwave y sont fixes (dessinés une fois par-dessus).
+  plus visible. Les palmiers du vaporwave y sont des triangles recalculés à chaque image : ils se balancent aussi.
 - **Fond « Vaporwave »** : coucher de soleil néon façon pochettes et clips vaporwave / synthwave des années 2010
   (inspirés des années 80) — soleil à bandes qui défilent, montagnes en fil de fer cyan, sol quadrillé magenta qui
   avance vers soi, palmiers qui se balancent, étoiles qui scintillent ; dans ses propres couleurs (violet, magenta,

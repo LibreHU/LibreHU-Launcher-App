@@ -46,6 +46,7 @@ class StandbyActivity : ComponentActivity() {
             mediaKey(KeyEvent.KEYCODE_MEDIA_PAUSE)
             paused = true
         }
+        org.librehu.launcher.data.ThemeController.restore(this)
         setContent {
             CarTheme {
                 val settings by store.settings.collectAsStateWithLifecycle()
