@@ -2,6 +2,7 @@ package org.librehu.launcher.bridge
 
 import android.content.ContentProvider
 import android.content.ContentValues
+import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
@@ -15,7 +16,9 @@ import org.librehu.launcher.weather.WeatherRepo
 /**
  * The launcher's settings for LibreHU's phone app, through LibreHU-service (its bridge asks `org.librehu.launcher.bridge`,
  * signature permission `org.librehu.permission.BRIDGE`): `call("pages")` → Bundle "json" = the pages with their items
- * (format of LibreHU-service's docs/bridge.md), `call("set", "<page>/<item>", value)`.
+ * (format of LibreHU-service's docs/bridge.md), `call("set", "<page>/<item>", value)`. The permission is checked here:
+ * Android does not check a provider's permission for `call()` (ContentProvider.Transport.call), only for query /
+ * insert / update / delete.
  */
 class BridgeProvider : ContentProvider() {
     override fun onCreate() = true
@@ -26,6 +29,7 @@ class BridgeProvider : ContentProvider() {
         extras: Bundle?,
     ): Bundle? {
         val ctx = context ?: return null
+        if (ctx.checkCallingPermission(PERMISSION) != PackageManager.PERMISSION_GRANTED) throw SecurityException("needs $PERMISSION")
         val weather = WeatherRepo.get(ctx)
         val limits = SpeedLimitManager.get(ctx)
         val w = weather.settings.value
@@ -119,4 +123,8 @@ class BridgeProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?,
     ) = 0
+
+    companion object {
+        private const val PERMISSION = "org.librehu.permission.BRIDGE"
+    }
 }
