@@ -89,6 +89,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   `content://org.librehu.launcher.theme/theme` : colonnes `style` (`modern` / `retro`), `font` (`normal` /
   `segment`), `background`, `surface`, `surface_high`, `on_accent`, `text`, `text_dim` en plus de `dark` et `accent`,
   mêmes extras dans `THEME_CHANGED`).
+  **Widgets compris** (ceux du launcher et ceux des applis) : couleurs rétro, et police à segments dessinée en image
+  (`SegmentViews`, images `<id>_seg` ajoutées par `tools/segment_widgets.py` : un widget Android 9 ne peut pas
+  utiliser la police d'une appli).
 - **Fonds d'écran** (Paramètres) : aucun, animations intégrées à la couleur d'accent (aurore, étoiles, vagues),
   **afficheur d'autoradio des années 90-2000** en matrice de points fine (256 points de large, 8 niveaux de luminosité
   par point comme un écran OEL, formes lissées, points éteints visibles ; 15 images/s ; grille des points éteints
@@ -103,6 +106,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
   focus audio), ou **fond Android / live wallpaper** affiché derrière le launcher (`FLAG_SHOW_WALLPAPER`). Les
   animations se mettent en pause dès que le launcher n'est plus au premier plan.
+- **Fond « Vaporwave »** : coucher de soleil néon façon pochettes et clips vaporwave / synthwave des années 2010
+  (inspirés des années 80) — soleil à bandes qui défilent, montagnes en fil de fer cyan, sol quadrillé magenta qui
+  avance vers soi, palmiers qui se balancent, étoiles qui scintillent ; dans ses propres couleurs (violet, magenta,
+  cyan, jaune), dessiné dans le code (aucune image), 20 images/s.
 - **Fond « Spectre »** : vagues lumineuses du fond animé « Music visualization » d'AOSP (Apache 2.0), dans l'esprit de
   [Neospectro](https://github.com/danielnavarrowo/Neospectro) (réécrit en OpenGL ES 2, pas de code repris : le dépôt
   Neospectro n'a pas de licence). 7 palettes dont la couleur d'accent ; option **« suivre la musique »** (spectre du

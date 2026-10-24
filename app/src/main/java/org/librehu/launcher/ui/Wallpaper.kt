@@ -45,16 +45,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import org.librehu.launcher.data.ThemeStore
-import org.librehu.launcher.data.WallpaperKind
 import java.io.File
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import org.librehu.launcher.data.ThemeStore
+import org.librehu.launcher.data.WallpaperKind
 
 /**
  * Launcher background. Pictures, GIF / WebP and videos get a scrim so that the cards stay readable; the built-in
@@ -143,6 +143,10 @@ fun Wallpaper(theme: ThemeStore) {
 
         WallpaperKind.RETRO_DOLPHIN, WallpaperKind.RETRO_ANALYZER, WallpaperKind.RETRO_CASSETTE, WallpaperKind.RETRO_ROAD, WallpaperKind.RETRO_RALLY, WallpaperKind.RETRO_DEMO -> {
             RetroScene(s.wallpaper)
+        }
+
+        WallpaperKind.VAPORWAVE -> {
+            Vaporwave()
         }
     }
 }

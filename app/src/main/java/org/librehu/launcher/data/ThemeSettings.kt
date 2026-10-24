@@ -8,11 +8,11 @@ import android.graphics.ImageDecoder
 import android.graphics.drawable.AnimatedImageDrawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.librehu.launcher.ui.Accent
-import java.io.File
 
 enum class ThemeMode { LIGHT, DARK, AUTO }
 
@@ -52,11 +52,14 @@ enum class WallpaperKind {
 
     /** All of them, one after the other (a head unit's demo mode). */
     RETRO_DEMO,
+
+    /** Vaporwave sunset in its own neon colours ([org.librehu.launcher.ui.Vaporwave]). */
+    VAPORWAVE,
     ;
 
     val retroScene get() = name.startsWith("RETRO_")
 
-    val builtIn get() = this == AURORA || this == STARS || this == WAVES || this == SPECTRUM || retroScene
+    val builtIn get() = this == AURORA || this == STARS || this == WAVES || this == SPECTRUM || this == VAPORWAVE || retroScene
 }
 
 /** Where the internet wallpaper comes from. */
