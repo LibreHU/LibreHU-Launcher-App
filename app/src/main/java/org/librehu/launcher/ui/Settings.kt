@@ -387,6 +387,11 @@ fun LookSettings(
         }
         SettingHint(stringResource(R.string.spectrum_credits))
     }
+    if (gpuDrawn(w)) {
+        SettingSwitch(stringResource(R.string.gpu_animations), stringResource(R.string.gpu_animations_hint), s.gpuAnimations) { on ->
+            actions.setTheme { it.copy(gpuAnimations = on) }
+        }
+    }
     if (full) SettingHint(stringResource(R.string.wallpaper_hint))
 }
 

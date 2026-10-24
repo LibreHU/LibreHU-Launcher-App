@@ -65,6 +65,11 @@ import org.librehu.launcher.data.WallpaperKind
 fun Wallpaper(theme: ThemeStore) {
     val s by theme.settings.collectAsStateWithLifecycle()
     val revision by theme.revision.collectAsStateWithLifecycle()
+    // GPU acceleration (Settings): the built-in animations drawn by OpenGL ES shaders (GlScenes.kt).
+    if (s.gpuAnimations && gpuDrawn(s.wallpaper)) {
+        GlWallpaper(s.wallpaper)
+        return
+    }
     when (s.wallpaper) {
         WallpaperKind.NONE -> {
             Box(Modifier.fillMaxSize().background(CarColors.Background))

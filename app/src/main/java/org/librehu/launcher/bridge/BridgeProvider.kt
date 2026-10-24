@@ -96,6 +96,9 @@ class BridgeProvider : BridgeKitProvider() {
             val kinds =
                 WALLPAPERS.filter { it.first !in PICKED || it.first == t.wallpaper }.map { (k, r) -> k to s(r) }
             choice("kind", s(R.string.wallpaper), t.wallpaper, kinds, s(R.string.wallpaper_hint)) { v -> store.update { it.copy(wallpaper = v) } }
+            if (org.librehu.launcher.ui.gpuDrawn(t.wallpaper)) {
+                switch("gpu", s(R.string.gpu_animations), t.gpuAnimations, s(R.string.gpu_animations_hint)) { v -> store.update { it.copy(gpuAnimations = v) } }
+            }
             if (t.wallpaper == WallpaperKind.SPECTRUM) {
                 pick("spectrum_palette", s(R.string.spectrum_colors), t.spectrumPalette, label = { s(SPECTRUM_NAMES.getValue(it)) }) { v ->
                     store.update { it.copy(spectrumPalette = v) }

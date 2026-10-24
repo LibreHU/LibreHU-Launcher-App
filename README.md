@@ -106,6 +106,12 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
   focus audio), ou **fond Android / live wallpaper** affiché derrière le launcher (`FLAG_SHOW_WALLPAPER`). Les
   animations se mettent en pause dès que le launcher n'est plus au premier plan.
+- **Accélération GPU** (Paramètres → Fond d'écran, sous l'animation choisie ; désactivée par défaut = le dessin
+  habituel) : aurore, étoiles, vagues, vaporwave et toutes les animations d'afficheur dessinées par la **puce
+  graphique** (shaders OpenGL ES 2, `ui/GlScenes.kt`) au lieu de forme par forme. Les animations d'afficheur calculent
+  toujours leurs 256 points de large sur le processeur (sur le fil OpenGL), puis les donnent au GPU en petite
+  texture ; images demandées 30 fois par seconde (15 pour l'afficheur), pas à 60 Hz ; arrêt quand le launcher n'est
+  plus visible. Les palmiers du vaporwave y sont fixes (dessinés une fois par-dessus).
 - **Fond « Vaporwave »** : coucher de soleil néon façon pochettes et clips vaporwave / synthwave des années 2010
   (inspirés des années 80) — soleil à bandes qui défilent, montagnes en fil de fer cyan, sol quadrillé magenta qui
   avance vers soi, palmiers qui se balancent, étoiles qui scintillent ; dans ses propres couleurs (violet, magenta,

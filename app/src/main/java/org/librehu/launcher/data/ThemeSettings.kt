@@ -162,6 +162,8 @@ data class ThemeSettings(
     val widgetLayout: Boolean = false,
     /** Right-hand drive: the home screen mirrored (rail, big widget and rows from the right). */
     val rightHandDrive: Boolean = false,
+    /** Built-in animated wallpapers drawn by the GPU (OpenGL ES shaders) instead of the usual drawing. */
+    val gpuAnimations: Boolean = false,
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -220,6 +222,7 @@ class ThemeStore private constructor(
             .putInt("home_pages", s.homePages)
             .putBoolean("widget_layout", s.widgetLayout)
             .putBoolean("right_hand_drive", s.rightHandDrive)
+            .putBoolean("gpu_animations", s.gpuAnimations)
             .apply()
         _settings.value = s
     }
@@ -445,6 +448,7 @@ class ThemeStore private constructor(
             homePages = prefs.getInt("home_pages", 1).coerceIn(1, MAX_HOME_PAGES),
             widgetLayout = prefs.getBoolean("widget_layout", false),
             rightHandDrive = prefs.getBoolean("right_hand_drive", false),
+            gpuAnimations = prefs.getBoolean("gpu_animations", false),
         )
     }
 
