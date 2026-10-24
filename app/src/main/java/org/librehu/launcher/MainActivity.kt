@@ -163,7 +163,7 @@ class MainActivity : ComponentActivity() {
         media = MediaRepository(this)
         widgets = WidgetHost(this)
         headUnit = HeadUnitBridge.create(this)
-        theme = ThemeStore(this)
+        theme = ThemeStore.get(this)
         themeController = ThemeController(applicationContext, theme, headUnit.headlights)
         themeController.start(lifecycleScope)
         TpmsManager.get(this).start()

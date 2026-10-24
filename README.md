@@ -266,6 +266,13 @@ Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans
 
 Non testé sur l'autoradio à ce stade.
 
+## Appli téléphone (LibreHU Bridge)
+
+Réglable depuis le téléphone par l'appli LibreHU Bridge (Android et iPhone), à travers LibreHU-service : apparence (thème, style, police, couleur RGB), fond d'écran, accueil (pages, taille et disposition des widgets, conduite à droite, barre), tiroir, horloge de veille, verrouillage, SOS, conduite (météo, limites) et pneus.
+Fournisseur `<paquet>.bridge` (`bridge/BridgeProvider.kt`), réservé aux applis signées avec la clé LibreHU (permission
+`org.librehu.permission.BRIDGE`, vérifiée dans `call()` lui-même) ; format décrit dans
+[LibreHU-service, docs/bridge.md](https://github.com/LibreHU/LibreHU-service/blob/main/docs/bridge.md).
+
 ## Optimisation (R8)
 
 L'APK publié par la CI (`assembleRelease`) est **optimisé par R8** : code et ressources réduits et optimisés, ce qui

@@ -167,7 +167,7 @@ data class ThemeSettings(
 }
 
 /** Persistence of the appearance settings and of the wallpaper files. */
-class ThemeStore(
+class ThemeStore private constructor(
     private val context: Context,
 ) {
     private val prefs = context.getSharedPreferences("theme", Context.MODE_PRIVATE)
@@ -454,6 +454,13 @@ class ThemeStore(
         private const val MAX_ANIMATED_BYTES = 64L * 1024 * 1024
         private const val MAX_VIDEO_BYTES = 512L * 1024 * 1024
         const val MAX_HOME_PAGES = 4
+
+        @Volatile
+        private var instance: ThemeStore? = null
+
+        /** One store for the screens and the bridge (a change from the phone shows at once). */
+        fun get(context: Context): ThemeStore =
+            instance ?: synchronized(this) { instance ?: ThemeStore(context.applicationContext).also { instance = it } }
 
         /** Shortcut bar background by default: readable over a wallpaper, still showing it. */
         const val DEFAULT_RAIL_OPACITY = 70

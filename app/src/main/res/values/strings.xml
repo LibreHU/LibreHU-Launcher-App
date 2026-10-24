@@ -603,4 +603,13 @@
     <string name="standby_obd_tiles">As tiles</string>
     <string name="standby_obd_labels">Show the names</string>
     <string name="standby_obd_car_hint">Manufacturer values (ddt4all) show here while LibreHU-service reads them (adapter connected, values ticked in its car).</string>
+    <string name="bridge_accent_blue">Blue</string>
+    <string name="bridge_accent_teal">Teal</string>
+    <string name="bridge_accent_green">Green</string>
+    <string name="bridge_accent_yellow">Yellow</string>
+    <string name="bridge_accent_orange">Orange</string>
+    <string name="bridge_accent_red">Red</string>
+    <string name="bridge_accent_pink">Pink</string>
+    <string name="bridge_accent_purple">Purple</string>
+    <string name="bridge_accent_custom">Custom (RGB)</string>
 </resources>
