@@ -37,6 +37,9 @@ data class ObdLiveState(
  */
 object ObdLive {
     const val ACTION_OBD = "org.librehu.action.OBD"
+
+    /** Signature permission of LibreHU-service, required from the sender of [ACTION_OBD]. */
+    const val VEHICLE_PERMISSION = "org.librehu.permission.VEHICLE"
     private const val STALE_MS = 5_000L
 
     private val _state = MutableStateFlow(ObdLiveState())
@@ -84,7 +87,8 @@ object ObdLive {
 
     fun start(context: Context) {
         if (users++ > 0) return
-        ContextCompat.registerReceiver(context.applicationContext, receiver, IntentFilter(ACTION_OBD), ContextCompat.RECEIVER_EXPORTED)
+        // Only from an app holding the signature permission VEHICLE (LibreHU-service): no other app can fake values.
+        ContextCompat.registerReceiver(context.applicationContext, receiver, IntentFilter(ACTION_OBD), VEHICLE_PERMISSION, null, ContextCompat.RECEIVER_EXPORTED)
         main.postDelayed(stale, 2_000)
     }
 

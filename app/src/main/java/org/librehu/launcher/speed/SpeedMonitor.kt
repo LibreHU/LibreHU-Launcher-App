@@ -103,7 +103,8 @@ class SpeedMonitor private constructor(
     @SuppressLint("MissingPermission")
     fun start() {
         if (users++ > 0) return
-        ContextCompat.registerReceiver(app, obd, IntentFilter(ACTION_OBD), ContextCompat.RECEIVER_EXPORTED)
+        // Only from LibreHU-service (signature permission VEHICLE): no other app can fake the speed.
+        ContextCompat.registerReceiver(app, obd, IntentFilter(ACTION_OBD), org.librehu.launcher.obd.ObdLive.VEHICLE_PERMISSION, null, ContextCompat.RECEIVER_EXPORTED)
         val granted =
             ContextCompat.checkSelfPermission(app, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         set(_state.value.copy(gpsPermission = granted))

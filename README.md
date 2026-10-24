@@ -98,7 +98,7 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   **numéro du téléphone** (transmis par le téléphone en Bluetooth, sinon tapé dans Général : à donner aux secours
   pour être rappelé) et
   informations pour les secours (nom, infos médicales, véhicule : marque, modèle, année, couleur et plaque repris
-  de LibreHU-service) ; action `org.librehu.action.SOS`. Voir [docs/sos.md](docs/sos.md).
+  de LibreHU-service) ; action `org.librehu.action.SOS` (applis signées LibreHU seulement). Voir [docs/sos.md](docs/sos.md).
 - **Assistant de premier démarrage**, étape par étape (chacune peut être passée et se retrouve dans les paramètres) :
   1. **Bienvenue + root** : le type de root est détecté (`system/RootManager.kt` : appli du gestionnaire, sinon
      fichiers `/data/adb/ksud`, `/data/adb/ap`, `/data/adb/magisk`, `daemonsu`, sinon un `su` seul) et le texte
