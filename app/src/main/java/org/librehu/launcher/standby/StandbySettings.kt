@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.asStateFlow
 
 enum class ClockStyle { DIGITAL, ANALOG }
 
+/** How the OBD values are drawn under the clock: one line, or tiles side by side. */
+enum class ObdClockStyle { LINE, TILES }
+
 /**
  * Standby clock (ivi-services: "screen protection" timer and the power key's "clock" actions, drawn by Jancar's
  * launcher). Here: after [idleMinutes] without touching the home screen, from the rail clock, from
@@ -23,6 +26,14 @@ data class StandbySettings(
     val showPhone: Boolean = false,
     /** Car battery (LibreHU-service's OBD adapter) under the clock, when the adapter is connected. */
     val showCarBattery: Boolean = true,
+    /**
+     * OBD values under the clock, in this order: LibreHU-service's standard names (SPEED, RPM, COOLANT_TEMP…) and
+     * manufacturer values as `car:<ECU>/<value>`. Shown while the adapter is connected; up to [MAX_OBD].
+     */
+    val obdValues: List<String> = emptyList(),
+    val obdStyle: ObdClockStyle = ObdClockStyle.LINE,
+    /** Names of the values next to them (else only value and unit). */
+    val obdLabels: Boolean = true,
     /** Accent colour instead of white. */
     val accentColor: Boolean = false,
     /** Screen brightness while shown (0..1), or [KEEP_BRIGHTNESS]. */
@@ -34,6 +45,7 @@ data class StandbySettings(
 ) {
     companion object {
         const val KEEP_BRIGHTNESS = -1f
+        const val MAX_OBD = 6
         val IDLE_CHOICES = listOf(0, 1, 2, 5, 10, 30)
         val BRIGHTNESS_CHOICES = listOf(KEEP_BRIGHTNESS, 0.5f, 0.2f, 0.05f)
     }
@@ -57,6 +69,9 @@ class StandbyStore private constructor(
             .putBoolean("media", s.showMedia)
             .putBoolean("phone", s.showPhone)
             .putBoolean("car_battery", s.showCarBattery)
+            .putString("obd_values", s.obdValues.joinToString("\n"))
+            .putString("obd_style", s.obdStyle.name)
+            .putBoolean("obd_labels", s.obdLabels)
             .putBoolean("accent", s.accentColor)
             .putFloat("brightness", s.brightness)
             .putBoolean("pause_media", s.pauseMedia)
@@ -80,6 +95,9 @@ class StandbyStore private constructor(
             showMedia = prefs.getBoolean("media", d.showMedia),
             showPhone = prefs.getBoolean("phone", d.showPhone),
             showCarBattery = prefs.getBoolean("car_battery", d.showCarBattery),
+            obdValues = prefs.getString("obd_values", "").orEmpty().split('\n').filter { it.isNotBlank() },
+            obdStyle = runCatching { ObdClockStyle.valueOf(prefs.getString("obd_style", null)!!) }.getOrDefault(d.obdStyle),
+            obdLabels = prefs.getBoolean("obd_labels", d.obdLabels),
             accentColor = prefs.getBoolean("accent", d.accentColor),
             brightness = prefs.getFloat("brightness", d.brightness),
             pauseMedia = prefs.getBoolean("pause_media", d.pauseMedia),
