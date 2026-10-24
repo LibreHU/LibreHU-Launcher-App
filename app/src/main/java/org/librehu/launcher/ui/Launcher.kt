@@ -97,7 +97,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -110,6 +112,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.text.DateFormat
+import java.util.Date
 import kotlinx.coroutines.delay
 import org.librehu.launcher.R
 import org.librehu.launcher.data.AaState
@@ -130,8 +134,6 @@ import org.librehu.launcher.sos.SosActivity
 import org.librehu.launcher.sos.SosSettings
 import org.librehu.launcher.sos.SosStore
 import org.librehu.launcher.tpms.TpmsManager
-import java.text.DateFormat
-import java.util.Date
 
 enum class Screen { HOME, APPS, SETTINGS, TPMS, OBD, SETUP }
 
@@ -926,11 +928,19 @@ private fun WidgetSlot(
     var picking by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
     val hostView = remember(appWidgetId) { if (appWidgetId >= 0) widgets.createView(appWidgetId) else null }
+    val density = LocalDensity.current.density
     Box(
         modifier =
             modifier
                 .clip(RoundedCornerShape(28.dp))
-                .background(CarColors.Surface),
+                .background(CarColors.Surface)
+                // The widget's size (dp) in its options: apps lay their content out for it (cut texts, OBD dashboard).
+                .onSizeChanged { px ->
+                    val w = (px.width / density).toInt()
+                    val h = (px.height / density).toInt()
+                    @Suppress("DEPRECATION")
+                    if (w > 0 && h > 0) hostView?.updateAppWidgetSize(null, w, h, w, h)
+                },
     ) {
         if (hostView != null) {
             // AndroidView only calls its factory once: without key(), a replaced widget kept showing the old view

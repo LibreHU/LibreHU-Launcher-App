@@ -104,6 +104,7 @@ class LockActivity : ComponentActivity() {
                 paused = true
             }
         }
+        org.librehu.launcher.data.ThemeController.restore(this)
         setContent { CarTheme { Screen() } }
     }
 
@@ -176,10 +177,11 @@ class LockActivity : ComponentActivity() {
                 applyBrightness()
             }
         }
+        val night = org.librehu.launcher.ui.nightLook()
         Box(
             Modifier
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(night.background)
                 .clickable(interactionSource = null, indication = null) { wake() },
         ) {
             if (awake.value) {
@@ -211,6 +213,8 @@ class LockActivity : ComponentActivity() {
                     }
                 }
             }
+            // Retro display at night: scan lines (the clock look has them already).
+            if (night.retro && s.look != LockLook.CLOCK) org.librehu.launcher.ui.ScanLines(Modifier.fillMaxSize())
         }
     }
 
@@ -222,7 +226,7 @@ class LockActivity : ComponentActivity() {
                 .fillMaxWidth(0.6f)
                 .height(80.dp)
                 .clip(RoundedCornerShape(40.dp))
-                .background(Color(0x33FFFFFF)),
+                .background(org.librehu.launcher.ui.nightLook().key),
             contentAlignment = Alignment.CenterStart,
         ) {
             val density = LocalDensity.current
@@ -231,7 +235,7 @@ class LockActivity : ComponentActivity() {
             var x by remember { mutableFloatStateOf(0f) }
             Text(
                 stringResource(R.string.lock_slide),
-                color = Color(0xCCFFFFFF),
+                color = org.librehu.launcher.ui.nightLook().text.copy(alpha = 0.8f),
                 fontSize = 20.sp,
                 modifier = Modifier.align(Alignment.Center),
             )
@@ -264,13 +268,14 @@ class LockActivity : ComponentActivity() {
     ) {
         var typed by remember { mutableStateOf("") }
         var wrong by remember { mutableStateOf(false) }
+        val night = org.librehu.launcher.ui.nightLook()
         Column(
-            Modifier.clip(RoundedCornerShape(28.dp)).background(Color(0xCC202124)).padding(20.dp),
+            Modifier.clip(RoundedCornerShape(28.dp)).background(night.panel).padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Lock, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                Icon(Icons.Default.Lock, null, tint = night.text, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(10.dp))
                 Text(
                     if (wrong) {
@@ -280,7 +285,7 @@ class LockActivity : ComponentActivity() {
                     } else {
                         "•".repeat(typed.length).ifEmpty { stringResource(R.string.lock_enter_pin) }
                     },
-                    color = if (wrong) Color(0xFFF28B82) else Color.White,
+                    color = if (wrong) Color(0xFFF28B82) else night.text,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Medium,
                 )
@@ -293,7 +298,7 @@ class LockActivity : ComponentActivity() {
                             Modifier
                                 .size(64.dp)
                                 .clip(CircleShape)
-                                .background(Color(0x33FFFFFF))
+                                .background(night.key)
                                 .clickable {
                                     wake()
                                     wrong = false
@@ -304,7 +309,7 @@ class LockActivity : ComponentActivity() {
                                     }
                                 },
                             contentAlignment = Alignment.Center,
-                        ) { Text(d, color = Color.White, fontSize = 26.sp) }
+                        ) { Text(d, color = night.text, fontSize = 26.sp) }
                     }
                 }
             }
@@ -315,7 +320,7 @@ class LockActivity : ComponentActivity() {
                     .clickable { typed = typed.dropLast(1) }
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.AutoMirrored.Filled.Backspace, stringResource(R.string.lock_erase), tint = Color.White) }
+            ) { Icon(Icons.AutoMirrored.Filled.Backspace, stringResource(R.string.lock_erase), tint = night.text) }
         }
     }
 
