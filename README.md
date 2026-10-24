@@ -75,9 +75,17 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   clair et en sombre (jour / nuit et phares comme d'habitude), police d'afficheur à segments partout (DSEG14, celle de
   l'afficheur rétro de LibreHU-Disc, en majuscules sans accents comme sur un autoradio : les lettres accentuées sont
   dessinées sans leur accent, police « LibreHU Seg14 » générée par `tools/make_retro_font.py`, SIL OFL 1.1,
-  `third_party/DSEG-LICENSE.txt`), et la nuit **lignes de
+  `third_party/DSEG-LICENSE.txt`) ; **suivi par toutes les applis LibreHU** (palette et police, publiées par
+  `content://org.librehu.launcher.theme/theme` : colonnes `style`, `background`, `surface`, `surface_high`,
+  `on_accent`, `text`, `text_dim` en plus de `dark` et `accent`, mêmes extras dans `THEME_CHANGED`), et la nuit **lignes de
   balayage** sur tout l'écran pour l'ambre et le vert (un dessin en cache, sans animation : pas de coût en continu).
 - **Fonds d'écran** (Paramètres) : aucun, animations intégrées à la couleur d'accent (aurore, étoiles, vagues),
+  **afficheur d'autoradio des années 90-2000** en matrice de points aux couleurs du thème (ambre, vert, cassette en
+  style rétro ; points éteints visibles comme sur un vrai afficheur ; 15 images/s, grille des points éteints dessinée
+  une fois) : **dauphins** sautant au-dessus de la mer sous la lune (dans l'esprit des autoradios Pioneer à écran
+  organique EL du début des années 2000 ; dessin original, aucune image de marque), **analyseur de spectre** à crêtes
+  qui retombent, **cassette** (bobines qui tournent, bande qui passe d'une bobine à l'autre, compteur), **route de
+  nuit** (virages, pointillés, collines, étoiles) et **mode démo** qui les enchaîne toutes les 20 s ;
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
   focus audio), ou **fond Android / live wallpaper** affiché derrière le launcher (`FLAG_SHOW_WALLPAPER`). Les
   animations se mettent en pause dès que le launcher n'est plus au premier plan.

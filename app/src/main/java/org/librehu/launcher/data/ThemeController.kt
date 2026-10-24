@@ -54,20 +54,10 @@ class ThemeController(
                 _dark.value = dark
                 val palette = CarPalette.of(dark, s.accent, translucent = wallpaper, style = s.style)
                 CarColors.palette = palette
-                ThemeProvider.publish(context, dark, argb(palette))
+                ThemeProvider.publish(context, palette)
                 if (s.systemWide) setSystemNightMode(dark)
             }
         }
-    }
-
-    private fun argb(p: CarPalette): Int {
-        val c = p.accent
-        return android.graphics.Color.argb(
-            (c.alpha * 255).toInt(),
-            (c.red * 255).toInt(),
-            (c.green * 255).toInt(),
-            (c.blue * 255).toInt(),
-        )
     }
 
     private fun setSystemNightMode(dark: Boolean) {
