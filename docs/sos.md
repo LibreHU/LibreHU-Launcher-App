@@ -3,7 +3,10 @@
 Écran d'urgence du launcher (`SosActivity`).
 
 - **Ouverture** : bouton rouge dans la barre et/ou sur le tableau de bord (appui long par défaut), widget « SOS »,
-  action `org.librehu.action.SOS` (touche remappée : `adb shell am start -a org.librehu.action.SOS`).
+  action `org.librehu.action.SOS`, réservée aux applis signées avec la clé LibreHU (permission de signature
+  `org.librehu.permission.SOS`) : l'écran appelle le numéro d'urgence après son compte à rebours, aucune autre appli
+  ne doit pouvoir l'ouvrir. Pour tester, en root (root passe outre la permission) :
+  `adb shell su -c 'am start -a org.librehu.action.SOS'`.
 - **Compte à rebours** (0, 5, 10 ou 20 s, annulable) puis appel du numéro d'urgence (112 par défaut).
 - **Appels** : par le téléphone connecté en Bluetooth (profil mains libres). Android interdit à une appli d'appeler
   directement un numéro d'urgence avec `ACTION_CALL` : sans installation privilégiée (`CALL_PRIVILEGED`), le numéro

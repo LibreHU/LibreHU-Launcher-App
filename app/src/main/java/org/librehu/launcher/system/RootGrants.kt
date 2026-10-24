@@ -112,7 +112,8 @@ object RootGrants {
                     if (intent.getStringExtra("package") == pkg) answer.complete(intent.getBooleanExtra("granted", false))
                 }
             }
-        ContextCompat.registerReceiver(context, receiver, IntentFilter(ACTION_RESULT), ContextCompat.RECEIVER_EXPORTED)
+        // Answers only from apps holding the signature permission ROOT_REQUEST (the LibreHU apps).
+        ContextCompat.registerReceiver(context, receiver, IntentFilter(ACTION_RESULT), ROOT_PERMISSION, null, ContextCompat.RECEIVER_EXPORTED)
         return try {
             // Stopped apps (never opened since their install, or force-stopped) get no broadcast without this flag.
             context.sendBroadcast(
@@ -135,4 +136,5 @@ object RootGrants {
     }
 
     private const val WAIT_S = 50L
+    private const val ROOT_PERMISSION = "org.librehu.permission.ROOT_REQUEST"
 }
