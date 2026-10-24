@@ -603,4 +603,13 @@
     <string name="standby_obd_tiles">En tuiles</string>
     <string name="standby_obd_labels">Afficher les noms</string>
     <string name="standby_obd_car_hint">Les valeurs constructeur (ddt4all) apparaissent ici quand LibreHU-service les lit (adaptateur connecté, valeurs cochées dans sa voiture).</string>
+    <string name="bridge_accent_blue">Bleu</string>
+    <string name="bridge_accent_teal">Bleu canard</string>
+    <string name="bridge_accent_green">Vert</string>
+    <string name="bridge_accent_yellow">Jaune</string>
+    <string name="bridge_accent_orange">Orange</string>
+    <string name="bridge_accent_red">Rouge</string>
+    <string name="bridge_accent_pink">Rose</string>
+    <string name="bridge_accent_purple">Violet</string>
+    <string name="bridge_accent_custom">Personnalisée (RGB)</string>
 </resources>
