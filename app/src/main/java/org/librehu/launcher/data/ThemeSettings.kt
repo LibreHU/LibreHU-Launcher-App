@@ -155,6 +155,10 @@ data class ThemeSettings(
     val onlineCaption: Boolean = true,
     /** Home pages swiped sideways: the dashboard, then pages of four widgets (1 to 4). */
     val homePages: Int = 1,
+    /** Widget sizes and places can be changed (their edit button): off = the usual layout. */
+    val widgetLayout: Boolean = false,
+    /** Right-hand drive: the home screen mirrored (rail, big widget and rows from the right). */
+    val rightHandDrive: Boolean = false,
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -211,6 +215,8 @@ class ThemeStore(
             .putString("online_refresh", s.onlineRefresh.name)
             .putBoolean("online_caption", s.onlineCaption)
             .putInt("home_pages", s.homePages)
+            .putBoolean("widget_layout", s.widgetLayout)
+            .putBoolean("right_hand_drive", s.rightHandDrive)
             .apply()
         _settings.value = s
     }
@@ -434,6 +440,8 @@ class ThemeStore(
             onlineRefresh = runCatching { OnlineRefresh.valueOf(prefs.getString("online_refresh", null)!!) }.getOrDefault(OnlineRefresh.DAILY),
             onlineCaption = prefs.getBoolean("online_caption", true),
             homePages = prefs.getInt("home_pages", 1).coerceIn(1, MAX_HOME_PAGES),
+            widgetLayout = prefs.getBoolean("widget_layout", false),
+            rightHandDrive = prefs.getBoolean("right_hand_drive", false),
         )
     }
 

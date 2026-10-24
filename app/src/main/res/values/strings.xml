@@ -390,6 +390,15 @@
     <string name="wallpaper_online_failed">No picture (no network?)</string>
     <string name="home_pages">Home pages</string>
     <string name="home_pages_hint">Swipe sideways: the dashboard, then pages of four widgets each.</string>
+    <string name="right_hand_drive">Right-hand drive</string>
+    <string name="right_hand_drive_hint">Home screen mirrored: shortcut bar, big widget and rows start on the right, next to the driver.</string>
+    <string name="widget_layout">Change widget sizes and layout</string>
+    <string name="widget_layout_hint">Each widget\'s edit button then sets its width and height and moves it to the previous or next slot (pages included).</string>
+    <string name="widget_sizes_reset">Usual widget sizes</string>
+    <string name="widget_width">Width</string>
+    <string name="widget_height">Height</string>
+    <string name="widget_move_previous">Previous slot</string>
+    <string name="widget_move_next">Next slot</string>
     <string name="region_title">Language and time</string>
     <string name="region_hint">Set here as root; without root each choice opens Android\'s own screen.</string>
     <string name="region_language">Language</string>
