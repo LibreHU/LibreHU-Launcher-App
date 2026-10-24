@@ -390,6 +390,15 @@
     <string name="wallpaper_online_failed">Pas d\'image (pas de réseau ?)</string>
     <string name="home_pages">Pages d\'accueil</string>
     <string name="home_pages_hint">Glisser sur le côté : le tableau de bord, puis des pages de quatre widgets chacune.</string>
+    <string name="right_hand_drive">Conduite à droite</string>
+    <string name="right_hand_drive_hint">Écran d\'accueil en miroir : barre de raccourcis, grand widget et rangées partent de la droite, côté conducteur.</string>
+    <string name="widget_layout">Modifier la taille et la disposition des widgets</string>
+    <string name="widget_layout_hint">Le bouton de modification de chaque widget règle alors sa largeur et sa hauteur et le déplace à l\'emplacement précédent ou suivant (pages comprises).</string>
+    <string name="widget_sizes_reset">Tailles des widgets par défaut</string>
+    <string name="widget_width">Largeur</string>
+    <string name="widget_height">Hauteur</string>
+    <string name="widget_move_previous">Emplacement précédent</string>
+    <string name="widget_move_next">Emplacement suivant</string>
     <string name="region_title">Langue et heure</string>
     <string name="region_hint">Réglé ici en root ; sans root, chaque choix ouvre l\'écran d\'Android.</string>
     <string name="region_language">Langue</string>

@@ -216,6 +216,13 @@ fun LookSettings(
         listOf(RailPosition.LEFT to stringResource(R.string.rail_left), RailPosition.BOTTOM to stringResource(R.string.rail_bottom)),
         s.rail,
     ) { r -> actions.setTheme { it.copy(rail = r) } }
+    SettingSwitch(stringResource(R.string.right_hand_drive), stringResource(R.string.right_hand_drive_hint), s.rightHandDrive) { on ->
+        actions.setTheme { it.copy(rightHandDrive = on) }
+    }
+    SettingSwitch(stringResource(R.string.widget_layout), stringResource(R.string.widget_layout_hint), s.widgetLayout) { on ->
+        actions.setTheme { it.copy(widgetLayout = on) }
+    }
+    if (s.widgetLayout) SettingChoice(stringResource(R.string.widget_sizes_reset), false, actions.resetWidgetSizes)
     SettingSection(stringResource(R.string.rail_opacity))
     SettingChoices(
         org.librehu.launcher.data.ThemeStore.RAIL_OPACITIES.map { it to "$it %" },

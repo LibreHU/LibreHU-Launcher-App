@@ -21,6 +21,11 @@ class LauncherPrefs(
     private val _slots = MutableStateFlow(Slot.entries.associateWith { prefs.getInt(it.key, NO_WIDGET) })
     val slots: StateFlow<Map<Slot, Int>> = _slots.asStateFlow()
 
+    private val _sizes = MutableStateFlow(loadSizes())
+
+    /** Widget sizes set by hand (keys from [Slot.widthKey] / [Slot.heightKey]), used when the layout may be changed. */
+    val sizes: StateFlow<Map<String, Float>> = _sizes.asStateFlow()
+
     /** First start assistant done (or skipped). */
     var setupDone: Boolean
         get() = prefs.getBoolean("setup_done", false)
@@ -52,12 +57,43 @@ class LauncherPrefs(
         _slots.value = _slots.value + (slot to appWidgetId)
     }
 
+    /** Swaps the widgets of two slots (moves a widget, to an empty slot too). */
+    fun swap(
+        a: Slot,
+        b: Slot,
+    ) {
+        val wa = _slots.value[a] ?: NO_WIDGET
+        val wb = _slots.value[b] ?: NO_WIDGET
+        prefs.edit().putInt(a.key, wb).putInt(b.key, wa).apply()
+        _slots.value = _slots.value + (a to wb) + (b to wa)
+    }
+
+    fun setSize(
+        key: String,
+        value: Float,
+    ) {
+        prefs.edit().putFloat(key, value).apply()
+        _sizes.value = _sizes.value + (key to value)
+    }
+
+    /** Back to the usual widget sizes (the widgets stay where they are). */
+    fun resetSizes() {
+        prefs.edit().apply { _sizes.value.keys.forEach(::remove) }.apply()
+        _sizes.value = emptyMap()
+    }
+
+    private fun loadSizes(): Map<String, Float> =
+        prefs.all.entries
+            .filter { (k, v) -> v is Float && (k.startsWith("w_slot_") || k.startsWith("h_slot_")) }
+            .associate { (k, v) -> k to v as Float }
+
     /** Back to the first-start state: default rail shortcuts, empty widget slots (ids returned to delete). */
     fun reset(): List<Int> {
         val widgetIds = _slots.value.values.filter { it >= 0 }
         prefs.edit().clear().apply()
         _pins.value = loadPins()
         _slots.value = Slot.entries.associateWith { NO_WIDGET }
+        _sizes.value = emptyMap()
         return widgetIds
     }
 
@@ -105,6 +141,25 @@ class LauncherPrefs(
         companion object {
             /** The four slots of home page [page] (2 to 4). */
             fun ofPage(page: Int): List<Slot> = (1..4).map { valueOf("P${page}_$it") }
+
+            /** The slots of the [pages] home pages shown, in order (a widget moves to the previous / next one). */
+            fun shown(pages: Int): List<Slot> = listOf(MAIN, SIDE) + (2..pages).flatMap { ofPage(it) }
+
+            /** Width of a slot: the main one's against the column beside it, a page's in its row (none: SIDE). */
+            fun widthKey(slot: Slot): String? = if (slot == SIDE) null else "w_${slot.key}"
+
+            /** Height: SIDE's in its column, a page slot's row (none: MAIN, full height). */
+            fun heightKey(slot: Slot): String? =
+                when (slot) {
+                    MAIN -> null
+                    SIDE -> "h_${slot.key}"
+                    else -> "h_${slot.key.dropLast(2)}_r${(slot.key.last() - '1') / 2}"
+                }
+
+            fun size(
+                sizes: Map<String, Float>,
+                key: String?,
+            ): Float = sizes[key] ?: if (key == "w_slot_main") 1.5f else 1f
         }
     }
 

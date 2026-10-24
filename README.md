@@ -67,6 +67,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   lanceur n'est pas visible ; APK publié en build *release* (non débogable, compilé entièrement par Android).
 - **Pages d'accueil** (Paramètres → apparence, 1 à 4) : on glisse sur le côté du tableau de bord vers des pages de
   quatre widgets chacune (points sous les pages).
+- **Taille et disposition des widgets** (Paramètres → Personnalisation, désactivé par défaut) : le bouton de
+  modification de chaque emplacement règle sa **largeur** et sa **hauteur** (grand widget contre la colonne d'à côté,
+  hauteur du second, largeur dans la rangée et hauteur de la rangée sur les pages) et le **déplace** à l'emplacement
+  précédent ou suivant, d'une page à l'autre compris. Désactivé : tailles habituelles (les réglages sont gardés).
 - **Fond d'écran internet** : image du jour de **Bing** (pays et langue au choix, ou ceux de l'appareil), de
   **Wikimedia Commons**, ou **photo au hasard** (Lorem Picsum, photos Unsplash) ; nouvelle image chaque jour, toutes les
   6 heures ou à chaque démarrage, et bouton « Nouvelle image maintenant ». Téléchargée seulement avec du réseau
@@ -105,6 +109,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   son joué via le `Visualizer` d'Android, autorisation micro, rien n'est enregistré).
 - **Barre de raccourcis à gauche ou en bas** (Paramètres → Personnalisation), avec un **fond réglable** : opacité
   0 à 100 % dans la couleur de surface du thème (70 % par défaut ; 0 % = fond d'écran visible tel quel).
+- **Conduite à droite** (Paramètres → Personnalisation) : l'écran d'accueil en **miroir**, côté conducteur — barre de
+  raccourcis à droite (en bas : accueil et premiers raccourcis à droite), grand widget à droite, rangées des pages
+  depuis la droite ; textes et icônes restent dans le bon sens.
 - **Horloge de veille** : grande horloge numérique ou analogique sur fond noir, date, titre en cours (centré sous
   l'heure, artiste en dessous), **batterie de la voiture** sous la date (tension, charge ou état de charge, quand
   l'adaptateur OBD de LibreHU-service est connecté ; désactivable), **jusqu'à 6 valeurs OBD au choix** (vitesse,
