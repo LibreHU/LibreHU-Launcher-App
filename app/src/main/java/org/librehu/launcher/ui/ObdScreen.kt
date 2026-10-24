@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -251,3 +252,68 @@ fun openServiceObd(context: Context) {
 }
 
 private const val SERVICE = "org.librehu.service"
+
+/** Values that can go under the clock: the standard ones, then the manufacturer values received now. */
+@Composable
+fun obdClockChoices(st: ObdLiveState): List<Pair<String, String>> =
+    PIDS.map { (k, p) -> k to stringResource(p.first) } + st.car.keys.sorted().map { "car:$it" to it.substringAfter('/') }
+
+/** Name of a value chosen for the clock. */
+@Composable
+fun obdClockName(key: String): String =
+    if (key.startsWith("car:")) key.removePrefix("car:").substringAfter('/') else PIDS[key]?.let { stringResource(it.first) } ?: key
+
+/**
+ * The chosen OBD values under the standby clock / on the lock screen ([keys] in order), as one line or as tiles;
+ * nothing while the adapter is not connected. A value not received now shows "—".
+ */
+@Composable
+fun ObdClockValues(
+    keys: List<String>,
+    tiles: Boolean,
+    labels: Boolean,
+    textSize: Int = 20,
+) {
+    if (keys.isEmpty()) return
+    val st = rememberObdLive()
+    if (!st.connected) return
+    val dim = Color(0xFF9AA0A6)
+    val items =
+        keys.map { k ->
+            val name = obdClockName(k)
+            val value =
+                if (k.startsWith("car:")) {
+                    st.car[k.removePrefix("car:")] ?: "—"
+                } else {
+                    val p = PIDS[k]
+                    val v = st.values[k]
+                    if (p == null || v == null) "—" else fmt(v, p.third) + " " + unitText(p.second)
+                }
+            name to value
+        }
+    if (!tiles) {
+        Text(
+            items.joinToString("   ·   ") { (n, v) -> if (labels) "$n  $v" else v },
+            color = dim,
+            fontSize = textSize.sp,
+            maxLines = 2,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        return
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        for ((n, v) in items) {
+            Column(
+                Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF16181C))
+                    .padding(horizontal = 18.dp, vertical = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(v, color = Color(0xFFE8EAED), fontSize = (textSize + 6).sp, maxLines = 1)
+                if (labels) Text(n, color = dim, fontSize = (textSize - 6).sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
+

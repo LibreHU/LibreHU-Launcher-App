@@ -31,6 +31,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import org.librehu.launcher.standby.ObdClockStyle
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -453,6 +457,7 @@ fun StandbySettingsPage(
         SettingSwitch(stringResource(R.string.standby_car_battery), stringResource(R.string.standby_car_battery_hint), s.showCarBattery) { on ->
             store.update { it.copy(showCarBattery = on) }
         }
+        StandbyObdSettings(s) { change -> store.update(change) }
         SettingSwitch(stringResource(R.string.standby_accent), null, s.accentColor) { on -> store.update { it.copy(accentColor = on) } }
         SettingSwitch(stringResource(R.string.standby_pause), stringResource(R.string.standby_pause_hint), s.pauseMedia) { on ->
             store.update { it.copy(pauseMedia = on) }
@@ -475,6 +480,77 @@ fun StandbySettingsPage(
         SettingChoice(stringResource(R.string.standby_dream), false, actions.openDreamSettings)
     }
     SettingHint(stringResource(R.string.standby_dream_hint))
+}
+
+/** OBD values under the clock: the chosen ones in order (up, remove), adding from the list, line or tiles, names. */
+@Composable
+private fun StandbyObdSettings(
+    s: StandbySettings,
+    update: ((StandbySettings) -> StandbySettings) -> Unit,
+) {
+    var adding by remember { mutableStateOf(false) }
+    SettingSection(stringResource(R.string.standby_obd))
+    SettingHint(stringResource(R.string.standby_obd_hint))
+    s.obdValues.forEachIndexed { i, key ->
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(CarColors.SurfaceHigh).padding(start = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("${i + 1}.  " + obdClockName(key), color = CarColors.Text, fontSize = 18.sp, modifier = Modifier.weight(1f))
+            if (i > 0) {
+                IconButton(onClick = {
+                    update { it.copy(obdValues = it.obdValues.toMutableList().apply { add(i - 1, removeAt(i)) }) }
+                }) { Icon(Icons.Default.KeyboardArrowUp, stringResource(R.string.standby_obd_up), tint = CarColors.Text) }
+            }
+            IconButton(onClick = { update { it.copy(obdValues = it.obdValues - key) } }) {
+                Icon(Icons.Default.Close, stringResource(R.string.standby_obd_remove), tint = CarColors.TextDim)
+            }
+        }
+    }
+    if (s.obdValues.size < StandbySettings.MAX_OBD) {
+        Row { SettingChoice(stringResource(R.string.standby_obd_add), false) { adding = true } }
+    }
+    if (s.obdValues.isNotEmpty()) {
+        SettingChoices(
+            listOf(
+                ObdClockStyle.LINE to stringResource(R.string.standby_obd_line),
+                ObdClockStyle.TILES to stringResource(R.string.standby_obd_tiles),
+            ),
+            s.obdStyle,
+        ) { st -> update { it.copy(obdStyle = st) } }
+        SettingSwitch(stringResource(R.string.standby_obd_labels), null, s.obdLabels) { on -> update { it.copy(obdLabels = on) } }
+    }
+    if (adding) {
+        val live = rememberObdLive()
+        val choices = obdClockChoices(live).filter { it.first !in s.obdValues }
+        AlertDialog(
+            onDismissRequest = { adding = false },
+            title = { Text(stringResource(R.string.standby_obd_add)) },
+            text = {
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 460.dp)) {
+                    items(choices.size) { n ->
+                        val (key, name) = choices[n]
+                        Text(
+                            name + if (key.startsWith("car:")) "  (" + key.removePrefix("car:").substringBefore('/') + ")" else "",
+                            color = CarColors.Text,
+                            fontSize = 18.sp,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        update { it.copy(obdValues = (it.obdValues + key).take(StandbySettings.MAX_OBD)) }
+                                        adding = false
+                                    }.padding(vertical = 12.dp, horizontal = 8.dp),
+                        )
+                    }
+                    item { SettingHint(stringResource(R.string.standby_obd_car_hint)) }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { adding = false }) { Text(stringResource(android.R.string.cancel)) } },
+        )
+    }
 }
 
 // --- SOS ---------------------------------------------------------------------------------------------------------
