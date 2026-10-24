@@ -8,7 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import org.librehu.launcher.R
+import org.librehu.launcher.data.SegmentViews
 import org.librehu.launcher.data.ThemeProvider
+import org.librehu.launcher.data.WidgetLook
 
 /** Weather at the car's position ([WeatherRepo], Open-Meteo): symbol, temperature, min / max. A touch refreshes it. */
 class WeatherWidget : AppWidgetProvider() {
@@ -47,11 +49,11 @@ class WeatherWidget : AppWidgetProvider() {
             val repo = WeatherRepo.get(context)
             val w = repo.now.value
             val s = repo.settings.value
-            val dark = context.getSharedPreferences(ThemeProvider.EFFECTIVE, Context.MODE_PRIVATE).getBoolean("dark", true)
-            val text = if (dark) 0xFFE8EAED.toInt() else 0xFF202124.toInt()
-            val dim = if (dark) 0xFF9AA0A6.toInt() else 0xFF5F6368.toInt()
-            return RemoteViews(context.packageName, R.layout.widget_weather).apply {
-                setInt(R.id.weather_root, "setBackgroundResource", if (dark) R.drawable.widget_background else R.drawable.widget_background_light)
+            val look = WidgetLook(context)
+            val text = look.text
+            val dim = look.dim
+            return SegmentViews(context, R.layout.widget_weather, look.segment).apply {
+                look.background(this, R.id.weather_root)
                 setTextColor(R.id.weather_temp, text)
                 setTextColor(R.id.weather_label, dim)
                 setTextColor(R.id.weather_minmax, dim)

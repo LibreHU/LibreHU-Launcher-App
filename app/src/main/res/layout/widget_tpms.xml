@@ -34,6 +34,17 @@
             android:textColor="#FFE8EAED"
             android:textSize="15sp" />
 
+        <ImageView
+            android:id="@+id/tpms_title_seg"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:adjustViewBounds="true"
+            android:importantForAccessibility="no"
+            android:scaleType="fitStart"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/tpms_status"
             android:layout_width="wrap_content"
@@ -41,6 +52,16 @@
             android:maxLines="1"
             android:textColor="#FF9AA0A6"
             android:textSize="12sp" />
+
+        <ImageView
+            android:id="@+id/tpms_status_seg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:importantForAccessibility="no"
+            android:scaleType="fitStart"
+            android:visibility="gone" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -78,6 +99,15 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
+                <ImageView
+                    android:id="@+id/tpms_fl_pressure_seg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitStart"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/tpms_fl_temp"
                     android:layout_width="wrap_content"
@@ -85,6 +115,16 @@
                     android:maxLines="1"
                     android:textColor="#FF9AA0A6"
                     android:textSize="13sp" />
+
+                <ImageView
+                    android:id="@+id/tpms_fl_temp_seg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitStart"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -109,6 +149,15 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
+                <ImageView
+                    android:id="@+id/tpms_rl_pressure_seg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitStart"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/tpms_rl_temp"
                     android:layout_width="wrap_content"
@@ -116,6 +165,16 @@
                     android:maxLines="1"
                     android:textColor="#FF9AA0A6"
                     android:textSize="13sp" />
+
+                <ImageView
+                    android:id="@+id/tpms_rl_temp_seg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitStart"
+                    android:visibility="gone" />
+
             </LinearLayout>
         </LinearLayout>
 
@@ -156,6 +215,15 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
+                <ImageView
+                    android:id="@+id/tpms_fr_pressure_seg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitStart"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/tpms_fr_temp"
                     android:layout_width="wrap_content"
@@ -163,6 +231,16 @@
                     android:maxLines="1"
                     android:textColor="#FF9AA0A6"
                     android:textSize="13sp" />
+
+                <ImageView
+                    android:id="@+id/tpms_fr_temp_seg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitStart"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -187,6 +265,15 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
+                <ImageView
+                    android:id="@+id/tpms_rr_pressure_seg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitStart"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/tpms_rr_temp"
                     android:layout_width="wrap_content"
@@ -194,6 +281,16 @@
                     android:maxLines="1"
                     android:textColor="#FF9AA0A6"
                     android:textSize="13sp" />
+
+                <ImageView
+                    android:id="@+id/tpms_rr_temp_seg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitStart"
+                    android:visibility="gone" />
+
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -208,4 +305,15 @@
         android:textColor="#FF9AA0A6"
         android:textSize="13sp"
         android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/tpms_spare_seg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:adjustViewBounds="true"
+        android:importantForAccessibility="no"
+        android:scaleType="centerInside"
+        android:visibility="gone" />
+
 </LinearLayout>

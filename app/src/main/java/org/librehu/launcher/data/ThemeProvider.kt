@@ -95,6 +95,9 @@ class ThemeProvider : ContentProvider() {
             for (pkg in LIBREHU_PACKAGES) context.sendBroadcast(intent().setPackage(pkg))
             TpmsWidget.refresh(context)
             SpeedWidget.refresh(context)
+            org.librehu.launcher.weather.WeatherWidget.refresh(context)
+            org.librehu.launcher.speed.SpeedLimitWidget.refresh(context)
+            org.librehu.launcher.sos.SosWidget.refresh(context)
         }
 
         /** LibreHU apps with widgets to redraw on theme changes. */
