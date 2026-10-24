@@ -157,13 +157,17 @@ fun LookSettings(
     SettingChoices(
         listOf(
             ThemeStyle.MODERN to stringResource(R.string.theme_style_modern),
-            ThemeStyle.RETRO_AMBER to stringResource(R.string.theme_style_amber),
-            ThemeStyle.RETRO_GREEN to stringResource(R.string.theme_style_green),
-            ThemeStyle.RETRO_CASSETTE to stringResource(R.string.theme_style_cassette),
+            ThemeStyle.RETRO to stringResource(R.string.theme_style_retro),
         ),
         s.style,
     ) { st -> actions.setTheme { it.copy(style = st) } }
     if (s.style != ThemeStyle.MODERN) SettingHint(stringResource(R.string.theme_style_hint))
+    SettingSection(stringResource(R.string.theme_font))
+    SettingChoices(
+        listOf(false to stringResource(R.string.theme_font_normal), true to stringResource(R.string.theme_font_segment)),
+        s.segmentFont,
+    ) { seg -> actions.setTheme { it.copy(segmentFont = seg) } }
+    SettingHint(stringResource(R.string.theme_font_hint))
     if (full) {
         SettingSwitch(
             stringResource(R.string.theme_system_wide),
@@ -181,7 +185,14 @@ fun LookSettings(
                     Modifier
                         .size(56.dp)
                         .clip(CircleShape)
-                        .background(a.color(dark))
+                        .then(
+                            if (a == Accent.CUSTOM) {
+                                // The colour wheel: any colour, set below.
+                                Modifier.background(androidx.compose.ui.graphics.Brush.sweepGradient(RAINBOW))
+                            } else {
+                                Modifier.background(a.color(dark))
+                            },
+                        )
                         .border(if (selected) 4.dp else 0.dp, CarColors.Text, CircleShape)
                         .clickable { actions.setTheme { it.copy(accent = a) } },
                 contentAlignment = Alignment.Center,
@@ -190,6 +201,8 @@ fun LookSettings(
             }
         }
     }
+
+    if (s.accent == Accent.CUSTOM) RgbPicker(s.customAccent) { argb -> actions.setTheme { it.copy(customAccent = argb) } }
 
     SettingSection(stringResource(R.string.home_pages))
     SettingChoices(
@@ -988,5 +1001,71 @@ private val RETRO_SCENES =
         WallpaperKind.RETRO_ANALYZER to R.string.wallpaper_retro_analyzer,
         WallpaperKind.RETRO_CASSETTE to R.string.wallpaper_retro_cassette,
         WallpaperKind.RETRO_ROAD to R.string.wallpaper_retro_road,
+        WallpaperKind.RETRO_RALLY to R.string.wallpaper_retro_rally,
         WallpaperKind.RETRO_DEMO to R.string.wallpaper_retro_demo,
     )
+
+private val RAINBOW =
+    listOf(
+        androidx.compose.ui.graphics.Color.Red,
+        androidx.compose.ui.graphics.Color.Yellow,
+        androidx.compose.ui.graphics.Color.Green,
+        androidx.compose.ui.graphics.Color.Cyan,
+        androidx.compose.ui.graphics.Color.Blue,
+        androidx.compose.ui.graphics.Color.Magenta,
+        androidx.compose.ui.graphics.Color.Red,
+    )
+
+/**
+ * The custom colour by its red, green and blue (0..255 each), with a preview and its hexadecimal value; saved when a
+ * slider is let go (the theme, the apps and the retro display's pixels follow it).
+ */
+@Composable
+private fun RgbPicker(
+    argb: Int,
+    onChange: (Int) -> Unit,
+) {
+    var r by remember(argb) { androidx.compose.runtime.mutableIntStateOf(android.graphics.Color.red(argb)) }
+    var g by remember(argb) { androidx.compose.runtime.mutableIntStateOf(android.graphics.Color.green(argb)) }
+    var b by remember(argb) { androidx.compose.runtime.mutableIntStateOf(android.graphics.Color.blue(argb)) }
+    fun save() = onChange(android.graphics.Color.rgb(r, g, b))
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Box(
+            Modifier
+                .size(72.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(androidx.compose.ui.graphics.Color(r, g, b)),
+        )
+        Text(String.format("#%02X%02X%02X", r, g, b), color = CarColors.Text, fontSize = 20.sp)
+    }
+    for ((label, value, tint, set) in listOf(
+        RgbChannel(stringResource(R.string.rgb_red), r, androidx.compose.ui.graphics.Color.Red) { v: Int -> r = v },
+        RgbChannel(stringResource(R.string.rgb_green), g, androidx.compose.ui.graphics.Color.Green) { v: Int -> g = v },
+        RgbChannel(stringResource(R.string.rgb_blue), b, androidx.compose.ui.graphics.Color.Blue) { v: Int -> b = v },
+    )) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(label, color = CarColors.Text, fontSize = 17.sp, modifier = Modifier.width(96.dp))
+            androidx.compose.material3.Slider(
+                value = value.toFloat(),
+                onValueChange = { set(it.toInt()) },
+                onValueChangeFinished = { save() },
+                valueRange = 0f..255f,
+                colors =
+                    androidx.compose.material3.SliderDefaults.colors(
+                        thumbColor = tint,
+                        activeTrackColor = tint,
+                        inactiveTrackColor = CarColors.SurfaceHigh,
+                    ),
+                modifier = Modifier.weight(1f),
+            )
+            Text("$value", color = CarColors.TextDim, fontSize = 16.sp, modifier = Modifier.width(48.dp))
+        }
+    }
+}
+
+private data class RgbChannel(
+    val label: String,
+    val value: Int,
+    val tint: androidx.compose.ui.graphics.Color,
+    val set: (Int) -> Unit,
+)

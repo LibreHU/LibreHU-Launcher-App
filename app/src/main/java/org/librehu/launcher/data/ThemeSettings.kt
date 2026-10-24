@@ -48,8 +48,9 @@ enum class WallpaperKind {
     RETRO_ANALYZER,
     RETRO_CASSETTE,
     RETRO_ROAD,
+    RETRO_RALLY,
 
-    /** The four, one after the other (a head unit's demo mode). */
+    /** All of them, one after the other (a head unit's demo mode). */
     RETRO_DEMO,
     ;
 
@@ -105,11 +106,19 @@ enum class SpectrumPalette(
     VIOLET(0xFF8000FF, 0xFFB366FF, 0xFFFFFFFF),
 }
 
+/** The accent colour itself: the chosen one, light or dark variant, or the custom colour. */
+fun ThemeSettings.accentColor(dark: Boolean): androidx.compose.ui.graphics.Color =
+    if (accent == Accent.CUSTOM) androidx.compose.ui.graphics.Color(customAccent) else accent.color(dark)
+
 data class ThemeSettings(
     val mode: ThemeMode = ThemeMode.AUTO,
     val accent: Accent = Accent.BLUE,
-    /** Modern or retro look (colours, font, scan lines). */
+    /** [Accent.CUSTOM]'s colour (ARGB), set with its red, green and blue. */
+    val customAccent: Int = 0xFFFF9800.toInt(),
+    /** Modern or retro look (retro: a display's colours from the accent, scan lines at night). */
     val style: org.librehu.launcher.ui.ThemeStyle = org.librehu.launcher.ui.ThemeStyle.MODERN,
+    /** Segment display font everywhere (LibreHU Seg14) instead of the usual one, in any style. */
+    val segmentFont: Boolean = false,
     /** Also switch the whole system (other apps) to light / dark. Needs MODIFY_DAY_NIGHT_MODE (privileged). */
     val systemWide: Boolean = true,
     val wallpaper: WallpaperKind = WallpaperKind.NONE,
@@ -175,7 +184,9 @@ class ThemeStore(
             .edit()
             .putString("mode", s.mode.name)
             .putString("accent", s.accent.name)
+            .putInt("custom_accent", s.customAccent)
             .putString("style", s.style.name)
+            .putBoolean("segment_font", s.segmentFont)
             .putBoolean("system_wide", s.systemWide)
             .putString("wallpaper", s.wallpaper.name)
             .putString("rail", s.rail.name)
@@ -394,9 +405,10 @@ class ThemeStore(
         return ThemeSettings(
             mode = runCatching { ThemeMode.valueOf(prefs.getString("mode", null)!!) }.getOrDefault(ThemeMode.AUTO),
             accent = runCatching { Accent.valueOf(prefs.getString("accent", null)!!) }.getOrDefault(Accent.BLUE),
-            style =
-                runCatching { org.librehu.launcher.ui.ThemeStyle.valueOf(prefs.getString("style", null)!!) }
-                    .getOrDefault(org.librehu.launcher.ui.ThemeStyle.MODERN),
+            customAccent = prefs.getInt("custom_accent", 0xFFFF9800.toInt()),
+            style = org.librehu.launcher.ui.ThemeStyle.parse(prefs.getString("style", null)),
+            // The retro styles of before always had the segment font.
+            segmentFont = prefs.getBoolean("segment_font", prefs.getString("style", null)?.startsWith("RETRO_") == true),
             systemWide = prefs.getBoolean("system_wide", true),
             wallpaper = kind,
             rail = runCatching { RailPosition.valueOf(prefs.getString("rail", null)!!) }.getOrDefault(RailPosition.LEFT),

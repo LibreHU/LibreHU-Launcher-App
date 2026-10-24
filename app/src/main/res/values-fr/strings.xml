@@ -95,6 +95,7 @@
     <string name="wallpaper_retro_analyzer">Afficheur : analyseur de spectre</string>
     <string name="wallpaper_retro_cassette">Afficheur : cassette</string>
     <string name="wallpaper_retro_road">Afficheur : route de nuit</string>
+    <string name="wallpaper_retro_rally">Afficheur : rallye old school</string>
     <string name="wallpaper_retro_demo">Afficheur : mode démo</string>
     <string name="wallpaper_video">Vidéo</string>
     <string name="wallpaper_system">Fond Android / animé</string>
@@ -572,10 +573,15 @@
     <string name="setup_bridge_connected">Connecté : %1$s</string>
     <string name="theme_style">Style</string>
     <string name="theme_style_modern">Moderne</string>
-    <string name="theme_style_amber">Rétro VFD ambre</string>
-    <string name="theme_style_green">Rétro LCD vert</string>
-    <string name="theme_style_cassette">Rétro cassette</string>
-    <string name="theme_style_hint">Couleurs du style (la couleur d\'accent n\'est pas utilisée), police à chasse fixe ; jour / nuit et phares comme d\'habitude. Ambre et vert : lignes de balayage la nuit, comme un afficheur.</string>
+    <string name="theme_style_retro">Afficheur rétro</string>
+    <string name="theme_font">Police</string>
+    <string name="theme_font_normal">Normale</string>
+    <string name="theme_font_segment">Afficheur à segments</string>
+    <string name="theme_font_hint">Afficheur à segments : majuscules sans accents, comme sur un autoradio (LibreHU Seg14). Tous les styles, et toutes les applis LibreHU suivent.</string>
+    <string name="rgb_red">Rouge</string>
+    <string name="rgb_green">Vert</string>
+    <string name="rgb_blue">Bleu</string>
+    <string name="theme_style_hint">Les couleurs d\'un afficheur d\'autoradio dans la couleur d\'accent (la roue : n\'importe quelle couleur, en rouge, vert et bleu) ; jour / nuit et phares comme d\'habitude ; lignes de balayage la nuit, comme sur un afficheur.</string>
     <string name="aa_low_latency">Android Auto : vidéo basse latence</string>
     <string name="aa_low_latency_hint">Mode basse latence du décodeur vidéo MediaTek (vdec-lowlatency, Android 9 n\'a pas la clé officielle), en plein écran comme dans la carte : moins de retard entre le téléphone et l\'écran. Réglage d\'Open Headunit LibreHU, retiré tout seul si le décodeur le refuse ; vaut pour la prochaine connexion. À couper si l\'image reste noire ou saccade.</string>
     <string name="standby_obd">Valeurs OBD sur l\'horloge</string>
