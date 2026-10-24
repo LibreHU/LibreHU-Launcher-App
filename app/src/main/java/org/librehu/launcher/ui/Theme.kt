@@ -26,23 +26,29 @@ enum class Accent(
     RED(0xFFF28B82, 0xFFD93025),
     PINK(0xFFFF8BCB, 0xFFC5221F),
     PURPLE(0xFFC58AF9, 0xFF9334E6),
+
+    /** Any colour, set with its red, green and blue ([org.librehu.launcher.data.ThemeSettings.customAccent]). */
+    CUSTOM(0xFFFF9800, 0xFFFF9800),
     ;
 
     fun color(dark: Boolean) = Color(if (dark) onDark else onLight)
 }
 
-/** Look of the launcher: the usual one, or a retro one (its own colours, segment display font, scan lines on screens). */
+/**
+ * Look of the launcher: the usual one, or a retro one (a display's colours drawn from the accent colour, scan lines on
+ * screens at night). The font is chosen apart ([CarPalette.segment]).
+ */
 enum class ThemeStyle {
     MODERN,
 
-    /** Amber vacuum fluorescent display of 80s car radios. */
-    RETRO_AMBER,
+    /** A car stereo display of the 80s-2000s (VFD, LCD, OEL) in the accent colour. */
+    RETRO,
+    ;
 
-    /** Green phosphor / LCD. */
-    RETRO_GREEN,
-
-    /** Warm 70s colours (cassette deck). */
-    RETRO_CASSETTE,
+    companion object {
+        /** Stored name, the three retro styles of before (amber, green, cassette) read as [RETRO]. */
+        fun parse(name: String?): ThemeStyle = if (name?.startsWith("RETRO") == true) RETRO else MODERN
+    }
 }
 
 data class CarPalette(
@@ -55,69 +61,78 @@ data class CarPalette(
     val text: Color,
     val textDim: Color,
     val style: ThemeStyle = ThemeStyle.MODERN,
+    /** Segment display font everywhere (LibreHU Seg14), any style. */
+    val segment: Boolean = false,
 ) {
-    val retro: Boolean get() = style != ThemeStyle.MODERN
+    val retro: Boolean get() = style == ThemeStyle.RETRO
 
-    /** Scan lines over the screen (the display styles, at night). */
-    val scanLines: Boolean get() = dark && (style == ThemeStyle.RETRO_AMBER || style == ThemeStyle.RETRO_GREEN)
+    /** Scan lines over the screen (retro, at night). */
+    val scanLines: Boolean get() = dark && retro
 
     companion object {
-        /** Retro palettes: dark (night, headlights) and light (day), [accent] ignored: each style has its own. */
+        /**
+         * Retro palette from the accent colour, as a display lit in that colour: at night a near-black glass tinted by
+         * it and text in it; by day a pale panel tinted by it and dark text of its hue.
+         */
         private fun retro(
-            style: ThemeStyle,
             dark: Boolean,
+            accent: Color,
             a: Float,
+            segment: Boolean,
         ): CarPalette {
-            fun p(
-                bg: Long,
-                surface: Long,
-                high: Long,
-                accent: Long,
-                onAccent: Long,
-                text: Long,
-                dim: Long,
-            ) = CarPalette(dark, Color(bg), Color(surface).copy(alpha = a), Color(high), Color(accent), Color(onAccent), Color(text), Color(dim), style)
-            return when (style) {
-                ThemeStyle.RETRO_AMBER ->
-                    if (dark) {
-                        p(0xFF0A0805, 0xFF17120A, 0xFF2A2010, 0xFFFFB000, 0xFF1A1205, 0xFFFFC14D, 0xFFB07D2A)
-                    } else {
-                        p(0xFFF4E9D2, 0xFFFBF3E2, 0xFFE8D9B8, 0xFFC77700, 0xFFFFFFFF, 0xFF3A2A10, 0xFF7A6040)
-                    }
-                ThemeStyle.RETRO_GREEN ->
-                    if (dark) {
-                        p(0xFF050A06, 0xFF0C160E, 0xFF16261A, 0xFF39FF6A, 0xFF04140A, 0xFF7DFF9B, 0xFF3F9E57)
-                    } else {
-                        p(0xFFB9C4A0, 0xFFC9D3B0, 0xFFA9B48E, 0xFF2F3B1F, 0xFFDCE4C6, 0xFF1F2A14, 0xFF4A5734)
-                    }
-                else ->
-                    if (dark) {
-                        p(0xFF1B1410, 0xFF2A1F18, 0xFF3A2B21, 0xFFE8743B, 0xFF1B1410, 0xFFF2E2C4, 0xFFB39A7A)
-                    } else {
-                        p(0xFFEFE3CC, 0xFFF8EFDC, 0xFFE3D2B2, 0xFFC2502A, 0xFFFFFFFF, 0xFF3B2A1E, 0xFF7C6650)
-                    }
+            val black = Color(0xFF050505)
+            val white = Color(0xFFF7F5F0)
+            return if (dark) {
+                CarPalette(
+                    dark = true,
+                    background = lerp(black, accent, 0.05f),
+                    surface = lerp(black, accent, 0.10f).copy(alpha = a),
+                    surfaceHigh = lerp(black, accent, 0.18f),
+                    accent = accent,
+                    onAccent = lerp(black, accent, 0.10f),
+                    text = lerp(accent, Color.White, 0.25f),
+                    textDim = lerp(black, accent, 0.62f),
+                    style = ThemeStyle.RETRO,
+                    segment = segment,
+                )
+            } else {
+                val deep = lerp(Color.Black, accent, 0.45f)
+                CarPalette(
+                    dark = false,
+                    background = lerp(white, accent, 0.14f),
+                    surface = lerp(white, accent, 0.07f).copy(alpha = a),
+                    surfaceHigh = lerp(white, accent, 0.22f),
+                    accent = deep,
+                    onAccent = white,
+                    text = lerp(Color.Black, accent, 0.25f),
+                    textDim = lerp(Color.Black, accent, 0.5f).copy(alpha = 0.8f),
+                    style = ThemeStyle.RETRO,
+                    segment = segment,
+                )
             }
         }
 
         /** [translucent]: cards let a wallpaper show through. */
         fun of(
             dark: Boolean,
-            accent: Accent,
+            accent: Color,
             translucent: Boolean = false,
             style: ThemeStyle = ThemeStyle.MODERN,
+            segment: Boolean = false,
         ): CarPalette {
             val a = if (translucent) 0.86f else 1f
-            if (style != ThemeStyle.MODERN) return retro(style, dark, a)
+            if (style == ThemeStyle.RETRO) return retro(dark, accent, a, segment)
             return if (dark) {
                 CarPalette(
                     dark = true,
                     background = Color(0xFF000000),
                     surface = Color(0xFF1E1F22).copy(alpha = a),
                     surfaceHigh = Color(0xFF2B2D31),
-                    accent = accent.color(true),
+                    accent = accent,
                     onAccent = Color(0xFF202124),
                     text = Color(0xFFE8EAED),
                     textDim = Color(0xFF9AA0A6),
+                    segment = segment,
                 )
             } else {
                 CarPalette(
@@ -125,10 +140,11 @@ data class CarPalette(
                     background = Color(0xFFF1F3F4),
                     surface = Color(0xFFFFFFFF).copy(alpha = a),
                     surfaceHigh = Color(0xFFE8EAED),
-                    accent = accent.color(false),
+                    accent = accent,
                     onAccent = Color(0xFFFFFFFF),
                     text = Color(0xFF202124),
                     textDim = Color(0xFF5F6368),
+                    segment = segment,
                 )
             }
         }
@@ -140,7 +156,7 @@ data class CarPalette(
  * (light / dark, headlights, accent).
  */
 object CarColors {
-    var palette: CarPalette by mutableStateOf(CarPalette.of(true, org.librehu.launcher.ui.Accent.BLUE))
+    var palette: CarPalette by mutableStateOf(CarPalette.of(true, org.librehu.launcher.ui.Accent.BLUE.color(true)))
 
     val Background: Color get() = palette.background
     val Surface: Color get() = palette.surface
@@ -180,7 +196,7 @@ fun CarTheme(content: @Composable () -> Unit) {
         }
     MaterialTheme(
         colorScheme = scheme.withCarRoles(p.accent, p.onAccent, p.surface, p.surfaceHigh, p.text, p.textDim),
-        typography = if (p.retro) RetroTypography else androidx.compose.material3.Typography(),
+        typography = if (p.segment) RetroTypography else androidx.compose.material3.Typography(),
         content = content,
     )
 }
@@ -226,7 +242,7 @@ internal fun ColorScheme.withCarRoles(
 }
 
 /**
- * Segment display font everywhere for the retro styles: DSEG14, the one of LibreHU-Disc's retro display, with the
+ * Segment display font everywhere when chosen: DSEG14, the one of LibreHU-Disc's retro display, with the
  * accented letters drawn bare (capitals without accents, as on a car stereo's display; tools/make_retro_font.py).
  */
 private val RetroTypography: androidx.compose.material3.Typography =

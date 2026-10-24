@@ -52,7 +52,7 @@ class ThemeController(
                 Triple(dark, s, s.hasWallpaper)
             }.distinctUntilChanged().collect { (dark, s, wallpaper) ->
                 _dark.value = dark
-                val palette = CarPalette.of(dark, s.accent, translucent = wallpaper, style = s.style)
+                val palette = CarPalette.of(dark, s.accentColor(dark), translucent = wallpaper, style = s.style, segment = s.segmentFont)
                 CarColors.palette = palette
                 ThemeProvider.publish(context, palette)
                 if (s.systemWide) setSystemNightMode(dark)

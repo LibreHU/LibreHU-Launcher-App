@@ -71,22 +71,31 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   **Wikimedia Commons**, ou **photo au hasard** (Lorem Picsum, photos Unsplash) ; nouvelle image chaque jour, toutes les
   6 heures ou à chaque démarrage, et bouton « Nouvelle image maintenant ». Téléchargée seulement avec du réseau
   (environ 0,5 Mo), la dernière reste sans réseau ; titre et crédit de l'image en petit dans un coin (désactivable).
-- **Style** (Paramètres → Personnalisation) : **Moderne** ou **rétro** — **VFD ambre** (afficheur fluorescent des
-  autoradios des années 80), **LCD vert**, **cassette** (tons chauds des années 70) ; chaque style a ses couleurs en
-  clair et en sombre (jour / nuit et phares comme d'habitude), police d'afficheur à segments partout (DSEG14, celle de
-  l'afficheur rétro de LibreHU-Disc, en majuscules sans accents comme sur un autoradio : les lettres accentuées sont
-  dessinées sans leur accent, police « LibreHU Seg14 » générée par `tools/make_retro_font.py`, SIL OFL 1.1,
-  `third_party/DSEG-LICENSE.txt`) ; **suivi par toutes les applis LibreHU** (palette et police, publiées par
-  `content://org.librehu.launcher.theme/theme` : colonnes `style`, `background`, `surface`, `surface_high`,
-  `on_accent`, `text`, `text_dim` en plus de `dark` et `accent`, mêmes extras dans `THEME_CHANGED`), et la nuit **lignes de
-  balayage** sur tout l'écran pour l'ambre et le vert (un dessin en cache, sans animation : pas de coût en continu).
+- **Style** (Paramètres → Personnalisation) : **Moderne** ou **Afficheur rétro** — les couleurs d'un afficheur
+  d'autoradio (VFD, LCD, OEL) **tirées de la couleur d'accent** : la nuit un verre presque noir teinté et le texte
+  dans la couleur, le jour un panneau pâle teinté ; jour / nuit et phares comme d'habitude ; la nuit **lignes de
+  balayage** sur tout l'écran (un dessin en cache). Les trois styles rétro d'avant (ambre, vert, cassette) sont lus
+  comme ce style.
+- **Couleur d'accent** : 8 couleurs ou la **roue RGB** (rouge, vert, bleu de 0 à 255, aperçu et valeur hexadécimale) ;
+  elle colore le thème, le style rétro, les pixels des animations d'afficheur et toutes les applis LibreHU.
+- **Police** : normale ou **afficheur à segments** (LibreHU Seg14 : DSEG14, celle de l'afficheur rétro de LibreHU-Disc,
+  en majuscules sans accents comme sur un autoradio ; les lettres accentuées sont dessinées sans leur accent ; police
+  générée par `tools/make_retro_font.py`, SIL OFL 1.1, `third_party/DSEG-LICENSE.txt`), dans tous les styles.
+  **Style, police et palette suivis par toutes les applis LibreHU** (publiés par
+  `content://org.librehu.launcher.theme/theme` : colonnes `style` (`modern` / `retro`), `font` (`normal` /
+  `segment`), `background`, `surface`, `surface_high`, `on_accent`, `text`, `text_dim` en plus de `dark` et `accent`,
+  mêmes extras dans `THEME_CHANGED`).
 - **Fonds d'écran** (Paramètres) : aucun, animations intégrées à la couleur d'accent (aurore, étoiles, vagues),
-  **afficheur d'autoradio des années 90-2000** en matrice de points aux couleurs du thème (ambre, vert, cassette en
-  style rétro ; points éteints visibles comme sur un vrai afficheur ; 15 images/s, grille des points éteints dessinée
-  une fois) : **dauphins** sautant au-dessus de la mer sous la lune (dans l'esprit des autoradios Pioneer à écran
-  organique EL du début des années 2000 ; dessin original, aucune image de marque), **analyseur de spectre** à crêtes
-  qui retombent, **cassette** (bobines qui tournent, bande qui passe d'une bobine à l'autre, compteur), **route de
-  nuit** (virages, pointillés, collines, étoiles) et **mode démo** qui les enchaîne toutes les 20 s ;
+  **afficheur d'autoradio des années 90-2000** en matrice de points fine (256 points de large, 8 niveaux de luminosité
+  par point comme un écran OEL, formes lissées, points éteints visibles ; 15 images/s ; grille des points éteints
+  dessinée une fois, points allumés en un appel par niveau, le tracé passant par l'accélération matérielle
+  d'Android) dans la couleur d'accent : **dauphins** sautant dans une mer sous la pleine lune (reflet scintillant,
+  éclaboussures, ronds dans l'eau ; dans l'esprit des autoradios Pioneer à écran organique EL du début des années
+  2000 ; dessin original, aucune image de marque), **rallye old school** (vue arrière façon jeux d'arcade des années
+  90 : piste en gravier dans une forêt de pins, glisse en contre-braquage, poussière, temps de la spéciale),
+  **analyseur de spectre** (32 bandes à segments, crêtes qui retombent, vu-mètres G / D), **cassette** (C-90 :
+  bobines vues par la fenêtre, dents des moyeux qui tournent, bande vers les têtes, PLAY et compteur), **route de
+  nuit** (virages, pointillés, feux d'une voiture devant) et **mode démo** qui les enchaîne toutes les 20 s ;
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
   focus audio), ou **fond Android / live wallpaper** affiché derrière le launcher (`FLAG_SHOW_WALLPAPER`). Les
   animations se mettent en pause dès que le launcher n'est plus au premier plan.
