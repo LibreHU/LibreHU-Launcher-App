@@ -612,4 +612,6 @@
     <string name="bridge_accent_pink">Pink</string>
     <string name="bridge_accent_purple">Purple</string>
     <string name="bridge_accent_custom">Custom (RGB)</string>
+    <string name="gpu_animations">GPU acceleration</string>
+    <string name="gpu_animations_hint">This animation drawn by the graphics chip (OpenGL ES shaders) instead of shape by shape: less work for the processor. Off: the usual drawing.</string>
 </resources>

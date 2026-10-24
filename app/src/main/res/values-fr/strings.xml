@@ -612,4 +612,6 @@
     <string name="bridge_accent_pink">Rose</string>
     <string name="bridge_accent_purple">Violet</string>
     <string name="bridge_accent_custom">Personnalisée (RGB)</string>
+    <string name="gpu_animations">Accélération GPU</string>
+    <string name="gpu_animations_hint">Cette animation dessinée par la puce graphique (shaders OpenGL ES) au lieu de forme par forme : moins de travail pour le processeur. Désactivé : le dessin habituel.</string>
 </resources>
