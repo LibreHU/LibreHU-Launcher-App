@@ -72,7 +72,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   (environ 0,5 Mo), la dernière reste sans réseau ; titre et crédit de l'image en petit dans un coin (désactivable).
 - **Style** (Paramètres → Personnalisation) : **Moderne** ou **rétro** — **VFD ambre** (afficheur fluorescent des
   autoradios des années 80), **LCD vert**, **cassette** (tons chauds des années 70) ; chaque style a ses couleurs en
-  clair et en sombre (jour / nuit et phares comme d'habitude), police à chasse fixe partout, et la nuit **lignes de
+  clair et en sombre (jour / nuit et phares comme d'habitude), police d'afficheur à segments partout (DSEG14, celle de
+  l'afficheur rétro de LibreHU-Disc, en majuscules sans accents comme sur un autoradio : les lettres accentuées sont
+  dessinées sans leur accent, police « LibreHU Seg14 » générée par `tools/make_retro_font.py`, SIL OFL 1.1,
+  `third_party/DSEG-LICENSE.txt`), et la nuit **lignes de
   balayage** sur tout l'écran pour l'ambre et le vert (un dessin en cache, sans animation : pas de coût en continu).
 - **Fonds d'écran** (Paramètres) : aucun, animations intégrées à la couleur d'accent (aurore, étoiles, vagues),
   image fixe, **GIF / WebP animé** (`AnimatedImageDrawable`), **vidéo** MP4 en boucle et muette (ne prend pas le
@@ -128,7 +131,12 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   4. **Apparence et barre**, 5. **accès Android** (accueil par défaut, notifications, position / appels, mises à jour
      par LibreHU Apps).
   6. **Fonctions LibreHU** : **QR code de l'appli téléphone LibreHU** (dernière version, `latest-main` de
-     LibreHU-bridge-app, généré sur place sans réseau) à scanner avec le téléphone, puis raccourcis vers les réglages
+     LibreHU-bridge-app, généré sur place sans réseau) à scanner avec le téléphone ; **association de l'appli** avec
+     LibreHU-service (fournisseur `org.librehu.service.bridgepair`, permission de signature
+     `org.librehu.permission.BRIDGE`) : **QR code d'association** (jeton à usage unique, valable 5 min, décompte et
+     empreinte de l'autoradio) en Wi-Fi, ou **association Bluetooth** (téléphone déjà appairé) dont la demande
+     s'accepte ici, aussi proposée à l'étape Bluetooth ; téléphones associés et connectés affichés aussitôt ; puis
+     raccourcis vers les réglages
      des autres applis à voir sur un autoradio neuf ou
      fraîchement flashé (chaque ligne n'apparaît que si l'appli est installée) : **restaurer une sauvegarde**
      (LibreHU-service → Système), **touches au volant** (BtnRemap → Mode test des touches, appuis longs,
@@ -236,3 +244,6 @@ rend Jetpack Compose nettement plus fluide ([Compose performance](https://develo
 règles gardent aussi ce qui n'est appelé que par son nom (méthodes natives, helpers root lancés par `app_process`). Si
 une fonction plante avec « class / method not found », regarder `usage.txt` dans l'artefact *R8 reports* de la CI (ce
 que R8 a retiré) et ajouter une règle `-keep`.
+
+Police rétro : DSEG © keshikan, SIL Open Font License 1.1 (`third_party/DSEG-LICENSE.txt`), modifiée et renommée
+« LibreHU Seg14 » (nom réservé « DSEG »).

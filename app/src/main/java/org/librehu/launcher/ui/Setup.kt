@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -40,7 +41,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.librehu.launcher.R
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeStore
@@ -163,6 +167,7 @@ fun SetupScreen(
 
                     SetupStep.BLUETOOTH -> {
                         BluetoothSetupPage()
+                        PhoneAppPairing(qrCode = false)
                     }
 
                     SetupStep.DONE -> {
@@ -223,6 +228,7 @@ private fun LibreHuFeatures() {
     val context = LocalContext.current
     SettingHint(stringResource(R.string.setup_librehu_text))
     PhoneAppQr()
+    PhoneAppPairing(qrCode = true)
     for ((pkg, title, hint) in FEATURES) {
         val open = context.packageManager.getLaunchIntentForPackage(pkg) ?: continue
         SetupItem(stringResource(title), stringResource(hint)) {
@@ -243,26 +249,12 @@ private val FEATURES =
 const val PHONE_APP_URL = "https://github.com/LibreHU/LibreHU-bridge-app/releases/download/latest-main/LibreHU-Bridge-main.apk"
 
 /**
- * QR code of the phone app's latest release, to install it on the phone (it then pairs with the QR code of
- * LibreHU-service → Bluetooth → Phone). Made here (ZXing), no network needed.
+ * QR code of the phone app's latest release, to install it on the phone (it then pairs with [PhoneAppPairing]).
+ * Made here (ZXing), no network needed.
  */
 @Composable
 private fun PhoneAppQr() {
-    val qr =
-        remember {
-            runCatching {
-                val m =
-                    com.google.zxing.qrcode.QRCodeWriter().encode(
-                        PHONE_APP_URL,
-                        com.google.zxing.BarcodeFormat.QR_CODE,
-                        480,
-                        480,
-                        mapOf(com.google.zxing.EncodeHintType.MARGIN to 2),
-                    )
-                val px = IntArray(m.width * m.height) { i -> if (m.get(i % m.width, i / m.width)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt() }
-                android.graphics.Bitmap.createBitmap(px, m.width, m.height, android.graphics.Bitmap.Config.ARGB_8888)
-            }.getOrNull()
-        }
+    val qr = remember { qrBitmap(PHONE_APP_URL) }
     Row(
         Modifier
             .fillMaxWidth()
@@ -282,6 +274,137 @@ private fun PhoneAppQr() {
         Column(Modifier.weight(1f)) {
             Text(stringResource(R.string.setup_phone_app), color = CarColors.Text, fontSize = 18.sp)
             Text(stringResource(R.string.setup_phone_app_hint), color = CarColors.TextDim, fontSize = 14.sp)
+        }
+    }
+}
+
+/** QR code of [text] (ZXing), black on white. */
+private fun qrBitmap(text: String): android.graphics.Bitmap? =
+    runCatching {
+        val m =
+            com.google.zxing.qrcode.QRCodeWriter().encode(
+                text,
+                com.google.zxing.BarcodeFormat.QR_CODE,
+                480,
+                480,
+                mapOf(com.google.zxing.EncodeHintType.MARGIN to 2),
+            )
+        val px = IntArray(m.width * m.height) { i -> if (m.get(i % m.width, i / m.width)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt() }
+        android.graphics.Bitmap.createBitmap(px, m.width, m.height, android.graphics.Bitmap.Config.ARGB_8888)
+    }.getOrNull()
+
+/** LibreHU-service's pairing provider (signature permission `org.librehu.permission.BRIDGE`). */
+private const val BRIDGE_PAIR = "org.librehu.service.bridgepair"
+
+private fun bridgeCall(
+    context: android.content.Context,
+    method: String,
+    arg: String? = null,
+    extras: android.os.Bundle? = null,
+): android.os.Bundle? =
+    runCatching {
+        if (context.packageManager.resolveContentProvider(BRIDGE_PAIR, 0) == null) return null
+        context.contentResolver.call(android.net.Uri.parse("content://$BRIDGE_PAIR"), method, arg, extras)
+    }.getOrNull()
+
+/**
+ * Pairing of the phone app with LibreHU-service ([BRIDGE_PAIR]): a one-time QR code (valid 5 minutes) to scan in the
+ * app, over Wi-Fi; or, the phone already paired in Bluetooth, the app's Bluetooth pairing, confirmed here. The
+ * phones paired and connected show up as soon as they are. Without LibreHU-service, a line saying it is needed.
+ */
+@Composable
+private fun PhoneAppPairing(qrCode: Boolean) {
+    val context = LocalContext.current
+    var state by remember { mutableStateOf<android.os.Bundle?>(null) }
+    var available by remember { mutableStateOf(true) }
+    var uri by remember { mutableStateOf<String?>(null) }
+    var fingerprint by remember { mutableStateOf("") }
+    var baseline by remember { mutableStateOf<Set<String>?>(null) }
+    var now by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            val b = withContext(Dispatchers.IO) { bridgeCall(context, "state") }
+            available = b != null
+            state = b
+            if (baseline == null && b != null) baseline = b.getStringArray("devices").orEmpty().toSet()
+            now = System.currentTimeMillis()
+            if (uri != null && b != null && b.getLong("until") == 0L) uri = null
+            delay(1_000)
+        }
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose { if (uri != null) bridgeCall(context, "cancel") }
+    }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(CarColors.SurfaceHigh)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(stringResource(R.string.setup_bridge_title), color = CarColors.Text, fontSize = 18.sp)
+        if (!available) {
+            Text(stringResource(R.string.setup_bridge_no_service), color = CarColors.TextDim, fontSize = 14.sp)
+            return@Column
+        }
+        val b = state ?: return@Column
+        val newOnes = b.getStringArray("devices").orEmpty().filter { it !in baseline.orEmpty() }
+        if (newOnes.isNotEmpty()) {
+            Text(stringResource(R.string.setup_bridge_paired, newOnes.joinToString(", ")), color = CarColors.Accent, fontSize = 16.sp)
+        }
+        val connected = b.getStringArray("connected").orEmpty()
+        if (connected.isNotEmpty()) Text(stringResource(R.string.setup_bridge_connected, connected.joinToString(", ")), color = CarColors.Accent, fontSize = 15.sp)
+        if (!b.getBoolean("enabled")) {
+            Text(stringResource(R.string.setup_bridge_off), color = CarColors.TextDim, fontSize = 14.sp)
+            SettingChoice(stringResource(R.string.setup_bridge_enable), false) {
+                bridgeCall(context, "enable", extras = android.os.Bundle().apply { putBoolean("on", true) })
+            }
+        }
+        if (qrCode) {
+            Text(stringResource(R.string.setup_bridge_wifi), color = CarColors.TextDim, fontSize = 14.sp)
+            val text = uri
+            if (text == null) {
+                SettingChoice(stringResource(R.string.setup_bridge_show_qr), true) {
+                    bridgeCall(context, "pair")?.let {
+                        uri = it.getString("uri")
+                        fingerprint = it.getString("fingerprint").orEmpty()
+                    }
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    remember(text) { qrBitmap(text) }?.let {
+                        androidx.compose.foundation.Image(
+                            it.asImageBitmap(),
+                            null,
+                            Modifier.size(220.dp).clip(RoundedCornerShape(12.dp)).background(Color.White).padding(6.dp),
+                        )
+                        Spacer(Modifier.size(16.dp))
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val left = ((b.getLong("until") - now) / 1000).coerceAtLeast(0)
+                        Text(stringResource(R.string.setup_bridge_qr_hint, left / 60, left % 60, fingerprint.take(8)), color = CarColors.TextDim, fontSize = 14.sp)
+                        SettingChoice(stringResource(R.string.setup_bridge_close_qr), false) {
+                            bridgeCall(context, "cancel")
+                            uri = null
+                        }
+                    }
+                }
+            }
+        }
+        Text(stringResource(R.string.setup_bridge_bt), color = CarColors.TextDim, fontSize = 14.sp)
+        val ids = b.getStringArray("requests").orEmpty()
+        val names = b.getStringArray("request_names").orEmpty()
+        ids.forEachIndexed { i, id ->
+            Text(stringResource(R.string.setup_bridge_request, names.getOrElse(i) { "?" }), color = CarColors.Text, fontSize = 16.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SettingChoice(stringResource(R.string.setup_bridge_allow), true) {
+                    bridgeCall(context, "answer", id, android.os.Bundle().apply { putBoolean("allow", true) })
+                }
+                SettingChoice(stringResource(R.string.setup_bridge_deny), false) {
+                    bridgeCall(context, "answer", id, android.os.Bundle().apply { putBoolean("allow", false) })
+                }
+            }
         }
     }
 }
