@@ -248,6 +248,7 @@ class MainActivity : ComponentActivity() {
                     widgets.delete(prefs.slots.value[slot] ?: LauncherPrefs.NO_WIDGET)
                     prefs.setSlot(slot, LauncherPrefs.NO_WIDGET)
                 },
+                resetWidgetSizes = prefs::resetSizes,
                 uninstall = { pkg -> startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:$pkg"))) },
                 forceStop = { pkg ->
                     val full = headUnit.forceStop(pkg)

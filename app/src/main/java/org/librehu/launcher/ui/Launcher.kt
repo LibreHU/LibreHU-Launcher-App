@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -31,6 +32,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Apps
@@ -74,6 +77,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -94,11 +98,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -151,6 +157,8 @@ class LauncherActions(
     val grantMediaAccess: () -> Unit,
     val addWidget: (LauncherPrefs.Slot, ComponentName) -> Unit,
     val removeWidget: (LauncherPrefs.Slot) -> Unit,
+    /** Widgets back to their usual sizes (Settings → Customisation). */
+    val resetWidgetSizes: () -> Unit = {},
     val uninstall: (String) -> Unit,
     val forceStop: (String) -> Unit,
     val appInfo: (String) -> Unit,
@@ -209,7 +217,7 @@ fun LauncherScreen(
     val pinned = pins.mapNotNull { byKey[it] }
     val content: @Composable () -> Unit = {
         when (screen) {
-            Screen.HOME -> HomePages(look.homePages) { page -> if (page == 0) Dashboard(prefs, media, widgets, actions, sos, look.aaLiveVideo) else WidgetPage(page + 1, prefs, widgets, actions) }
+            Screen.HOME -> HomePages(look.homePages) { page -> if (page == 0) Dashboard(prefs, media, widgets, actions, sos, look) else WidgetPage(page + 1, prefs, widgets, actions, look) }
             Screen.APPS -> AppGrid(apps, pins, look, actions) { menuFor = it }
             Screen.SETTINGS -> SettingsScreen(theme, themeController, actions, apps)
             Screen.TPMS -> TpmsScreen()
@@ -240,7 +248,7 @@ fun LauncherScreen(
             }
 
             else -> {
-                Row(modifier = Modifier.fillMaxSize()) {
+                MirrorRow(look.rightHandDrive, modifier = Modifier.fillMaxSize()) {
                     Rail(pinned, screen, actions, sos, look) { menuFor = it }
                     Box(
                         modifier =
@@ -307,7 +315,10 @@ private fun Rail(
             Modifier
                 .width(104.dp)
                 .fillMaxHeight()
-                .background(railBackground(look), RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp))
+                .background(
+                    railBackground(look),
+                    if (look.rightHandDrive) RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp) else RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+                )
                 .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -355,7 +366,8 @@ private fun BottomRail(
     look: ThemeSettings,
     onMenu: (LauncherApp) -> Unit,
 ) {
-    Row(
+    MirrorRow(
+        look.rightHandDrive,
         modifier =
             Modifier
                 .fillMaxWidth()
@@ -370,6 +382,8 @@ private fun BottomRail(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
+            // Mirrored: the first shortcuts next to the home button, on the right.
+            reverseLayout = look.rightHandDrive,
         ) {
             items(pinned, key = { it.key }) { app ->
                 AppIcon(app, size = 64, onLongClick = { onMenu(app) }) {
@@ -394,6 +408,27 @@ private fun BottomRail(
 
 /** Shortcut bar background: the theme's surface at the chosen opacity (Settings → Customisation). */
 private fun railBackground(look: ThemeSettings): Color = CarColors.Surface.copy(alpha = look.railOpacity.coerceIn(0, 100) / 100f)
+
+/**
+ * A row laid out from the right when [mirror] (right-hand drive, Settings → Customisation), its children drawn as
+ * usual: only the row's layout direction is turned round.
+ */
+@Composable
+private fun MirrorRow(
+    mirror: Boolean,
+    modifier: Modifier = Modifier,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
+    verticalAlignment: Alignment.Vertical = Alignment.Top,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val dir = LocalLayoutDirection.current
+    val rowDir = if (!mirror) dir else if (dir == LayoutDirection.Ltr) LayoutDirection.Rtl else LayoutDirection.Ltr
+    CompositionLocalProvider(LocalLayoutDirection provides rowDir) {
+        Row(modifier, horizontalArrangement, verticalAlignment) {
+            CompositionLocalProvider(LocalLayoutDirection provides dir) { content() }
+        }
+    }
+}
 
 /** Power menu visible (opened from the rail, the control center or org.librehu.action.POWER_MENU). */
 private val powerMenu = mutableStateOf(false)
@@ -585,19 +620,23 @@ private fun WidgetPage(
     prefs: LauncherPrefs,
     widgets: WidgetHost,
     actions: LauncherActions,
+    look: ThemeSettings,
 ) {
     val slots by prefs.slots.collectAsStateWithLifecycle()
+    val sizes = widgetSizes(prefs, look)
     val pageSlots = LauncherPrefs.Slot.ofPage(page)
     Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
         for (row in pageSlots.chunked(2)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f).fillMaxWidth()) {
+            val height = LauncherPrefs.Slot.size(sizes, LauncherPrefs.Slot.heightKey(row.first()))
+            MirrorRow(look.rightHandDrive, horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(height).fillMaxWidth()) {
                 for (slot in row) {
                     WidgetSlot(
                         slot = slot,
                         appWidgetId = slots[slot] ?: LauncherPrefs.NO_WIDGET,
                         widgets = widgets,
                         actions = actions,
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        modifier = Modifier.weight(LauncherPrefs.Slot.size(sizes, LauncherPrefs.Slot.widthKey(slot))).fillMaxHeight(),
+                        layout = slotLayout(slot, prefs, look, sizes),
                     ) { pick -> EmptySlot(Icons.Default.Widgets, stringResource(R.string.add_widget)) { pick() } }
                 }
             }
@@ -614,23 +653,27 @@ private fun Dashboard(
     widgets: WidgetHost,
     actions: LauncherActions,
     sos: SosSettings,
-    aaLiveVideo: Boolean,
+    look: ThemeSettings,
 ) {
     val slots by prefs.slots.collectAsStateWithLifecycle()
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
+    val sizes = widgetSizes(prefs, look)
+    val main = LauncherPrefs.Slot.MAIN
+    val side = LauncherPrefs.Slot.SIDE
+    MirrorRow(look.rightHandDrive, horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
         WidgetSlot(
-            slot = LauncherPrefs.Slot.MAIN,
-            appWidgetId = slots[LauncherPrefs.Slot.MAIN] ?: LauncherPrefs.NO_WIDGET,
+            slot = main,
+            appWidgetId = slots[main] ?: LauncherPrefs.NO_WIDGET,
             widgets = widgets,
             actions = actions,
-            modifier = Modifier.weight(1.5f).fillMaxHeight(),
+            modifier = Modifier.weight(LauncherPrefs.Slot.size(sizes, LauncherPrefs.Slot.widthKey(main))).fillMaxHeight(),
+            layout = slotLayout(main, prefs, look, sizes),
         ) { WelcomeCard() }
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.weight(1f).fillMaxHeight(),
         ) {
             val aa by AndroidAutoLink.state.collectAsStateWithLifecycle()
-            if (aa.active && aaLiveVideo && aa.state == "projecting") {
+            if (aa.active && look.aaLiveVideo && aa.state == "projecting") {
                 AndroidAutoVideoCard(Modifier.fillMaxWidth())
             } else if (aa.active) {
                 AndroidAutoCard(aa, Modifier.weight(0.8f).fillMaxWidth())
@@ -643,11 +686,12 @@ private fun Dashboard(
             if (tpmsSettings.enabled) TpmsCard(Modifier.weight(0.9f).fillMaxWidth()) { actions.show(Screen.TPMS) }
             if (sos.onDashboard) SosCard(sos, actions, Modifier.weight(0.6f).fillMaxWidth())
             WidgetSlot(
-                slot = LauncherPrefs.Slot.SIDE,
-                appWidgetId = slots[LauncherPrefs.Slot.SIDE] ?: LauncherPrefs.NO_WIDGET,
+                slot = side,
+                appWidgetId = slots[side] ?: LauncherPrefs.NO_WIDGET,
                 widgets = widgets,
                 actions = actions,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier.weight(LauncherPrefs.Slot.size(sizes, LauncherPrefs.Slot.heightKey(side))).fillMaxWidth(),
+                layout = slotLayout(side, prefs, look, sizes),
             ) { pick ->
                 val fm = widgets.fmWidget()
                 EmptySlot(
@@ -876,55 +920,54 @@ private fun WidgetSlot(
     widgets: WidgetHost,
     actions: LauncherActions,
     modifier: Modifier,
+    layout: SlotLayout? = null,
     empty: @Composable (pick: () -> Unit) -> Unit,
 ) {
     var picking by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
+    val hostView = remember(appWidgetId) { if (appWidgetId >= 0) widgets.createView(appWidgetId) else null }
     Box(
         modifier =
             modifier
                 .clip(RoundedCornerShape(28.dp))
                 .background(CarColors.Surface),
     ) {
-        val hostView = remember(appWidgetId) { if (appWidgetId >= 0) widgets.createView(appWidgetId) else null }
         if (hostView != null) {
             // AndroidView only calls its factory once: without key(), a replaced widget kept showing the old view
             // until the screen was rebuilt (opening the app drawer).
             key(appWidgetId) { AndroidView(factory = { hostView }, modifier = Modifier.fillMaxSize()) }
             // LibreHU-service's rear view widget: the camera stream drawn by the launcher over it.
             if (hostView.appWidgetInfo?.provider == REAR_WIDGET) key(appWidgetId) { RearLive(Modifier.fillMaxSize()) }
-            Box(
-                modifier =
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(CarColors.SurfaceHigh)
-                        .clickable { editing = true },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Default.Edit, stringResource(R.string.edit_widget), tint = CarColors.TextDim, modifier = Modifier.size(20.dp))
-            }
+            EditButton { editing = true }
         } else {
             Box(Modifier.fillMaxSize().clickable { picking = true }) { empty { picking = true } }
+            // An empty slot can be resized and moved too when the layout may be changed.
+            if (layout != null) EditButton { editing = true }
         }
     }
     if (editing) {
         AlertDialog(
             onDismissRequest = { editing = false },
             title = { Text(stringResource(R.string.edit_widget)) },
+            text =
+                layout?.let {
+                    {
+                        SlotLayoutEditor(it) { editing = false }
+                    }
+                },
             confirmButton = {
                 TextButton(onClick = {
                     editing = false
                     picking = true
-                }) { Text(stringResource(R.string.replace)) }
+                }) { Text(stringResource(if (hostView != null) R.string.replace else R.string.add_widget)) }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    editing = false
-                    actions.removeWidget(slot)
-                }) { Text(stringResource(R.string.remove)) }
+                if (hostView != null) {
+                    TextButton(onClick = {
+                        editing = false
+                        actions.removeWidget(slot)
+                    }) { Text(stringResource(R.string.remove)) }
+                }
             },
         )
     }
@@ -935,6 +978,104 @@ private fun WidgetSlot(
         }
     }
 }
+
+/** The small round edit button in a widget slot's corner. */
+@Composable
+private fun androidx.compose.foundation.layout.BoxScope.EditButton(onClick: () -> Unit) {
+    Box(
+        modifier =
+            Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(CarColors.SurfaceHigh)
+                .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(Icons.Default.Edit, stringResource(R.string.edit_widget), tint = CarColors.TextDim, modifier = Modifier.size(20.dp))
+    }
+}
+
+/** The sizes set by hand when the widget layout may be changed (Settings → Customisation), else none (usual sizes). */
+@Composable
+private fun widgetSizes(
+    prefs: LauncherPrefs,
+    look: ThemeSettings,
+): Map<String, Float> {
+    val sizes by prefs.sizes.collectAsStateWithLifecycle()
+    return if (look.widgetLayout) sizes else emptyMap()
+}
+
+/** A slot's size and place, changed from its edit dialog: width / height (null when it has none), previous / next slot. */
+private class SlotLayout(
+    val width: Float?,
+    val height: Float?,
+    val setWidth: (Float) -> Unit,
+    val setHeight: (Float) -> Unit,
+    val previous: (() -> Unit)?,
+    val next: (() -> Unit)?,
+)
+
+private fun slotLayout(
+    slot: LauncherPrefs.Slot,
+    prefs: LauncherPrefs,
+    look: ThemeSettings,
+    sizes: Map<String, Float>,
+): SlotLayout? {
+    if (!look.widgetLayout) return null
+    val order = LauncherPrefs.Slot.shown(look.homePages)
+    val i = order.indexOf(slot)
+    val w = LauncherPrefs.Slot.widthKey(slot)
+    val h = LauncherPrefs.Slot.heightKey(slot)
+    return SlotLayout(
+        width = w?.let { LauncherPrefs.Slot.size(sizes, it) },
+        height = h?.let { LauncherPrefs.Slot.size(sizes, it) },
+        setWidth = { v -> w?.let { prefs.setSize(it, v) } },
+        setHeight = { v -> h?.let { prefs.setSize(it, v) } },
+        previous = order.getOrNull(i - 1)?.let { { prefs.swap(slot, it) } },
+        next = order.getOrNull(i + 1)?.let { { prefs.swap(slot, it) } },
+    )
+}
+
+/** Width, height (the row's on the widget pages) and moving to the previous / next slot; [done] after a move. */
+@Composable
+private fun SlotLayoutEditor(
+    layout: SlotLayout,
+    done: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        layout.width?.let { w ->
+            Text(stringResource(R.string.widget_width), color = CarColors.Text)
+            Slider(value = w, onValueChange = layout.setWidth, valueRange = MIN_SIZE..MAX_SIZE)
+        }
+        layout.height?.let { h ->
+            Text(stringResource(R.string.widget_height), color = CarColors.Text)
+            Slider(value = h, onValueChange = layout.setHeight, valueRange = MIN_SIZE..MAX_SIZE)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(enabled = layout.previous != null, onClick = {
+                layout.previous?.invoke()
+                done()
+            }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.widget_move_previous))
+            }
+            TextButton(enabled = layout.next != null, onClick = {
+                layout.next?.invoke()
+                done()
+            }) {
+                Text(stringResource(R.string.widget_move_next))
+                Spacer(Modifier.width(6.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(20.dp))
+            }
+        }
+    }
+}
+
+private const val MIN_SIZE = 0.5f
+private const val MAX_SIZE = 3f
 
 @Composable
 private fun EmptySlot(
