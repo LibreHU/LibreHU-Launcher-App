@@ -88,6 +88,8 @@
     <permission
         android:name="org.librehu.permission.BRIDGE"
         android:protectionLevel="signature" />
+    <!-- Phone app pairing in the first start assistant (LibreHU-service's org.librehu.service.bridgepair). -->
+    <uses-permission android:name="org.librehu.permission.BRIDGE" />
     <!-- Root asked for every LibreHU app at once (RootGrants): requests and answers between apps signed with the
          LibreHU key only. Also defined by the other LibreHU apps, so that it exists whatever the install order. -->
     <permission
