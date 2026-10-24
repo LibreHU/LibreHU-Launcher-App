@@ -11,7 +11,10 @@ import org.librehu.launcher.tpms.TpmsWidget
 
 /**
  * Effective theme for the other LibreHU apps: `content://org.librehu.launcher.theme/theme` returns one row
- * (`dark` 0/1, `accent` ARGB). Changes are also broadcast with [ThemeStore.ACTION_THEME_CHANGED].
+ * (`dark` 0/1, `accent` ARGB, then `style`: `modern`, `retro_amber`, `retro_green`, `retro_cassette`, and the whole
+ * palette, ARGB, opaque: `background`, `surface`, `surface_high`, `on_accent`, `text`, `text_dim`). Changes are also
+ * broadcast with [ThemeStore.ACTION_THEME_CHANGED], same names as extras. A retro style is followed by every LibreHU
+ * app: its colours (the palette) and the segment display font.
  */
 class ThemeProvider : ContentProvider() {
     override fun onCreate() = true
@@ -24,8 +27,14 @@ class ThemeProvider : ContentProvider() {
         sortOrder: String?,
     ): Cursor {
         val prefs = context!!.getSharedPreferences(EFFECTIVE, Context.MODE_PRIVATE)
-        return MatrixCursor(arrayOf("dark", "accent")).apply {
-            addRow(arrayOf<Any>(if (prefs.getBoolean("dark", true)) 1 else 0, prefs.getInt("accent", 0xFF8AB4F8.toInt())))
+        return MatrixCursor(arrayOf("dark", "accent", "style") + COLORS).apply {
+            addRow(
+                listOf<Any>(
+                    if (prefs.getBoolean("dark", true)) 1 else 0,
+                    prefs.getInt("accent", 0xFF8AB4F8.toInt()),
+                    prefs.getString("style", "modern")!!,
+                ).plus(COLORS.map { prefs.getInt(it, 0) }).toTypedArray(),
+            )
         }
     }
 
@@ -53,22 +62,34 @@ class ThemeProvider : ContentProvider() {
         const val EFFECTIVE = "theme_effective"
         val URI: Uri = Uri.parse("content://org.librehu.launcher.theme/theme")
 
+        /** Palette colours shared besides `accent`. */
+        private val COLORS = arrayOf("background", "surface", "surface_high", "on_accent", "text", "text_dim")
+
+        private fun argb(c: androidx.compose.ui.graphics.Color): Int =
+            android.graphics.Color.argb(255, (c.red * 255).toInt(), (c.green * 255).toInt(), (c.blue * 255).toInt())
+
         fun publish(
             context: Context,
-            dark: Boolean,
-            accent: Int,
+            p: org.librehu.launcher.ui.CarPalette,
         ) {
+            val dark = p.dark
+            val accent = argb(p.accent)
+            val style = p.style.name.lowercase()
+            val colors = COLORS.zip(listOf(p.background, p.surface, p.surfaceHigh, p.onAccent, p.text, p.textDim).map(::argb))
             context
                 .getSharedPreferences(EFFECTIVE, Context.MODE_PRIVATE)
                 .edit()
                 .putBoolean("dark", dark)
                 .putInt("accent", accent)
+                .putString("style", style)
+                .apply { colors.forEach { (k, v) -> putInt(k, v) } }
                 .apply()
             context.contentResolver.notifyChange(URI, null)
+            fun intent() = ThemeStore.themeIntent(dark, accent).putExtra("style", style).apply { colors.forEach { (k, v) -> putExtra(k, v) } }
             // Running apps listen to the implicit broadcast; manifest receivers (widgets of apps that are not
             // running) only get broadcasts aimed at their package (Android 8+).
-            context.sendBroadcast(ThemeStore.themeIntent(dark, accent))
-            for (pkg in LIBREHU_PACKAGES) context.sendBroadcast(ThemeStore.themeIntent(dark, accent).setPackage(pkg))
+            context.sendBroadcast(intent())
+            for (pkg in LIBREHU_PACKAGES) context.sendBroadcast(intent().setPackage(pkg))
             TpmsWidget.refresh(context)
             SpeedWidget.refresh(context)
         }

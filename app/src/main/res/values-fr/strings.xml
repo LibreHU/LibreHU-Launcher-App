@@ -91,6 +91,11 @@
     <string name="wallpaper_aurora">Aurore</string>
     <string name="wallpaper_stars">Étoiles</string>
     <string name="wallpaper_waves">Vagues</string>
+    <string name="wallpaper_retro_dolphin">Afficheur : dauphins</string>
+    <string name="wallpaper_retro_analyzer">Afficheur : analyseur de spectre</string>
+    <string name="wallpaper_retro_cassette">Afficheur : cassette</string>
+    <string name="wallpaper_retro_road">Afficheur : route de nuit</string>
+    <string name="wallpaper_retro_demo">Afficheur : mode démo</string>
     <string name="wallpaper_video">Vidéo</string>
     <string name="wallpaper_system">Fond Android / animé</string>
     <string name="wallpaper_live_choose">Choisir le fond d\'écran Android…</string>
