@@ -254,10 +254,22 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 
 | | |
 |---|---|
-| ![Accueil](docs/screenshots/home.png)<br>Accueil | ![Tiroir d'applis](docs/screenshots/drawer.png)<br>Tiroir d'applis |
-| ![Menu marche / arrêt](docs/screenshots/power.png)<br>Menu marche / arrêt | ![Premier démarrage](docs/screenshots/onboarding.png)<br>Premier démarrage |
+| ![Assistant de premier démarrage](docs/screenshots/onboarding.png)<br>Assistant de premier démarrage | ![Accueil](docs/screenshots/home.png)<br>Accueil |
+| ![Toutes les applis](docs/screenshots/drawer.png)<br>Toutes les applis | ![Menu marche / arrêt](docs/screenshots/power.png)<br>Menu marche / arrêt |
+| ![Réglages : personnalisation](docs/screenshots/settings-look.png)<br>Réglages : personnalisation | ![Réglages : personnalisation (2)](docs/screenshots/settings-look-2.png)<br>Réglages : personnalisation (2) |
+| ![Réglages : personnalisation (3)](docs/screenshots/settings-look-3.png)<br>Réglages : personnalisation (3) | ![Réglages : personnalisation (4)](docs/screenshots/settings-look-4.png)<br>Réglages : personnalisation (4) |
+| ![Réglages : horloge de veille](docs/screenshots/settings-standby.png)<br>Réglages : horloge de veille | ![Réglages : horloge de veille (2)](docs/screenshots/settings-standby-2.png)<br>Réglages : horloge de veille (2) |
+| ![Réglages : verrouillage](docs/screenshots/settings-lock.png)<br>Réglages : verrouillage | ![Réglages : verrouillage (2)](docs/screenshots/settings-lock-2.png)<br>Réglages : verrouillage (2) |
+| ![Réglages : conduite](docs/screenshots/settings-driving.png)<br>Réglages : conduite | ![Réglages : conduite (2)](docs/screenshots/settings-driving-2.png)<br>Réglages : conduite (2) |
+| ![Réglages : langue et heure](docs/screenshots/settings-region.png)<br>Réglages : langue et heure | ![Réglages : langue et heure (2)](docs/screenshots/settings-region-2.png)<br>Réglages : langue et heure (2) |
+| ![Réglages : général](docs/screenshots/settings-general.png)<br>Réglages : général | ![Réglages : général (2)](docs/screenshots/settings-general-2.png)<br>Réglages : général (2) |
+| ![Horloge de veille](docs/screenshots/standby.png)<br>Horloge de veille | ![Écran de verrouillage](docs/screenshots/lock.png)<br>Écran de verrouillage |
+| ![Style afficheur rétro](docs/screenshots/settings-retro.png)<br>Style afficheur rétro | ![Accueil, style afficheur rétro](docs/screenshots/home-retro-dolphins.png)<br>Accueil, style afficheur rétro |
+| ![Toutes les applis, rétro](docs/screenshots/drawer-retro.png)<br>Toutes les applis, rétro | ![Horloge de veille, rétro](docs/screenshots/standby-retro.png)<br>Horloge de veille, rétro |
+| ![Verrouillage, rétro](docs/screenshots/lock-retro.png)<br>Verrouillage, rétro | ![Fond aurore](docs/screenshots/home-aurora.png)<br>Fond aurore |
+| ![Pneus (TPMS)](docs/screenshots/tpms.png)<br>Pneus (TPMS) |   |
 
-Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots).
+Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots). Galerie : [librehu.github.io/screenshots/launcher.html](https://librehu.github.io/screenshots/launcher.html).
 
 ## Branches
 
