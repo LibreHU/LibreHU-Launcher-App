@@ -88,13 +88,16 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   comme ce style.
 - **Style Écran d'usine** (Paramètres → Personnalisation → Style) : l'allure d'un écran d'origine de voiture, fond
   noir et police Source Sans 3. **MENU** de 8 grandes tuiles (Radio, Média, Applis, Android Auto — appui long : CarPlay —,
-  Téléphone, Véhicule, Navigation, Réglages), puis des pages de 8 applis épinglées (glisser, points de page) ; ailleurs
-  une **barre d'état d'usine** (bouton MENU, heure au centre, téléphone et météo) remplace la barre. Écran **Média** :
-  titre, artiste, pochette, barre de lecture (toucher ou glisser pour avancer), et **touches du bas** (Source → liste
-  des sources : radio FM, disque, Android Auto, CarPlay et les applis de musique ; Parcourir, précédent, lecture /
-  pause, suivant, Réglages). Mise en page inspirée de TheCarLauncher (LazarC11) ; aucun code ni dessin repris : icônes
-  et couleurs de LibreHU. Les autres applis LibreHU le suivent pour l'instant comme le style moderne (`style` =
-  `factory`).
+  Téléphone, Véhicule, Navigation, Réglages), puis des pages de 8 applis épinglées terminées par une tuile **Ajouter**
+  (glisser, points de page). Ailleurs, **barre d'état d'usine** : à gauche boussole et nom de la route (celui des
+  alertes de vitesse quand elles sont activées, sinon « MENU » ; un toucher revient au MENU), au centre l'heure et le
+  téléphone, à droite la météo. Écran **Média** : titre, artiste, pochette, barre de lecture (toucher ou glisser pour
+  avancer) et **touches du bas** (Source, Parcourir, précédent, lecture / pause, suivant, Réglages) ; **Source** ouvre
+  un cadre posé sur la touche, deux sources par ligne (radio FM, disque, Android Auto, CarPlay et les applis de
+  musique). Écran **Applis** en tuiles, touches Recherche, Tout (applis masquées comprises), MENU et Réglages ; appui
+  long sur une appli = son menu (épingler…). Mise en page inspirée de TheCarLauncher (LazarC11), réécrite : aucun
+  code ni dessin repris, icônes et couleurs de LibreHU. Les autres applis LibreHU le suivent pour l'instant comme le
+  style moderne (`style` = `factory`).
 - **Couleur d'accent** : 8 couleurs ou la **roue RGB** (rouge, vert, bleu de 0 à 255, aperçu et valeur hexadécimale) ;
   elle colore le thème, le style rétro, les pixels des animations d'afficheur et toutes les applis LibreHU.
 - **Police** : normale ou **afficheur à segments** (LibreHU Seg14 : DSEG14, celle de l'afficheur rétro de LibreHU-Disc,

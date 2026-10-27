@@ -616,6 +616,10 @@
     <string name="factory_no_app">Not installed</string>
     <string name="factory_carplay">CarPlay</string>
     <string name="factory_menu">MENU</string>
+    <string name="factory_add">Add</string>
+    <string name="factory_search">Search</string>
+    <string name="factory_all">All</string>
+    <string name="factory_search_hint">Search apps</string>
     <string name="aa_low_latency">Android Auto: low-latency video</string>
     <string name="aa_low_latency_hint">Low-latency mode of the MediaTek video decoder (vdec-lowlatency, Android 9 lacks the official key), full screen and in the card alike: less delay between the phone and the screen. An Open Headunit LibreHU setting, dropped by itself when the decoder refuses it; applies to the next connection. Switch off if the picture stays black or stutters.</string>
     <string name="standby_obd">OBD values on the clock</string>
