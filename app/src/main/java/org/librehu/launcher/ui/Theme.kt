@@ -43,11 +43,22 @@ enum class ThemeStyle {
 
     /** A car stereo display of the 80s-2000s (VFD, LCD, OEL) in the accent colour. */
     RETRO,
+
+    /**
+     * A factory infotainment screen: black, menu of tiles underlined in the accent colour, soft-key bars, status bar
+     * on top, Source Sans 3 (FactoryUi.kt). Drawn with LibreHU's own icons, no maker's artwork or name.
+     */
+    FACTORY,
     ;
 
     companion object {
         /** Stored name, the three retro styles of before (amber, green, cassette) read as [RETRO]. */
-        fun parse(name: String?): ThemeStyle = if (name?.startsWith("RETRO") == true) RETRO else MODERN
+        fun parse(name: String?): ThemeStyle =
+            when {
+                name?.startsWith("RETRO") == true -> RETRO
+                name == "FACTORY" -> FACTORY
+                else -> MODERN
+            }
     }
 }
 
@@ -112,6 +123,23 @@ data class CarPalette(
             }
         }
 
+        /** Factory screen: always black, nearly black tiles, white text, the accent for lines and pressed icons. */
+        private fun factory(
+            accent: Color,
+            segment: Boolean,
+        ) = CarPalette(
+            dark = true,
+            background = Color(0xFF000000),
+            surface = Color(0xFF16171A),
+            surfaceHigh = Color(0xFF26282C),
+            accent = accent,
+            onAccent = Color(0xFF000000),
+            text = Color(0xFFF2F2F2),
+            textDim = Color(0xFFA9ABAF),
+            style = ThemeStyle.FACTORY,
+            segment = segment,
+        )
+
         /** [translucent]: cards let a wallpaper show through. */
         fun of(
             dark: Boolean,
@@ -122,6 +150,7 @@ data class CarPalette(
         ): CarPalette {
             val a = if (translucent) 0.86f else 1f
             if (style == ThemeStyle.RETRO) return retro(dark, accent, a, segment)
+            if (style == ThemeStyle.FACTORY) return factory(accent, segment)
             return if (dark) {
                 CarPalette(
                     dark = true,
@@ -196,7 +225,12 @@ fun CarTheme(content: @Composable () -> Unit) {
         }
     MaterialTheme(
         colorScheme = scheme.withCarRoles(p.accent, p.onAccent, p.surface, p.surfaceHigh, p.text, p.textDim),
-        typography = if (p.segment) RetroTypography else androidx.compose.material3.Typography(),
+        typography =
+            when {
+                p.segment -> RetroTypography
+                p.style == ThemeStyle.FACTORY -> FactoryTypography
+                else -> androidx.compose.material3.Typography()
+            },
         content = content,
     )
 }
@@ -306,3 +340,33 @@ fun nightLook(): NightLook {
     val n = if (p.dark) p else androidx.compose.runtime.remember(p.accent, p.segment) { CarPalette.of(true, p.accent, style = ThemeStyle.RETRO, segment = p.segment) }
     return NightLook(true, n.background, n.text, n.textDim, n.surface, n.surfaceHigh)
 }
+
+/** Source Sans 3 (Adobe, SIL Open Font License 1.1, third_party/SourceSans3-LICENSE.md) for the factory style. */
+val FactoryFont: androidx.compose.ui.text.font.FontFamily =
+    androidx.compose.ui.text.font.FontFamily(
+        androidx.compose.ui.text.font.Font(org.librehu.launcher.R.font.source_sans3_regular, androidx.compose.ui.text.font.FontWeight.Normal),
+        androidx.compose.ui.text.font.Font(org.librehu.launcher.R.font.source_sans3_semibold, androidx.compose.ui.text.font.FontWeight.SemiBold),
+        androidx.compose.ui.text.font.Font(org.librehu.launcher.R.font.source_sans3_semibold, androidx.compose.ui.text.font.FontWeight.Bold),
+    )
+
+private val FactoryTypography: androidx.compose.material3.Typography =
+    androidx.compose.material3.Typography().run {
+        val f = FactoryFont
+        copy(
+            displayLarge = displayLarge.copy(fontFamily = f),
+            displayMedium = displayMedium.copy(fontFamily = f),
+            displaySmall = displaySmall.copy(fontFamily = f),
+            headlineLarge = headlineLarge.copy(fontFamily = f),
+            headlineMedium = headlineMedium.copy(fontFamily = f),
+            headlineSmall = headlineSmall.copy(fontFamily = f),
+            titleLarge = titleLarge.copy(fontFamily = f),
+            titleMedium = titleMedium.copy(fontFamily = f),
+            titleSmall = titleSmall.copy(fontFamily = f),
+            bodyLarge = bodyLarge.copy(fontFamily = f),
+            bodyMedium = bodyMedium.copy(fontFamily = f),
+            bodySmall = bodySmall.copy(fontFamily = f),
+            labelLarge = labelLarge.copy(fontFamily = f),
+            labelMedium = labelMedium.copy(fontFamily = f),
+            labelSmall = labelSmall.copy(fontFamily = f),
+        )
+    }

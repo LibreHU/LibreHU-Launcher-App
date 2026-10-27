@@ -86,13 +86,22 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   dans la couleur, le jour un panneau pâle teinté ; jour / nuit et phares comme d'habitude ; la nuit **lignes de
   balayage** sur tout l'écran (un dessin en cache). Les trois styles rétro d'avant (ambre, vert, cassette) sont lus
   comme ce style.
+- **Style Écran d'usine** (Paramètres → Personnalisation → Style) : l'allure d'un écran d'origine de voiture, fond
+  noir et police Source Sans 3. **MENU** de 8 grandes tuiles (Radio, Média, Applis, Android Auto — appui long : CarPlay —,
+  Téléphone, Véhicule, Navigation, Réglages), puis des pages de 8 applis épinglées (glisser, points de page) ; ailleurs
+  une **barre d'état d'usine** (bouton MENU, heure au centre, téléphone et météo) remplace la barre. Écran **Média** :
+  titre, artiste, pochette, barre de lecture (toucher ou glisser pour avancer), et **touches du bas** (Source → liste
+  des sources : radio FM, disque, Android Auto, CarPlay et les applis de musique ; Parcourir, précédent, lecture /
+  pause, suivant, Réglages). Mise en page inspirée de TheCarLauncher (LazarC11) ; aucun code ni dessin repris : icônes
+  et couleurs de LibreHU. Les autres applis LibreHU le suivent pour l'instant comme le style moderne (`style` =
+  `factory`).
 - **Couleur d'accent** : 8 couleurs ou la **roue RGB** (rouge, vert, bleu de 0 à 255, aperçu et valeur hexadécimale) ;
   elle colore le thème, le style rétro, les pixels des animations d'afficheur et toutes les applis LibreHU.
 - **Police** : normale ou **afficheur à segments** (LibreHU Seg14 : DSEG14, celle de l'afficheur rétro de LibreHU-Disc,
   en majuscules sans accents comme sur un autoradio ; les lettres accentuées sont dessinées sans leur accent ; police
   générée par `tools/make_retro_font.py`, SIL OFL 1.1, `third_party/DSEG-LICENSE.txt`), dans tous les styles.
   **Style, police et palette suivis par toutes les applis LibreHU** (publiés par
-  `content://org.librehu.launcher.theme/theme` : colonnes `style` (`modern` / `retro`), `font` (`normal` /
+  `content://org.librehu.launcher.theme/theme` : colonnes `style` (`modern` / `retro` / `factory`), `font` (`normal` /
   `segment`), `background`, `surface`, `surface_high`, `on_accent`, `text`, `text_dim` en plus de `dark` et `accent`,
   mêmes extras dans `THEME_CHANGED`).
   **Widgets compris** (ceux du launcher et ceux des applis) : couleurs rétro, et police à segments dessinée en image
@@ -314,6 +323,8 @@ que R8 a retiré) et ajouter une règle `-keep`.
 
 Police rétro : DSEG © keshikan, SIL Open Font License 1.1 (`third_party/DSEG-LICENSE.txt`), modifiée et renommée
 « LibreHU Seg14 » (nom réservé « DSEG »).
+
+Police du style Écran d'usine : Source Sans 3 © Adobe, SIL Open Font License 1.1 (`third_party/SourceSans3-LICENSE.md`).
 
 ## Soutenir le projet
 
