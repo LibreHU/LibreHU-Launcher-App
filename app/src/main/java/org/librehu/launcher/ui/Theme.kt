@@ -49,6 +49,13 @@ enum class ThemeStyle {
      * on top, Source Sans 3 (FactoryUi.kt). Drawn with LibreHU's own icons, no maker's artwork or name.
      */
     FACTORY,
+
+    /**
+     * A connected-car tablet screen: black to night blue, the accent colour as the ambient light (glows, frames), home
+     * pages of widgets, a menu of six tiles, a bar of buttons at the bottom (AmbientUi.kt). LibreHU's own icons, no
+     * maker's artwork, logo, font or name.
+     */
+    AMBIENT,
     ;
 
     companion object {
@@ -57,6 +64,7 @@ enum class ThemeStyle {
             when {
                 name?.startsWith("RETRO") == true -> RETRO
                 name == "FACTORY" -> FACTORY
+                name == "AMBIENT" -> AMBIENT
                 else -> MODERN
             }
     }
@@ -140,6 +148,23 @@ data class CarPalette(
             segment = segment,
         )
 
+        /** Ambient screen: black to night blue, blue-grey panels, the accent colour as the ambient light. */
+        private fun ambient(
+            accent: Color,
+            segment: Boolean,
+        ) = CarPalette(
+            dark = true,
+            background = Color(0xFF000000),
+            surface = Color(0xFF121821),
+            surfaceHigh = Color(0xFF1D2531),
+            accent = accent,
+            onAccent = Color(0xFF000000),
+            text = Color(0xFFEEF2F6),
+            textDim = Color(0xFF98A3B0),
+            style = ThemeStyle.AMBIENT,
+            segment = segment,
+        )
+
         /** [translucent]: cards let a wallpaper show through. */
         fun of(
             dark: Boolean,
@@ -151,6 +176,7 @@ data class CarPalette(
             val a = if (translucent) 0.86f else 1f
             if (style == ThemeStyle.RETRO) return retro(dark, accent, a, segment)
             if (style == ThemeStyle.FACTORY) return factory(accent, segment)
+            if (style == ThemeStyle.AMBIENT) return ambient(accent, segment)
             return if (dark) {
                 CarPalette(
                     dark = true,

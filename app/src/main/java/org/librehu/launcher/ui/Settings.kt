@@ -159,11 +159,13 @@ fun LookSettings(
             ThemeStyle.MODERN to stringResource(R.string.theme_style_modern),
             ThemeStyle.RETRO to stringResource(R.string.theme_style_retro),
             ThemeStyle.FACTORY to stringResource(R.string.theme_style_factory),
+            ThemeStyle.AMBIENT to stringResource(R.string.theme_style_ambient),
         ),
         s.style,
     ) { st -> actions.setTheme { it.copy(style = st) } }
     if (s.style == ThemeStyle.RETRO) SettingHint(stringResource(R.string.theme_style_hint))
     if (s.style == ThemeStyle.FACTORY) SettingHint(stringResource(R.string.theme_style_factory_hint))
+    if (s.style == ThemeStyle.AMBIENT) SettingHint(stringResource(R.string.theme_style_ambient_hint))
     SettingSection(stringResource(R.string.theme_font))
     SettingChoices(
         listOf(false to stringResource(R.string.theme_font_normal), true to stringResource(R.string.theme_font_segment)),

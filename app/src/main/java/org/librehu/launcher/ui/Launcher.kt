@@ -135,7 +135,7 @@ import org.librehu.launcher.sos.SosSettings
 import org.librehu.launcher.sos.SosStore
 import org.librehu.launcher.tpms.TpmsManager
 
-enum class Screen { HOME, APPS, SETTINGS, TPMS, OBD, SETUP, MEDIA }
+enum class Screen { HOME, APPS, SETTINGS, TPMS, OBD, SETUP, MEDIA, MENU }
 
 class LauncherActions(
     val launch: (ComponentName) -> Unit,
@@ -219,8 +219,8 @@ fun LauncherScreen(
     val pinned = pins.mapNotNull { byKey[it] }
     val content: @Composable () -> Unit = {
         when (screen) {
-            // MEDIA is the factory theme's own screen (FactoryShell draws it); elsewhere it is the dashboard.
-            Screen.HOME, Screen.MEDIA -> HomePages(look.homePages) { page -> if (page == 0) Dashboard(prefs, media, widgets, actions, sos, look) else WidgetPage(page + 1, prefs, widgets, actions, look) }
+            // MEDIA and MENU are the factory / ambient themes' own screens; elsewhere they are the dashboard.
+            Screen.HOME, Screen.MEDIA, Screen.MENU -> HomePages(look.homePages) { page -> if (page == 0) Dashboard(prefs, media, widgets, actions, sos, look) else WidgetPage(page + 1, prefs, widgets, actions, look) }
             Screen.APPS -> AppGrid(apps, pins, look, actions) { menuFor = it }
             Screen.SETTINGS -> SettingsScreen(theme, themeController, actions, apps)
             Screen.TPMS -> TpmsScreen()
@@ -230,8 +230,9 @@ fun LauncherScreen(
     }
     SideEffect { themedIcons.value = look.themedIcons }
     val factory = look.style == ThemeStyle.FACTORY
+    val ambient = look.style == ThemeStyle.AMBIENT
     Box(modifier = Modifier.fillMaxSize()) {
-        if (!factory) Wallpaper(theme)
+        if (!factory && !ambient) Wallpaper(theme)
         when {
             screen == Screen.SETUP -> {
                 SetupScreen(theme, themeController, actions)
@@ -240,6 +241,11 @@ fun LauncherScreen(
             // Factory screen theme: MENU of tiles, status bar and soft keys instead of the rail.
             factory -> {
                 FactoryShell(screen, apps, pins, look, media, actions, onAppMenu = { menuFor = it }) { content() }
+            }
+
+            // Ambient screen theme: home pages of widgets, a menu of six tiles, a bar of buttons at the bottom.
+            ambient -> {
+                AmbientShell(screen, apps, pins, media, actions, onAppMenu = { menuFor = it }) { content() }
             }
 
             look.rail == RailPosition.BOTTOM -> {
