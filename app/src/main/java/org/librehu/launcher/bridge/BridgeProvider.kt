@@ -175,6 +175,7 @@ class BridgeProvider : BridgeKitProvider() {
             switch("power", s(R.string.bar_power), t.showPower, s(R.string.bar_power_hint)) { v -> store.update { it.copy(showPower = v) } }
             switch("volume", s(R.string.bar_volume), t.showVolume, s(R.string.bar_volume_hint)) { v -> store.update { it.copy(showVolume = v) } }
             switch("aa_live_video", s(R.string.aa_live_video), t.aaLiveVideo, s(R.string.aa_live_video_hint)) { v -> store.update { it.copy(aaLiveVideo = v) } }
+            switch("aa_turn_popup", s(R.string.aa_turn_popup), t.aaTurnPopup, s(R.string.aa_turn_popup_hint)) { v -> store.update { it.copy(aaTurnPopup = v) } }
         }
     }
 
