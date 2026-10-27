@@ -39,6 +39,8 @@ data class AaManeuver(
     val road: String,
     val totalDistanceMeters: Int,
     val arrival: String,
+    /** Android Auto's own screen is in front (Open Headunit LibreHU says so with each update). */
+    val projectionOnScreen: Boolean = false,
 )
 
 /**
@@ -112,6 +114,7 @@ object AndroidAutoLink {
                                 i.getStringExtra("road").orEmpty(),
                                 i.getIntExtra("total_distance_meters", -1),
                                 i.getStringExtra("estimated_arrival").orEmpty(),
+                                i.getBooleanExtra("org.librehu.projection_on_screen", false),
                             )
                         }
                 }

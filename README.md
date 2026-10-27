@@ -21,6 +21,12 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   pendant une projection, la carte montre l'image en direct et tactile (boutons plein écran et déconnecter). La
   surface de la carte est confiée au décodeur d'Open Headunit LibreHU (`LibreHuVideoService`, permission signature
   `org.librehu.headunit.permission.CONFIGURE`) tant que son écran de projection n'est pas affiché.
+  **Directions en popup** (Réglages → apparence, activé par défaut, désactivable) : chaque nouvelle direction de la
+  navigation, puis un rappel à 200 m, affichée 6 s en haut de l'écran par-dessus les autres applis (radio, musique,
+  accueil…) ; jamais sur l'écran d'Android Auto, qui l'affiche déjà (Open Headunit LibreHU l'indique dans chaque
+  `NAVIGATION_UPDATE`, extra `org.librehu.projection_on_screen`) ; toucher = afficher Android Auto. Fenêtre de
+  superposition (`headunit/TurnPopup.kt`) : permission accordée par le root (`appops set … SYSTEM_ALERT_WINDOW allow`)
+  ou, sinon, demandée à l'activation.
   Réglages d'Android Auto : LibreHU-service, onglet Android Auto.
 - **Toutes les applis** : grille ; appui long pour épingler, retirer ou réordonner dans le rail.
 - **Pneus (TPMS)** : récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte

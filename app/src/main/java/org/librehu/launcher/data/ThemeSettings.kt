@@ -151,6 +151,8 @@ data class ThemeSettings(
     val themedIcons: Boolean = true,
     /** Android Auto's picture in the dashboard card while its screen is not shown (Open Headunit LibreHU). */
     val aaLiveVideo: Boolean = false,
+    /** Popup of each Android Auto direction over the other screens (not over Android Auto itself). */
+    val aaTurnPopup: Boolean = true,
     val onlineSource: OnlineSource = OnlineSource.BING,
     /** Bing market, e.g. fr-FR; "auto" = the language of the device. */
     val bingMarket: String = "auto",
@@ -216,6 +218,7 @@ class ThemeStore private constructor(
             .putStringSet("hidden_apps", s.hiddenApps)
             .putBoolean("themed_icons", s.themedIcons)
             .putBoolean("aa_live_video", s.aaLiveVideo)
+            .putBoolean("aa_turn_popup", s.aaTurnPopup)
             .putString("online_source", s.onlineSource.name)
             .putString("bing_market", s.bingMarket)
             .putString("online_refresh", s.onlineRefresh.name)
@@ -442,6 +445,7 @@ class ThemeStore private constructor(
             hiddenApps = prefs.getStringSet("hidden_apps", emptySet()).orEmpty().toSet(),
             themedIcons = prefs.getBoolean("themed_icons", true),
             aaLiveVideo = prefs.getBoolean("aa_live_video", false),
+            aaTurnPopup = prefs.getBoolean("aa_turn_popup", true),
             onlineSource = runCatching { OnlineSource.valueOf(prefs.getString("online_source", null)!!) }.getOrDefault(OnlineSource.BING),
             bingMarket = prefs.getString("bing_market", "auto") ?: "auto",
             onlineRefresh = runCatching { OnlineRefresh.valueOf(prefs.getString("online_refresh", null)!!) }.getOrDefault(OnlineRefresh.DAILY),
