@@ -86,7 +86,7 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   dans la couleur, le jour un panneau pâle teinté ; jour / nuit et phares comme d'habitude ; la nuit **lignes de
   balayage** sur tout l'écran (un dessin en cache). Les trois styles rétro d'avant (ambre, vert, cassette) sont lus
   comme ce style.
-- **Style Écran d'usine** (Paramètres → Personnalisation → Style) : l'allure d'un écran d'origine de voiture, fond
+- **Style « Modularer Infotainment-Baukasten »** (écran d'usine ; Paramètres → Personnalisation → Style) : l'allure d'un écran d'origine de voiture, fond
   noir et police Source Sans 3. **MENU** de 8 grandes tuiles (Radio, Média, Applis, Android Auto — appui long : CarPlay —,
   Téléphone, Véhicule, Navigation, Réglages), puis des pages de 8 applis épinglées terminées par une tuile **Ajouter**
   (glisser, points de page). Ailleurs, **barre d'état d'usine** : à gauche boussole et nom de la route (celui des
@@ -98,7 +98,7 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   long sur une appli = son menu (épingler…). Mise en page inspirée de TheCarLauncher (LazarC11), réécrite : aucun
   code ni dessin repris, icônes et couleurs de LibreHU. Les autres applis LibreHU le suivent pour l'instant comme le
   style moderne (`style` = `factory`).
-- **Style Écran ambiance** (Paramètres → Personnalisation → Style) : l'allure d'une tablette de voiture connectée
+- **Style « LHU-Link »** (écran ambiance ; Paramètres → Personnalisation → Style) : l'allure d'une tablette de voiture connectée
   (mise en page inspirée de l'interface R-Link 2 de Renault ; aucun logo, nom, icône, police ni image de Renault : tout
   est redessiné avec les icônes de LibreHU). Fond du noir au bleu nuit, **la couleur d'accent sert d'éclairage
   d'ambiance** (lueur montant du bas, cadres, boutons). **Barre du haut** : heure, raccourcis carte et audio encadrés,
@@ -336,7 +336,7 @@ que R8 a retiré) et ajouter une règle `-keep`.
 Police rétro : DSEG © keshikan, SIL Open Font License 1.1 (`third_party/DSEG-LICENSE.txt`), modifiée et renommée
 « LibreHU Seg14 » (nom réservé « DSEG »).
 
-Police du style Écran d'usine : Source Sans 3 © Adobe, SIL Open Font License 1.1 (`third_party/SourceSans3-LICENSE.md`).
+Police du style Modularer Infotainment-Baukasten : Source Sans 3 © Adobe, SIL Open Font License 1.1 (`third_party/SourceSans3-LICENSE.md`).
 
 ## Soutenir le projet
 
