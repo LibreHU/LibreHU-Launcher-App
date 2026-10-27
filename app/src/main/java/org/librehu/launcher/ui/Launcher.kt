@@ -239,7 +239,7 @@ fun LauncherScreen(
 
             // Factory screen theme: MENU of tiles, status bar and soft keys instead of the rail.
             factory -> {
-                FactoryShell(screen, pinned, media, actions, onAppMenu = { menuFor = it }) { content() }
+                FactoryShell(screen, apps, pins, look, media, actions, onAppMenu = { menuFor = it }) { content() }
             }
 
             look.rail == RailPosition.BOTTOM -> {
