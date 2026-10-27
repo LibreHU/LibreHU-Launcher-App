@@ -620,6 +620,16 @@
     <string name="factory_search">Search</string>
     <string name="factory_all">All</string>
     <string name="factory_search_hint">Search apps</string>
+    <string name="theme_style_ambient">Ambient screen</string>
+    <string name="theme_style_ambient_hint">A connected-car tablet screen: black to night blue lit by the accent colour (your ambient light), home pages of widgets (clock, what is playing, pinned apps), a menu of six tiles and a bar of buttons at the bottom. LibreHU\'s own icons.</string>
+    <string name="ambient_menu">Menu</string>
+    <string name="ambient_multimedia">Multimedia</string>
+    <string name="ambient_system">System</string>
+    <string name="ambient_sources">Sources</string>
+    <string name="ambient_options">Options</string>
+    <string name="ambient_back">Back</string>
+    <string name="ambient_add">Add an app</string>
+    <string name="ambient_date" translatable="false">EEEE d MMMM</string>
     <string name="aa_low_latency">Android Auto: low-latency video</string>
     <string name="aa_low_latency_hint">Low-latency mode of the MediaTek video decoder (vdec-lowlatency, Android 9 lacks the official key), full screen and in the card alike: less delay between the phone and the screen. An Open Headunit LibreHU setting, dropped by itself when the decoder refuses it; applies to the next connection. Switch off if the picture stays black or stutters.</string>
     <string name="standby_obd">OBD values on the clock</string>

@@ -530,7 +530,7 @@ private fun Progress(
     }
 }
 
-private fun time(ms: Long): String {
+internal fun time(ms: Long): String {
     val s = ms / 1000
     return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, s / 60 % 60, s % 60) else "%d:%02d".format(s / 60, s % 60)
 }
@@ -656,7 +656,7 @@ private fun SourceCell(
     }
 }
 
-private class MediaSource(
+internal class MediaSource(
     val component: ComponentName,
     val label: String,
     val icon: ImageVector?,
@@ -738,9 +738,9 @@ private fun FactoryApps(
     }
 }
 
-private const val CARPLAY = "org.librehu.carplay"
-private val ANDROID_AUTO = arrayOf("org.librehu.headunit", "com.andrerinas.headunitrevived")
-private val DIALER = "org.librehu.dialer"
+internal const val CARPLAY = "org.librehu.carplay"
+internal val ANDROID_AUTO = arrayOf("org.librehu.headunit", "com.andrerinas.headunitrevived")
+internal const val DIALER = "org.librehu.dialer"
 
 /** Navigation apps tried in this order before a plain geo: link. */
 private val NAV_APPS = listOf("net.osmand.plus", "net.osmand", "app.organicmaps", "com.mapswithme.maps.pro", "com.waze", "com.google.android.apps.maps", "com.generalmagic.magicearth")
@@ -751,7 +751,7 @@ private fun launchComponent(
 ): ComponentName? = context.packageManager.getLaunchIntentForPackage(pkg)?.component
 
 /** The first installed of [packages]; nothing installed: a short note. */
-private fun openPackage(
+internal fun openPackage(
     context: Context,
     actions: LauncherActions,
     vararg packages: String,
@@ -764,7 +764,7 @@ private fun openPackage(
     }
 }
 
-private fun openNavigation(
+internal fun openNavigation(
     context: Context,
     actions: LauncherActions,
 ) {
@@ -780,7 +780,7 @@ private fun openNavigation(
     }
 }
 
-private fun mediaSources(context: Context): List<MediaSource> {
+internal fun mediaSources(context: Context): List<MediaSource> {
     val pm = context.packageManager
     val packages = linkedSetOf(LauncherPrefs.FM_PACKAGE, "org.librehu.disc", *ANDROID_AUTO, CARPLAY)
     runCatching {
