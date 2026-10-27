@@ -297,8 +297,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 | ![Toutes les applis, rétro](docs/screenshots/drawer-retro.png)<br>Toutes les applis, rétro | ![Horloge de veille, rétro](docs/screenshots/standby-retro.png)<br>Horloge de veille, rétro |
 | ![Verrouillage, rétro](docs/screenshots/lock-retro.png)<br>Verrouillage, rétro | ![Fond aurore](docs/screenshots/home-aurora.png)<br>Fond aurore |
 | ![Pneus (TPMS)](docs/screenshots/tpms.png)<br>Pneus (TPMS) |   |
+| ![Style LHU-Link, accueil](docs/screenshots/style-lhu-link-home.png)<br>Style LHU-Link, accueil | ![Style LHU-Link, menu](docs/screenshots/style-lhu-link-menu.png)<br>Style LHU-Link, menu |
+| ![Style LHU-Link, multimédia](docs/screenshots/style-lhu-link-media.png)<br>Style LHU-Link, multimédia | ![Style Modularer Infotainment-Baukasten, MENU](docs/screenshots/style-mib-menu.png)<br>Style Modularer Infotainment-Baukasten, MENU |
 
-Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots). Galerie : [librehu.github.io/screenshots/launcher.html](https://librehu.github.io/screenshots/launcher.html).
+Captures des styles LHU-Link et Modularer Infotainment-Baukasten : rendu Compose sur la JVM (Paparazzi, 1280×720, 160 dpi), sans téléphone ni média. Autres captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots). Galerie : [librehu.github.io/screenshots/launcher.html](https://librehu.github.io/screenshots/launcher.html).
 
 ## Branches
 

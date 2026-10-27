@@ -100,12 +100,21 @@ import kotlin.math.sin
  * logo, font or name. Settings, apps, OBD and TPMS keep their screens between the two bars.
  */
 
-private val NIGHT = Color(0xFF071224)
-private val SHEEN = Color(0xFF6E6A70)
+private val SHEEN = Color(0xFF75716C)
 private val BAR_TOP = Color(0xFF3A3D42)
 private val BAR_BOTTOM = Color(0xFF191819)
 private val LIGHT = Color(0xFFEEF2F6)
 private val DIM = Color(0xFF98A3B0)
+
+/**
+ * The ambient light: the accent colour, deeper and fully saturated (the lines are the accent itself, e.g. #0078DC,
+ * the light under them a deep blue like #003CC7).
+ */
+private fun deep(accent: Color): Color {
+    val hsv = FloatArray(3)
+    android.graphics.Color.colorToHSV(android.graphics.Color.argb(255, (accent.red * 255).toInt(), (accent.green * 255).toInt(), (accent.blue * 255).toInt()), hsv)
+    return Color(android.graphics.Color.HSVToColor(floatArrayOf((hsv[0] + 12f) % 360f, 1f, hsv[2] * 0.9f)))
+}
 
 /** The whole screen in the ambient style; [content] draws the screens that keep their own look (settings, apps…). */
 @Composable
@@ -129,20 +138,35 @@ internal fun AmbientShell(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color.Black, Color.Black, NIGHT)))
+            .background(Color.Black)
             .drawBehind {
-                // The ambient light: a glow of the accent colour rising from the bottom.
-                drawRect(
+                // The ambient light: an oval of the deep accent rising behind the bottom bar.
+                val glow = deep(accent)
+                drawOval(
                     Brush.radialGradient(
-                        listOf(accent.copy(alpha = 0.32f), Color.Transparent),
-                        center = Offset(size.width / 2, size.height * 1.02f),
-                        radius = size.width * 0.6f,
+                        0f to glow,
+                        0.55f to Color.Transparent,
+                        center = Offset(size.width / 2, size.height),
+                        radius = size.width * 0.5f,
                     ),
+                    topLeft = Offset(0f, size.height * 0.62f),
+                    size = androidx.compose.ui.geometry.Size(size.width, size.height * 0.76f),
                 )
             },
     ) {
         Column(Modifier.fillMaxSize()) {
-            AmbientTopBar(actions, if (screen == Screen.HOME) pager else null)
+            AmbientTopBar(
+                actions,
+                if (screen == Screen.HOME) pager else null,
+                when (screen) {
+                    Screen.MENU -> stringResource(R.string.ambient_menu)
+                    Screen.MEDIA -> stringResource(R.string.ambient_multimedia)
+                    Screen.APPS -> stringResource(R.string.factory_apps)
+                    Screen.SETTINGS -> stringResource(R.string.ambient_system)
+                    Screen.OBD -> stringResource(R.string.factory_vehicle)
+                    else -> ""
+                },
+            )
             Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                 when (screen) {
                     Screen.HOME -> AmbientHome(pager, appPages, media, actions, onAppMenu)
@@ -186,6 +210,7 @@ internal fun AmbientShell(
 private fun AmbientTopBar(
     actions: LauncherActions,
     pager: PagerState?,
+    title: String,
 ) {
     val context = LocalContext.current
     val now = rememberMinute()
@@ -205,21 +230,28 @@ private fun AmbientTopBar(
                 Spacer(Modifier.width(8.dp))
                 ShortcutIcon(Icons.Outlined.MusicNote) { actions.show(Screen.MEDIA) }
             }
+            // In the middle: the page dots on the home pages, the name of the screen elsewhere.
             if (pager != null && pager.pageCount > 1) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.Center)) {
                     repeat(pager.pageCount) { i ->
                         Box(
                             Modifier
-                                .size(if (i == pager.currentPage) 9.dp else 7.dp)
+                                .size(7.dp)
                                 .clip(CircleShape)
-                                .background(if (i == pager.currentPage) LIGHT else DIM.copy(alpha = 0.6f)),
+                                .background(Color.White.copy(alpha = if (i == pager.currentPage) 1f else 0.2f)),
                         )
                     }
                 }
+            } else if (title.isNotEmpty()) {
+                Text(title, color = LIGHT, fontSize = 22.sp, fontWeight = FontWeight.Light, modifier = Modifier.align(Alignment.Center))
             }
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.align(Alignment.CenterEnd)) {
                 // The phone in a box drawn like the shortcuts, the outside temperature after it.
-                Box(Modifier.height(38.dp).border(BorderStroke(1.5.dp, CarColors.Accent)).padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                Row(
+                    Modifier.height(40.dp).border(BorderStroke(1.5.dp, CarColors.Accent)).padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Outlined.Phone, null, tint = LIGHT, modifier = Modifier.size(24.dp))
                     PhoneStatusView(compact = true)
                 }
                 Spacer(Modifier.width(14.dp))
@@ -254,7 +286,7 @@ private class AmbientButton(
 /** Two or three buttons side by side: grey sheen on top, black in the middle, the accent light at the bottom. */
 @Composable
 private fun AmbientBottomBar(buttons: List<AmbientButton>) {
-    Row(Modifier.fillMaxWidth().height(64.dp).padding(start = 40.dp, end = 40.dp, bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    Row(Modifier.fillMaxWidth().height(62.dp).padding(start = 16.dp, end = 16.dp, bottom = 6.dp)) {
         buttons.forEach { BarButton(it) }
     }
 }
@@ -274,11 +306,9 @@ private fun RowScope.BarButton(b: AmbientButton) {
                 .fillMaxHeight()
                 .background(
                     Brush.verticalGradient(
-                        0f to SHEEN,
-                        0.12f to BAR_TOP,
-                        0.3f to BAR_BOTTOM,
-                        0.55f to Color(0xFF0C1014),
-                        1f to accent.copy(alpha = if (pressed) 0.95f else 0.6f).compositeOver(Color.Black),
+                        0.0225f to SHEEN,
+                        (if (pressed) 0.25f else 0.4581f) to Color.Black,
+                        1f to if (pressed) accent else deep(accent),
                     ),
                 ).border(BorderStroke(1.dp, accent))
                 .combinedClickable(interactionSource = interaction, indication = null, onClick = b.onClick, onLongClick = b.onLongClick),
@@ -286,7 +316,7 @@ private fun RowScope.BarButton(b: AmbientButton) {
         if (b.icon != null) {
             Icon(b.icon, stringResource(b.label), tint = LIGHT, modifier = Modifier.size(30.dp))
         } else {
-            Text(stringResource(b.label), color = LIGHT, fontSize = 22.sp)
+            Text(stringResource(b.label), color = LIGHT, fontSize = 22.sp, fontWeight = FontWeight.Light)
         }
     }
 }
@@ -333,7 +363,7 @@ private fun AmbientHome(
     }
 }
 
-/** A panel lit from its edge: black, a thin line of the accent colour around it, its light rising from the bottom. */
+/** A panel: a thin line of the accent colour around it, the ambient light of the screen showing through. */
 @Composable
 private fun Frame(
     modifier: Modifier,
@@ -342,21 +372,20 @@ private fun Frame(
     val accent = CarColors.Accent
     Box(
         modifier
-            .background(Color.Black)
-            .drawBehind { bottomGlow(accent, 0.45f) }
+            .background(Color.Black.copy(alpha = 0.55f))
             .border(BorderStroke(1.dp, accent)),
         content = content,
     )
 }
 
-/** The light of the accent colour along the bottom of a panel: nothing over its top 70 %, then rising to the edge. */
+/** The light along the bottom of a panel: nothing over its top 64 %, then rising to the edge. */
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.bottomGlow(
     accent: Color,
     strength: Float,
 ) = drawRect(
     Brush.verticalGradient(
         0f to Color.Transparent,
-        0.7f to Color.Transparent,
+        0.64f to Color.Transparent,
         1f to accent.copy(alpha = strength),
     ),
 )
@@ -376,9 +405,9 @@ private fun Widget(
     Box(
         modifier
             .fillMaxHeight()
-            .background(Brush.verticalGradient(listOf(Color(0xFF15171B), Color.Black)))
-            .drawBehind { bottomGlow(accent, if (pressed) 0.8f else 0.4f) }
-            .border(BorderStroke(1.dp, if (pressed) accent else accent.copy(alpha = 0.7f)))
+            .background(Color.Black)
+            .drawBehind { bottomGlow(if (pressed) accent else deep(accent), 0.85f) }
+            .border(BorderStroke(1.dp, accent))
             .then(
                 if (onClick != null) Modifier.combinedClickable(interactionSource = interaction, indication = null, onClick = onClick, onLongClick = onLongClick) else Modifier,
             ),
@@ -386,25 +415,24 @@ private fun Widget(
     )
 }
 
-/** Analog clock with the date under it. */
+/** Analog clock: white ticks and hands on black, no dial, the date inside under the centre. */
 @Composable
 private fun BoxScope.ClockWidget() {
     val now = rememberMinute()
-    val accent = CarColors.Accent
-    Column(Modifier.align(Alignment.Center).padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Canvas(Modifier.weight(1f, fill = false).aspectRatio(1f).heightIn(max = 260.dp)) {
+    val date = java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT).format(now)
+    Box(Modifier.align(Alignment.Center).padding(16.dp).aspectRatio(1f).heightIn(max = 300.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
             val r = size.minDimension / 2
             val c = Offset(size.width / 2, size.height / 2)
-            drawCircle(Brush.radialGradient(listOf(Color(0xFF1E2836), Color(0xFF0B1018)), center = c, radius = r), r, c)
-            drawCircle(Color(0xFF8C97A6), r, c, style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
             for (i in 0 until 60) {
                 val a = i * PI / 30
-                val inner = if (i % 5 == 0) r * 0.84f else r * 0.9f
+                val hour = i % 5 == 0
+                val inner = if (hour) r * 0.9f else r * 0.94f
                 drawLine(
-                    if (i % 5 == 0) LIGHT else DIM,
+                    Color.White,
                     Offset(c.x + (inner * sin(a)).toFloat(), c.y - (inner * cos(a)).toFloat()),
-                    Offset(c.x + (r * 0.95f * sin(a)).toFloat(), c.y - (r * 0.95f * cos(a)).toFloat()),
-                    if (i % 5 == 0) 4f else 1.5f,
+                    Offset(c.x + (r * sin(a)).toFloat(), c.y - (r * cos(a)).toFloat()),
+                    if (hour) r * 0.035f else r * 0.012f,
                 )
             }
             val cal = java.util.Calendar.getInstance().apply { time = now }
@@ -414,18 +442,12 @@ private fun BoxScope.ClockWidget() {
                 angle: Double,
                 length: Float,
                 width: Float,
-                color: Color,
-            ) = drawLine(color, c, Offset(c.x + (length * sin(angle)).toFloat(), c.y - (length * cos(angle)).toFloat()), width, StrokeCap.Round)
-            hand(h * PI / 6, r * 0.5f, 8f, LIGHT)
-            hand(m * PI / 30, r * 0.76f, 5f, LIGHT)
-            drawCircle(accent, 7f, c)
+            ) = drawLine(Color.White, c, Offset(c.x + (length * sin(angle)).toFloat(), c.y - (length * cos(angle)).toFloat()), width)
+            hand(h * PI / 6, r * 0.6f, r * 0.03f)
+            hand(m * PI / 30, r * 0.8f, r * 0.018f)
+            drawCircle(Color.White, r * 0.065f, c)
         }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            java.text.SimpleDateFormat(stringResource(R.string.ambient_date), java.util.Locale.getDefault()).format(now).replaceFirstChar { it.uppercase() },
-            color = DIM,
-            fontSize = 18.sp,
-        )
+        Text(date, color = LIGHT, fontSize = 22.sp, fontWeight = FontWeight.Light, modifier = Modifier.align(Alignment.Center).padding(top = 120.dp))
     }
 }
 
@@ -484,21 +506,20 @@ private fun AmbientMenu(actions: LauncherActions) {
             AmbientTile(Icons.Outlined.DirectionsCar, R.string.factory_vehicle) { actions.show(Screen.OBD) },
             AmbientTile(Icons.Outlined.Settings, R.string.ambient_system) { actions.show(Screen.SETTINGS) },
         )
-    val accent = CarColors.Accent
-    // Tiles side by side in thin grey frames, the ambient light rising behind the bottom row.
+    // Tiles side by side in thin frames of the accent colour, the ambient light of the screen behind them.
     Column(
-        Modifier.fillMaxSize().padding(horizontal = 24.dp).drawBehind { bottomGlow(accent, 0.5f) },
-        verticalArrangement = Arrangement.spacedBy(3.dp),
+        Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         tiles.chunked(3).forEach { row ->
-            Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 row.forEach { t -> MenuTile(t, Modifier.weight(1f)) }
             }
         }
     }
 }
 
-/** A menu tile: black in a grey frame, icon over its name; pressed, the frame and a glow take the accent colour. */
+/** A menu tile: black in a thin frame of the accent colour, icon over its name; pressed, lit from the bottom. */
 @Composable
 private fun MenuTile(
     t: AmbientTile,
@@ -511,15 +532,15 @@ private fun MenuTile(
         modifier
             .fillMaxHeight()
             .background(Color.Black.copy(alpha = 0.75f))
-            .drawBehind { if (pressed) bottomGlow(accent, 0.8f) }
-            .border(BorderStroke(1.dp, if (pressed) accent else Color(0xFF3E434B)))
+            .drawBehind { if (pressed) bottomGlow(deep(accent), 0.9f) }
+            .border(BorderStroke(1.dp, accent))
             .clickable(interactionSource = interaction, indication = null, onClick = t.onClick),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(t.icon, null, tint = Color(0xFFD8DCE2), modifier = Modifier.size(56.dp))
             Spacer(Modifier.height(10.dp))
-            Text(stringResource(t.label), color = LIGHT, fontSize = 22.sp)
+            Text(stringResource(t.label), color = LIGHT, fontSize = 23.sp, fontWeight = FontWeight.Light)
         }
     }
 }
