@@ -594,7 +594,7 @@
     <string name="rgb_green">Green</string>
     <string name="rgb_blue">Blue</string>
     <string name="theme_style_hint">The colours of a car stereo display in the accent colour (the colour wheel: any colour, in red, green and blue); day / night and headlights as usual; scan lines at night, like a display.</string>
-    <string name="theme_style_factory">Factory screen</string>
+    <string name="theme_style_factory">Modularer Infotainment-Baukasten</string>
     <string name="theme_style_factory_hint">A factory infotainment screen: black, a menu of eight tiles underlined in the accent colour (swipe for your pinned apps), status bar on top, Media screen with soft keys. Drawn with LibreHU\'s own icons and the Source Sans 3 font.</string>
     <string name="factory_radio">Radio</string>
     <string name="factory_media">Media</string>
@@ -620,7 +620,7 @@
     <string name="factory_search">Search</string>
     <string name="factory_all">All</string>
     <string name="factory_search_hint">Search apps</string>
-    <string name="theme_style_ambient">Ambient screen</string>
+    <string name="theme_style_ambient">LHU-Link</string>
     <string name="theme_style_ambient_hint">A connected-car tablet screen: black to night blue lit by the accent colour (your ambient light), home pages of widgets (clock, what is playing, pinned apps), a menu of six tiles and a bar of buttons at the bottom. LibreHU\'s own icons.</string>
     <string name="ambient_menu">Menu</string>
     <string name="ambient_multimedia">Multimedia</string>
