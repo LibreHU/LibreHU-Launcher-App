@@ -61,7 +61,13 @@ class BridgeProvider : BridgeKitProvider() {
             }) { v -> store.update { it.copy(mode = v) } }
             switch("system_wide", s(R.string.theme_system_wide), t.systemWide, s(R.string.theme_system_wide_hint)) { v -> store.update { it.copy(systemWide = v) } }
             pick("style", s(R.string.theme_style), t.style, s(R.string.theme_style_hint), label = {
-                s(if (it == ThemeStyle.RETRO) R.string.theme_style_retro else R.string.theme_style_modern)
+                s(
+                    when (it) {
+                        ThemeStyle.RETRO -> R.string.theme_style_retro
+                        ThemeStyle.FACTORY -> R.string.theme_style_factory
+                        ThemeStyle.MODERN -> R.string.theme_style_modern
+                    },
+                )
             }) { v -> store.update { it.copy(style = v) } }
             choice(
                 "font",
