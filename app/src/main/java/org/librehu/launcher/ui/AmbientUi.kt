@@ -1,0 +1,727 @@
+package org.librehu.launcher.ui
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.Navigation
+import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.PhoneAndroid
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.SkipNext
+import androidx.compose.material.icons.outlined.SkipPrevious
+import androidx.compose.material.icons.outlined.Speaker
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
+import org.librehu.launcher.R
+import org.librehu.launcher.data.AndroidAutoLink
+import org.librehu.launcher.data.LauncherApp
+import org.librehu.launcher.data.LauncherPrefs
+import org.librehu.launcher.data.MediaRepository
+import org.librehu.launcher.data.NowPlaying
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+
+/*
+ * Ambient style ([ThemeStyle.AMBIENT]): the layout of a connected-car tablet screen. Black fading to night blue, the
+ * accent colour as the ambient light (glow at the bottom, frames, pressed buttons), a top bar (clock, map and audio
+ * shortcuts, page dots, phone, weather), home pages of widgets in a frame, a menu of six tiles, and a bar of buttons
+ * at the bottom (Menu / Back, the screen's main action, Options). LibreHU's own Material icons: no maker's artwork,
+ * logo, font or name. Settings, apps, OBD and TPMS keep their screens between the two bars.
+ */
+
+private val NIGHT = Color(0xFF071224)
+private val SHEEN = Color(0xFF6E6A70)
+private val BAR_TOP = Color(0xFF3A3D42)
+private val BAR_BOTTOM = Color(0xFF191819)
+private val LIGHT = Color(0xFFEEF2F6)
+private val DIM = Color(0xFF98A3B0)
+
+/** The whole screen in the ambient style; [content] draws the screens that keep their own look (settings, apps…). */
+@Composable
+internal fun AmbientShell(
+    screen: Screen,
+    apps: List<LauncherApp>,
+    pins: List<String>,
+    media: MediaRepository,
+    actions: LauncherActions,
+    onAppMenu: (LauncherApp) -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val context = LocalContext.current
+    val accent = CarColors.Accent
+    val byKey = apps.associateBy { it.key }
+    val pinned = pins.mapNotNull { byKey[it] }
+    // Home page 0: clock and what is playing; then pinned apps four by page, the last page ending with Add.
+    val appPages = (pinned.map<LauncherApp, LauncherApp?> { it } + null).chunked(4)
+    val pager = rememberPagerState { 1 + appPages.size }
+    var sources by remember { mutableStateOf(false) }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(Color.Black, Color.Black, NIGHT)))
+            .drawBehind {
+                // The ambient light: a glow of the accent colour rising from the bottom.
+                drawRect(
+                    Brush.radialGradient(
+                        listOf(accent.copy(alpha = 0.32f), Color.Transparent),
+                        center = Offset(size.width / 2, size.height * 1.02f),
+                        radius = size.width * 0.6f,
+                    ),
+                )
+            },
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            AmbientTopBar(actions, if (screen == Screen.HOME) pager else null)
+            Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                when (screen) {
+                    Screen.HOME -> AmbientHome(pager, appPages, media, actions, onAppMenu)
+                    Screen.MENU -> AmbientMenu(actions)
+                    Screen.MEDIA -> AmbientMedia(media, actions)
+                    else -> content()
+                }
+            }
+            val back = AmbientButton(R.string.ambient_back, Icons.AutoMirrored.Outlined.ArrowBack) { actions.show(if (screen == Screen.MENU) Screen.HOME else Screen.MENU) }
+            val options = AmbientButton(R.string.ambient_options, Icons.Outlined.MoreVert) { actions.show(Screen.SETTINGS) }
+            AmbientBottomBar(
+                when (screen) {
+                    Screen.HOME -> listOf(AmbientButton(R.string.ambient_menu, null) { actions.show(Screen.MENU) }, options)
+                    // Main action of the menu: the phone projection (a long press: CarPlay).
+                    Screen.MENU ->
+                        listOf(
+                            back,
+                            AmbientButton(R.string.factory_projection, null, onLongClick = { openPackage(context, actions, CARPLAY) }) {
+                                if (AndroidAutoLink.state.value.active) AndroidAutoLink.show(context) else openPackage(context, actions, *ANDROID_AUTO)
+                            },
+                            options,
+                        )
+                    Screen.MEDIA ->
+                        listOf(
+                            back,
+                            AmbientButton(R.string.ambient_sources, Icons.Outlined.Speaker) { sources = true },
+                            AmbientButton(R.string.factory_browse, Icons.Outlined.Menu) { actions.mediaOpen() },
+                        )
+                    else -> listOf(back, options)
+                },
+            )
+        }
+        if (sources) AmbientSources(actions) { sources = false }
+    }
+}
+
+// --- Bars ----------------------------------------------------------------------------------------------------------
+
+/** Clock, map and audio shortcuts on the left; page dots in the middle (home); phone and weather on the right. */
+@Composable
+private fun AmbientTopBar(
+    actions: LauncherActions,
+    pager: PagerState?,
+) {
+    val context = LocalContext.current
+    val now = rememberMinute()
+    Column(Modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.align(Alignment.CenterStart)) {
+                Text(
+                    android.text.format.DateFormat
+                        .getTimeFormat(context)
+                        .format(now),
+                    color = LIGHT,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Light,
+                )
+                Spacer(Modifier.width(20.dp))
+                ShortcutIcon(Icons.Outlined.Map) { openNavigation(context, actions) }
+                Spacer(Modifier.width(8.dp))
+                ShortcutIcon(Icons.Outlined.MusicNote) { actions.show(Screen.MEDIA) }
+            }
+            if (pager != null && pager.pageCount > 1) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.Center)) {
+                    repeat(pager.pageCount) { i ->
+                        Box(
+                            Modifier
+                                .size(if (i == pager.currentPage) 9.dp else 7.dp)
+                                .clip(CircleShape)
+                                .background(if (i == pager.currentPage) LIGHT else DIM.copy(alpha = 0.6f)),
+                        )
+                    }
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.align(Alignment.CenterEnd)) {
+                // The phone in a box drawn like the shortcuts, the outside temperature after it.
+                Box(Modifier.height(38.dp).border(BorderStroke(1.5.dp, CarColors.Accent)).padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                    PhoneStatusView(compact = true)
+                }
+                Spacer(Modifier.width(14.dp))
+                WeatherChip()
+            }
+        }
+        Box(Modifier.fillMaxWidth().padding(horizontal = 8.dp).height(2.dp).background(CarColors.Accent))
+    }
+}
+
+@Composable
+private fun ShortcutIcon(
+    icon: ImageVector,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier
+            .size(40.dp)
+            .border(BorderStroke(1.5.dp, CarColors.Accent))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, null, tint = LIGHT, modifier = Modifier.size(24.dp)) }
+}
+
+private class AmbientButton(
+    val label: Int,
+    val icon: ImageVector?,
+    val onLongClick: (() -> Unit)? = null,
+    val onClick: () -> Unit,
+)
+
+/** Two or three buttons side by side: grey sheen on top, black in the middle, the accent light at the bottom. */
+@Composable
+private fun AmbientBottomBar(buttons: List<AmbientButton>) {
+    Row(Modifier.fillMaxWidth().height(64.dp).padding(start = 40.dp, end = 40.dp, bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        buttons.forEach { BarButton(it) }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun RowScope.BarButton(b: AmbientButton) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val accent = CarColors.Accent
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier =
+            Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .background(
+                    Brush.verticalGradient(
+                        0f to SHEEN,
+                        0.12f to BAR_TOP,
+                        0.3f to BAR_BOTTOM,
+                        0.55f to Color(0xFF0C1014),
+                        1f to accent.copy(alpha = if (pressed) 0.95f else 0.6f).compositeOver(Color.Black),
+                    ),
+                ).border(BorderStroke(1.dp, accent))
+                .combinedClickable(interactionSource = interaction, indication = null, onClick = b.onClick, onLongClick = b.onLongClick),
+    ) {
+        if (b.icon != null) {
+            Icon(b.icon, stringResource(b.label), tint = LIGHT, modifier = Modifier.size(30.dp))
+        } else {
+            Text(stringResource(b.label), color = LIGHT, fontSize = 22.sp)
+        }
+    }
+}
+
+// --- Home ----------------------------------------------------------------------------------------------------------
+
+/** The home pages in a lit frame: clock and what is playing, then pinned apps as small widgets. */
+@Composable
+private fun AmbientHome(
+    pager: PagerState,
+    appPages: List<List<LauncherApp?>>,
+    media: MediaRepository,
+    actions: LauncherActions,
+    onAppMenu: (LauncherApp) -> Unit,
+) {
+    Frame(Modifier.fillMaxSize()) {
+        HorizontalPager(state = pager, beyondViewportPageCount = 1, modifier = Modifier.fillMaxSize()) { page ->
+            Row(Modifier.fillMaxSize().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                if (page == 0) {
+                    Widget(Modifier.weight(1f)) { ClockWidget() }
+                    Widget(Modifier.weight(1f), onClick = { actions.show(Screen.MEDIA) }) { MediaWidget(media, actions) }
+                } else {
+                    // Four small widgets: two by two.
+                    val apps = appPages[page - 1]
+                    for (col in 0 until 2) {
+                        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            for (row in 0 until 2) {
+                                val i = row * 2 + col
+                                val m = Modifier.weight(1f).fillMaxWidth()
+                                when {
+                                    i >= apps.size -> Spacer(m)
+                                    apps[i] == null -> Widget(m, onClick = { actions.show(Screen.APPS) }) { AppWidget(null, stringResource(R.string.ambient_add)) }
+                                    else -> {
+                                        val app = apps[i]!!
+                                        Widget(m, onClick = { actions.launch(app.component) }, onLongClick = { onAppMenu(app) }) { AppWidget(app, app.label) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** A panel lit from its edge: black, a thin line of the accent colour around it, its light rising from the bottom. */
+@Composable
+private fun Frame(
+    modifier: Modifier,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val accent = CarColors.Accent
+    Box(
+        modifier
+            .background(Color.Black)
+            .drawBehind { bottomGlow(accent, 0.45f) }
+            .border(BorderStroke(1.dp, accent)),
+        content = content,
+    )
+}
+
+/** The light of the accent colour along the bottom of a panel: nothing over its top 70 %, then rising to the edge. */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.bottomGlow(
+    accent: Color,
+    strength: Float,
+) = drawRect(
+    Brush.verticalGradient(
+        0f to Color.Transparent,
+        0.7f to Color.Transparent,
+        1f to accent.copy(alpha = strength),
+    ),
+)
+
+/** A widget: a frame whose bottom edge glows in the accent colour, brighter while pressed. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun Widget(
+    modifier: Modifier,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val accent = CarColors.Accent
+    Box(
+        modifier
+            .fillMaxHeight()
+            .background(Brush.verticalGradient(listOf(Color(0xFF15171B), Color.Black)))
+            .drawBehind { bottomGlow(accent, if (pressed) 0.8f else 0.4f) }
+            .border(BorderStroke(1.dp, if (pressed) accent else accent.copy(alpha = 0.7f)))
+            .then(
+                if (onClick != null) Modifier.combinedClickable(interactionSource = interaction, indication = null, onClick = onClick, onLongClick = onLongClick) else Modifier,
+            ),
+        content = content,
+    )
+}
+
+/** Analog clock with the date under it. */
+@Composable
+private fun BoxScope.ClockWidget() {
+    val now = rememberMinute()
+    val accent = CarColors.Accent
+    Column(Modifier.align(Alignment.Center).padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Canvas(Modifier.weight(1f, fill = false).aspectRatio(1f).heightIn(max = 260.dp)) {
+            val r = size.minDimension / 2
+            val c = Offset(size.width / 2, size.height / 2)
+            drawCircle(Brush.radialGradient(listOf(Color(0xFF1E2836), Color(0xFF0B1018)), center = c, radius = r), r, c)
+            drawCircle(Color(0xFF8C97A6), r, c, style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+            for (i in 0 until 60) {
+                val a = i * PI / 30
+                val inner = if (i % 5 == 0) r * 0.84f else r * 0.9f
+                drawLine(
+                    if (i % 5 == 0) LIGHT else DIM,
+                    Offset(c.x + (inner * sin(a)).toFloat(), c.y - (inner * cos(a)).toFloat()),
+                    Offset(c.x + (r * 0.95f * sin(a)).toFloat(), c.y - (r * 0.95f * cos(a)).toFloat()),
+                    if (i % 5 == 0) 4f else 1.5f,
+                )
+            }
+            val cal = java.util.Calendar.getInstance().apply { time = now }
+            val m = cal.get(java.util.Calendar.MINUTE)
+            val h = cal.get(java.util.Calendar.HOUR) + m / 60f
+            fun hand(
+                angle: Double,
+                length: Float,
+                width: Float,
+                color: Color,
+            ) = drawLine(color, c, Offset(c.x + (length * sin(angle)).toFloat(), c.y - (length * cos(angle)).toFloat()), width, StrokeCap.Round)
+            hand(h * PI / 6, r * 0.5f, 8f, LIGHT)
+            hand(m * PI / 30, r * 0.76f, 5f, LIGHT)
+            drawCircle(accent, 7f, c)
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            java.text.SimpleDateFormat(stringResource(R.string.ambient_date), java.util.Locale.getDefault()).format(now).replaceFirstChar { it.uppercase() },
+            color = DIM,
+            fontSize = 18.sp,
+        )
+    }
+}
+
+/** What is playing: cover, title, artist, previous / play / next. */
+@Composable
+private fun BoxScope.MediaWidget(
+    media: MediaRepository,
+    actions: LauncherActions,
+) {
+    val np by media.nowPlaying.collectAsStateWithLifecycle()
+    val p = np
+    Column(Modifier.fillMaxSize().padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Cover(p, Modifier.weight(1f, fill = false).aspectRatio(1f).heightIn(max = 180.dp))
+        Spacer(Modifier.height(12.dp))
+        Text(p?.title ?: stringResource(R.string.factory_no_media), color = LIGHT, fontSize = 22.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (!p?.subtitle.isNullOrEmpty()) Text(p!!.subtitle, color = DIM, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Spacer(Modifier.height(8.dp))
+        Transport(p?.playing == true, actions, small = true)
+    }
+}
+
+@Composable
+private fun BoxScope.AppWidget(
+    app: LauncherApp?,
+    label: String,
+) {
+    Row(Modifier.align(Alignment.CenterStart).padding(horizontal = 22.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (app != null) {
+            Image(app.icon, null, modifier = Modifier.size(56.dp))
+        } else {
+            GlowIcon(Icons.Outlined.Add, 56.dp)
+        }
+        Spacer(Modifier.width(18.dp))
+        Text(label, color = LIGHT, fontSize = 22.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+// --- Menu ----------------------------------------------------------------------------------------------------------
+
+private class AmbientTile(
+    val icon: ImageVector,
+    val label: Int,
+    val onClick: () -> Unit,
+)
+
+/** Menu: six tiles, three by two. */
+@Composable
+private fun AmbientMenu(actions: LauncherActions) {
+    val context = LocalContext.current
+    val tiles =
+        listOf(
+            AmbientTile(Icons.Outlined.Navigation, R.string.factory_navigation) { openNavigation(context, actions) },
+            AmbientTile(Icons.Outlined.MusicNote, R.string.ambient_multimedia) { actions.show(Screen.MEDIA) },
+            AmbientTile(Icons.Outlined.Phone, R.string.factory_phone) { openPackage(context, actions, DIALER) },
+            AmbientTile(Icons.Outlined.Apps, R.string.factory_apps) { actions.show(Screen.APPS) },
+            AmbientTile(Icons.Outlined.DirectionsCar, R.string.factory_vehicle) { actions.show(Screen.OBD) },
+            AmbientTile(Icons.Outlined.Settings, R.string.ambient_system) { actions.show(Screen.SETTINGS) },
+        )
+    val accent = CarColors.Accent
+    // Tiles side by side in thin grey frames, the ambient light rising behind the bottom row.
+    Column(
+        Modifier.fillMaxSize().padding(horizontal = 24.dp).drawBehind { bottomGlow(accent, 0.5f) },
+        verticalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        tiles.chunked(3).forEach { row ->
+            Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                row.forEach { t -> MenuTile(t, Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+/** A menu tile: black in a grey frame, icon over its name; pressed, the frame and a glow take the accent colour. */
+@Composable
+private fun MenuTile(
+    t: AmbientTile,
+    modifier: Modifier,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val accent = CarColors.Accent
+    Box(
+        modifier
+            .fillMaxHeight()
+            .background(Color.Black.copy(alpha = 0.75f))
+            .drawBehind { if (pressed) bottomGlow(accent, 0.8f) }
+            .border(BorderStroke(1.dp, if (pressed) accent else Color(0xFF3E434B)))
+            .clickable(interactionSource = interaction, indication = null, onClick = t.onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(t.icon, null, tint = Color(0xFFD8DCE2), modifier = Modifier.size(56.dp))
+            Spacer(Modifier.height(10.dp))
+            Text(stringResource(t.label), color = LIGHT, fontSize = 22.sp)
+        }
+    }
+}
+
+/** A white icon on a soft disc of the accent colour. */
+@Composable
+private fun GlowIcon(
+    icon: ImageVector,
+    size: androidx.compose.ui.unit.Dp,
+) {
+    val accent = CarColors.Accent
+    Box(
+        Modifier.size(size).drawBehind {
+            drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = 0.45f), Color.Transparent)), radius = this.size.minDimension * 0.62f)
+        },
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, null, tint = LIGHT, modifier = Modifier.size(size * 0.7f)) }
+}
+
+// --- Multimedia ----------------------------------------------------------------------------------------------------
+
+/** Multimedia: the cover on the left, title, artist and progress on the right, the controls under them. */
+@Composable
+private fun AmbientMedia(
+    media: MediaRepository,
+    actions: LauncherActions,
+) {
+    val access by media.hasAccess.collectAsStateWithLifecycle()
+    val np by media.nowPlaying.collectAsStateWithLifecycle()
+    Frame(Modifier.fillMaxSize()) {
+        val p = np
+        when {
+            !access ->
+                Text(
+                    stringResource(R.string.factory_no_access),
+                    color = DIM,
+                    fontSize = 22.sp,
+                    modifier = Modifier.align(Alignment.Center).clickable { actions.grantMediaAccess() },
+                )
+            p == null -> Text(stringResource(R.string.factory_no_media), color = DIM, fontSize = 22.sp, modifier = Modifier.align(Alignment.Center))
+            else ->
+                Row(Modifier.fillMaxSize().padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Cover(p, Modifier.fillMaxHeight(0.9f).aspectRatio(1f))
+                    Spacer(Modifier.width(32.dp))
+                    Column(Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Outlined.MusicNote, null, tint = DIM, modifier = Modifier.size(28.dp))
+                            Spacer(Modifier.width(14.dp))
+                            Text(p.title, color = LIGHT, fontSize = 30.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                        if (p.subtitle.isNotEmpty()) {
+                            Spacer(Modifier.height(14.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Outlined.Person, null, tint = DIM, modifier = Modifier.size(28.dp))
+                                Spacer(Modifier.width(14.dp))
+                                Text(p.subtitle, color = DIM, fontSize = 24.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                        if (p.durationMs > 0) {
+                            Spacer(Modifier.height(22.dp))
+                            ProgressLine(p)
+                        }
+                        Spacer(Modifier.height(22.dp))
+                        Transport(p.playing, actions, small = false)
+                    }
+                }
+        }
+    }
+}
+
+@Composable
+private fun Cover(
+    np: NowPlaying?,
+    modifier: Modifier,
+) {
+    val art = remember(np?.art) { np?.art?.asImageBitmap() }
+    val accent = CarColors.Accent
+    Box(
+        modifier
+            .drawBehind {
+                drawRect(Brush.radialGradient(listOf(accent.copy(alpha = 0.35f), Color.Transparent), center = Offset(size.width / 2, size.height), radius = size.width * 0.7f))
+            }.border(BorderStroke(1.dp, Color(0xFF5A6575))),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (art != null) {
+            Image(art, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        } else {
+            Box(Modifier.fillMaxSize().background(Color(0xFF111824)), contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.MusicNote, null, tint = DIM, modifier = Modifier.fillMaxSize(0.45f))
+            }
+        }
+    }
+}
+
+/** Progress of the track (shown only; seeking stays in the player and the media widgets). */
+@Composable
+private fun ProgressLine(np: NowPlaying) {
+    var position by remember { mutableLongStateOf(np.positionNow()) }
+    LaunchedEffect(np) {
+        position = np.positionNow()
+        while (np.playing) {
+            delay(1000L - position % 1000L)
+            position = np.positionNow()
+        }
+    }
+    val f = (position.toFloat() / np.durationMs).coerceIn(0f, 1f)
+    Column {
+        Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFF2A3442))) {
+            Box(Modifier.fillMaxWidth(f).fillMaxHeight().background(CarColors.Accent))
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            Text(time(position), color = DIM, fontSize = 15.sp)
+            Spacer(Modifier.weight(1f))
+            Text(time(np.durationMs), color = DIM, fontSize = 15.sp)
+        }
+    }
+}
+
+/** Previous, play / pause, next: round brushed buttons, the middle one lit by the accent colour. */
+@Composable
+private fun Transport(
+    playing: Boolean,
+    actions: LauncherActions,
+    small: Boolean,
+) {
+    val s = if (small) 44.dp else 64.dp
+    Row(horizontalArrangement = Arrangement.spacedBy(if (small) 14.dp else 24.dp), verticalAlignment = Alignment.CenterVertically) {
+        RoundButton(Icons.Outlined.SkipPrevious, s, false, actions.mediaPrevious)
+        RoundButton(if (playing) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, s * 1.2f, true, actions.mediaToggle)
+        RoundButton(Icons.Outlined.SkipNext, s, false, actions.mediaNext)
+    }
+}
+
+@Composable
+private fun RoundButton(
+    icon: ImageVector,
+    size: androidx.compose.ui.unit.Dp,
+    lit: Boolean,
+    onClick: () -> Unit,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Box(
+        Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(Brush.verticalGradient(0f to SHEEN, 0.2f to BAR_TOP, 0.5f to BAR_BOTTOM, 1f to Color.Black))
+            .border(BorderStroke(if (lit || pressed) 2.dp else 1.dp, if (lit || pressed) CarColors.Accent else Color(0xFF4A515B)), CircleShape)
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, null, tint = LIGHT, modifier = Modifier.size(size * 0.55f)) }
+}
+
+/** Sources: radio, disc, Android Auto, CarPlay and the music apps, in a lit frame. */
+@Composable
+private fun AmbientSources(
+    actions: LauncherActions,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val list = remember { mediaSources(context) }
+    Dialog(onDismissRequest = onDismiss) {
+        Frame(Modifier.width(520.dp)) {
+            Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                Text(stringResource(R.string.ambient_sources), color = LIGHT, fontSize = 24.sp, modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp))
+                LazyColumn(Modifier.heightIn(max = 380.dp)) {
+                    items(list, key = { it.component.flattenToString() }) { src ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onDismiss()
+                                        actions.launch(src.component)
+                                    }.padding(horizontal = 20.dp, vertical = 14.dp),
+                        ) {
+                            when {
+                                src.icon != null -> GlowIcon(src.icon, 40.dp)
+                                src.image != null -> Image(src.image, null, modifier = Modifier.size(40.dp))
+                                else -> GlowIcon(Icons.Outlined.PhoneAndroid, 40.dp)
+                            }
+                            Spacer(Modifier.width(18.dp))
+                            Text(src.label, color = LIGHT, fontSize = 22.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(1.dp).background(Color(0xFF243040)))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The current time, updated on each minute. */
+@Composable
+private fun rememberMinute(): java.util.Date {
+    var now by remember { mutableStateOf(java.util.Date()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            now = java.util.Date()
+            delay(1000L * (60 - (System.currentTimeMillis() / 1000) % 60))
+        }
+    }
+    return now
+}

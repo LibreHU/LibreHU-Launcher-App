@@ -65,6 +65,7 @@ class BridgeProvider : BridgeKitProvider() {
                     when (it) {
                         ThemeStyle.RETRO -> R.string.theme_style_retro
                         ThemeStyle.FACTORY -> R.string.theme_style_factory
+                        ThemeStyle.AMBIENT -> R.string.theme_style_ambient
                         ThemeStyle.MODERN -> R.string.theme_style_modern
                     },
                 )
