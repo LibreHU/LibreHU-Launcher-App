@@ -374,6 +374,8 @@
     <string name="aa_card_fullscreen">Android Auto en plein écran</string>
     <string name="aa_live_video">Image d\'Android Auto sur le tableau de bord (expérimental)</string>
     <string name="aa_live_video_hint">Pendant une projection, la carte Android Auto montre son image en direct, tactile, à la place de la prochaine manœuvre (Open Headunit LibreHU installé avant le launcher)</string>
+    <string name="aa_turn_popup">Directions d\'Android Auto en popup</string>
+    <string name="aa_turn_popup_hint">Chaque nouvelle direction de la navigation, puis un rappel à l\'approche, affichée quelques secondes par-dessus les autres écrans (pas sur Android Auto, qui l\'affiche déjà). Demande la permission de superposition, à l\'activation</string>
     <string name="wallpaper_online">Internet (image du jour)</string>
     <string name="wallpaper_online_source">Source</string>
     <string name="wallpaper_online_bing">Bing du jour</string>

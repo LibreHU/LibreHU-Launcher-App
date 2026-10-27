@@ -268,6 +268,11 @@ fun LookSettings(
         SettingSwitch(stringResource(R.string.aa_live_video), stringResource(R.string.aa_live_video_hint), s.aaLiveVideo) { on ->
             actions.setTheme { it.copy(aaLiveVideo = on) }
         }
+        val popupContext = LocalContext.current
+        SettingSwitch(stringResource(R.string.aa_turn_popup), stringResource(R.string.aa_turn_popup_hint), s.aaTurnPopup) { on ->
+            actions.setTheme { it.copy(aaTurnPopup = on) }
+            if (on) org.librehu.launcher.headunit.TurnPopup.ensurePermission(popupContext, ask = true)
+        }
         AaLowLatencySwitch()
 
         SettingSection(stringResource(R.string.drawer_title))

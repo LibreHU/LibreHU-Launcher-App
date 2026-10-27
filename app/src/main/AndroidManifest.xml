@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!-- Next maneuver of Android Auto from Open Headunit LibreHU (signature permission it declares). -->
     <uses-permission android:name="org.librehu.headunit.permission.NAVIGATION_UPDATE" />
+    <!-- Android Auto direction popup over the other screens (headunit/TurnPopup.kt), granted by root or by the user. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!-- Android Auto's picture in the dashboard card (Open Headunit LibreHU's LibreHuVideoService). -->
     <uses-permission android:name="org.librehu.headunit.permission.CONFIGURE" />
     <!-- The car's name and description from LibreHU-service (signature permission it declares). -->

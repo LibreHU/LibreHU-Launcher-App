@@ -181,6 +181,7 @@ class MainActivity : ComponentActivity() {
             start()
         }
         AndroidAutoLink.start(this) // Open Headunit's session and next maneuver for the dashboard
+        org.librehu.launcher.headunit.TurnPopup.start(this) // each direction in a popup over the other screens
         Thread({ VehicleLink.start(this) }, "vehicle").start() // the car's description from LibreHU-service
         apps.start()
         // Internet wallpaper: renewed when due (start, back to the front, then hourly while the launcher lives).
