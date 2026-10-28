@@ -99,7 +99,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   texte sombre, page avec touche retour encadrée et titre, interrupteurs en barres claires à case à cocher carrée,
   choix en touches encadrées ; barre d'état avec le globe à gauche de l'heure ; progression sur une ligne (écoulé,
   barre, temps restant). Fenêtres (menu d'une appli, marche / arrêt, confirmations) en cadre noir à filet blanc ;
-  **Retour revient à l'écran précédent** (historique des écrans), pas toujours au MENU. Mise en page inspirée de TheCarLauncher (LazarC11), réécrite : aucun
+  **Retour revient à l'écran précédent** (historique des écrans), pas toujours au MENU.
+  **Véhicule** : titre entre deux touches encadrées ‹ › qui passent d'« État du véhicule » (OBD) aux Pneus, touches du
+  bas Véhicule, Média et Réglages. Mise en page inspirée de TheCarLauncher (LazarC11), réécrite : aucun
   code ni dessin repris, icônes et couleurs de LibreHU. Les autres applis LibreHU le suivent pour l'instant comme le
   style moderne (`style` = `factory`).
 - **Style « LHU-Link »** (écran ambiance ; Paramètres → Personnalisation → Style) : l'allure d'une tablette de voiture connectée

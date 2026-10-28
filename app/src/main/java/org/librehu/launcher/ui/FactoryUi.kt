@@ -133,6 +133,7 @@ internal fun FactoryShell(
                     when (screen) {
                         Screen.MEDIA -> FactoryMedia(media, actions)
                         Screen.APPS -> FactoryApps(apps, look, actions, onAppMenu)
+                        Screen.OBD, Screen.TPMS -> FactoryVehicle(screen, actions, content)
                         else -> Box(Modifier.fillMaxSize().padding(12.dp)) { content() }
                     }
                 }
@@ -302,6 +303,49 @@ private fun TileIcon(
     icon: ImageVector,
     tint: Color,
 ) = Icon(icon, null, tint = tint, modifier = Modifier.size(64.dp))
+
+// --- Vehicle -------------------------------------------------------------------------------------------------------
+
+/** Vehicle pages (vehicle status = OBD, tyres): framed ‹ › keys around the title change page, soft keys at the bottom. */
+@Composable
+private fun FactoryVehicle(
+    screen: Screen,
+    actions: LauncherActions,
+    content: @Composable () -> Unit,
+) {
+    val pages = listOf(Screen.OBD to R.string.factory_vehicle_status, Screen.TPMS to R.string.tpms_title)
+    val i = pages.indexOfFirst { it.first == screen }.coerceAtLeast(0)
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            FramedKey(onClick = { actions.show(pages[(i + pages.size - 1) % pages.size].first) }) {
+                Icon(Icons.Outlined.ChevronLeft, null, tint = Color.White, modifier = Modifier.size(40.dp))
+            }
+            Text(
+                stringResource(pages[i].second),
+                color = Color.White,
+                fontFamily = FactoryFont,
+                fontSize = 32.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.weight(1f),
+            )
+            FramedKey(onClick = { actions.show(pages[(i + 1) % pages.size].first) }) {
+                Icon(Icons.Outlined.ChevronRight, null, tint = Color.White, modifier = Modifier.size(40.dp))
+            }
+        }
+        Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 12.dp)) { content() }
+        SoftKeys(
+            listOf(
+                SoftKey(R.string.factory_vehicle, Icons.Outlined.DirectionsCar) { actions.show(pages[(i + 1) % pages.size].first) },
+                SoftKey(R.string.factory_media, Icons.Outlined.MusicNote) { actions.show(Screen.MEDIA) },
+                null,
+                null,
+                null,
+                null,
+                SoftKey(R.string.factory_setup, Icons.Outlined.Settings) { actions.show(Screen.SETTINGS) },
+            ),
+        )
+    }
+}
 
 // --- Status bar ----------------------------------------------------------------------------------------------------
 

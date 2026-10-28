@@ -616,6 +616,7 @@
     <string name="factory_no_app">Non installée</string>
     <string name="factory_carplay">CarPlay</string>
     <string name="factory_menu">MENU</string>
+    <string name="factory_vehicle_status">État du véhicule</string>
     <string name="factory_add">Ajouter</string>
     <string name="factory_search">Recherche</string>
     <string name="factory_all">Tout</string>
