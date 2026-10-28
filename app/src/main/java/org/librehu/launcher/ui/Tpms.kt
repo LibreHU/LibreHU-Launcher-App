@@ -94,8 +94,7 @@ fun TpmsCard(
     Column(
         modifier =
             modifier
-                .clip(carShape(28.dp))
-                .background(CarColors.Surface)
+                .carPanel(28.dp, CarColors.Surface)
                 .clickable(onClick = onOpen)
                 .padding(14.dp),
     ) {
@@ -402,8 +401,7 @@ fun TpmsScreen() {
             Modifier
                 .weight(1.2f)
                 .fillMaxHeight()
-                .clip(carShape(28.dp))
-                .background(CarColors.Surface)
+                .carPanel(28.dp, CarColors.Surface)
                 .padding(20.dp),
         ) {
             Text(stringResource(R.string.tpms_title), color = CarColors.Text, fontSize = 24.sp, fontWeight = FontWeight.Medium)
@@ -459,8 +457,7 @@ fun TpmsScreen() {
             Modifier
                 .weight(1f)
                 .fillMaxHeight()
-                .clip(carShape(28.dp))
-                .background(CarColors.Surface)
+                .carPanel(28.dp, CarColors.Surface)
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -656,8 +653,7 @@ private fun BleSensors(
         Column(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(CarColors.SurfaceHigh)
+                .carPanel(18.dp, CarColors.SurfaceHigh, inner = true)
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -765,6 +761,7 @@ private fun Threshold(
 
 @Composable
 private fun Section(title: String) {
+    if (settingLook != SettingLook.MATERIAL) return StyledSection(title)
     Text(title, color = CarColors.Accent, fontSize = 18.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 8.dp))
 }
 
@@ -779,6 +776,7 @@ private fun Pill(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
+    if (settingLook != SettingLook.MATERIAL) return StyledChoice(label, selected, onClick)
     Text(
         label,
         color = if (selected) CarColors.OnAccent else CarColors.Text,
