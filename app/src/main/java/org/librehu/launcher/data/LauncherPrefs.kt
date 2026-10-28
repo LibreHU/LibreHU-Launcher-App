@@ -136,6 +136,16 @@ class LauncherPrefs(
         P4_2("slot_p4_2"),
         P4_3("slot_p4_3"),
         P4_4("slot_p4_4"),
+
+        // LHU-Link (ambient style): its own two pages of four widgets after the app pages.
+        A1("slot_a1"),
+        A2("slot_a2"),
+        A3("slot_a3"),
+        A4("slot_a4"),
+        A5("slot_a5"),
+        A6("slot_a6"),
+        A7("slot_a7"),
+        A8("slot_a8"),
         ;
 
         companion object {
@@ -143,6 +153,9 @@ class LauncherPrefs(
             fun ofPage(page: Int): List<Slot> = (1..4).map { valueOf("P${page}_$it") }
 
             /** The slots of the [pages] home pages shown, in order (a widget moves to the previous / next one). */
+            /** The LHU-Link widget slots, four by page. */
+            val ambient: List<List<Slot>> = listOf(listOf(A1, A2, A3, A4), listOf(A5, A6, A7, A8))
+
             fun shown(pages: Int): List<Slot> = listOf(MAIN, SIDE) + (2..pages).flatMap { ofPage(it) }
 
             /** Width of a slot: the main one's against the column beside it, a page's in its row (none: SIDE). */

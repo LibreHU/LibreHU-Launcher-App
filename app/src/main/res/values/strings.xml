@@ -630,6 +630,7 @@
     <string name="ambient_options">Options</string>
     <string name="ambient_back">Back</string>
     <string name="ambient_add">Add an app</string>
+    <string name="ambient_add_widget">Add a widget</string>
     <string name="ambient_home_pages">Home pages</string>
     <string name="ambient_display">Display</string>
     <string name="ambient_brightness">Brightness</string>

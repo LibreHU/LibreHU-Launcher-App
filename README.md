@@ -112,7 +112,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   d'ambiance** (lueur montant du bas, cadres, boutons). **Barre du haut** : heure, raccourcis carte et audio encadrés,
   points de page, téléphone encadré, météo, filet de la couleur d'accent. **Pages d'accueil** dans un cadre éclairé :
   horloge analogique + date et lecture en cours (pochette, titre, précédent / lecture / suivant), puis les applis
-  épinglées en petits widgets par quatre, terminées par « Ajouter une appli ». **Menu** de six tuiles (Navigation,
+  épinglées en petits widgets par quatre, terminées par « Ajouter une appli », puis **deux pages de vrais widgets Android**
+  (quatre par page, « Ajouter un widget » sur une case vide, touche ⋮ dans le coin : Remplacer / Retirer). **Menu** de six tuiles (Navigation,
   Multimédia, Téléphone, Applis, Véhicule, Système) aux icônes « métal brossé », qui s'ouvrent en zoom, et
   **sous-menus** comme l'original : Navigation (Destination, Carte, Réglages), Multimédia (Radio, Média, Photo,
   Vidéo, Réglages du son), Téléphone (Répertoire, Historique des appels, Composer numéro, Smartphone, Réglages : onglets

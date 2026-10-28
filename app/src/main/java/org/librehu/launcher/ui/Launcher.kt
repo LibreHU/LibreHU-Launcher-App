@@ -208,6 +208,7 @@ fun LauncherScreen(
 ) {
     val apps by appsRepo.apps.collectAsStateWithLifecycle()
     val pins by prefs.pins.collectAsStateWithLifecycle()
+    val slots by prefs.slots.collectAsStateWithLifecycle()
     val look by theme.settings.collectAsStateWithLifecycle()
     val sos by SosStore
         .get(LocalContext.current)
@@ -247,7 +248,7 @@ fun LauncherScreen(
 
             // Ambient screen theme: home pages of widgets, a menu of six tiles, a bar of buttons at the bottom.
             ambient -> {
-                AmbientShell(screen, apps, pins, media, actions, onAppMenu = { menuFor = it }, wallpaper = styleWallpaper) { content() }
+                AmbientShell(screen, apps, pins, media, actions, onAppMenu = { menuFor = it }, widgets = widgets, slots = slots, wallpaper = styleWallpaper) { content() }
             }
 
             look.rail == RailPosition.BOTTOM -> {
@@ -1124,14 +1125,14 @@ private fun EmptySlot(
 }
 
 @Composable
-private fun WidgetPicker(
+internal fun WidgetPicker(
     widgets: WidgetHost,
     onDismiss: () -> Unit,
     onPick: (ComponentName) -> Unit,
 ) {
     val context = LocalContext.current
     val providers: List<AppWidgetProviderInfo> = remember { widgets.providers.sortedBy { it.loadLabel(context.packageManager) } }
-    AlertDialog(
+    CarAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.add_widget)) },
         text = {

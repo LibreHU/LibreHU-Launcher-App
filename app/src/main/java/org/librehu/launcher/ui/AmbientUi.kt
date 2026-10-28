@@ -90,6 +90,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
@@ -118,6 +119,7 @@ import org.librehu.launcher.R
 import org.librehu.launcher.data.AndroidAutoLink
 import org.librehu.launcher.data.LauncherApp
 import org.librehu.launcher.data.LauncherPrefs
+import org.librehu.launcher.data.WidgetHost
 import org.librehu.launcher.data.MediaRepository
 import org.librehu.launcher.data.NowPlaying
 
@@ -154,6 +156,9 @@ internal fun AmbientShell(
     media: MediaRepository,
     actions: LauncherActions,
     onAppMenu: (LauncherApp) -> Unit,
+    /** Android app widgets on the LHU-Link pages after the apps ([LauncherPrefs.Slot.ambient]). */
+    widgets: WidgetHost,
+    slots: Map<LauncherPrefs.Slot, Int>,
     /** The wallpaper shows behind (dimmed) instead of black. */
     wallpaper: Boolean = false,
     content: @Composable () -> Unit,
@@ -164,7 +169,13 @@ internal fun AmbientShell(
     val pinned = pins.mapNotNull { byKey[it] }
     // Home page 0: clock and what is playing; then pinned apps four by page, the last page ending with Add.
     val appPages = (pinned.map<LauncherApp, LauncherApp?> { it } + null).chunked(4)
-    val pager = rememberPagerState { 1 + appPages.size }
+    // Then the widget pages: the first one always, the second once the first is full or holds something.
+    val widgetPages =
+        LauncherPrefs.Slot.ambient.filterIndexed { i, page ->
+            i == 0 || page.any { (slots[it] ?: LauncherPrefs.NO_WIDGET) >= 0 } ||
+                LauncherPrefs.Slot.ambient[i - 1].all { (slots[it] ?: LauncherPrefs.NO_WIDGET) >= 0 }
+        }
+    val pager = rememberPagerState { 1 + appPages.size + widgetPages.size }
     var sources by remember { mutableStateOf(false) }
     // The menu and its sub-menus (Navigation, Multimedia, Phone, Apps): kept while a tile's screen is open, so Back
     // comes back to the same sub-menu; the menu itself again after the home screen.
@@ -206,7 +217,7 @@ internal fun AmbientShell(
             )
             Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                 when (screen) {
-                    Screen.HOME -> AmbientHome(pager, appPages, media, actions, onAppMenu)
+                    Screen.HOME -> AmbientHome(pager, appPages, widgetPages, widgets, slots, media, actions, onAppMenu) { options = it }
                     Screen.MENU -> AmbientMenu(section, { section = it }, actions)
                     Screen.MEDIA -> AmbientMedia(media, actions)
                     Screen.APPS -> AmbientApps(apps, actions, onAppMenu)
@@ -383,9 +394,13 @@ private fun RowScope.BarButton(b: AmbientButton) {
 private fun AmbientHome(
     pager: PagerState,
     appPages: List<List<LauncherApp?>>,
+    widgetPages: List<List<LauncherPrefs.Slot>>,
+    widgets: WidgetHost,
+    slots: Map<LauncherPrefs.Slot, Int>,
     media: MediaRepository,
     actions: LauncherActions,
     onAppMenu: (LauncherApp) -> Unit,
+    onOptions: (List<AmbientOption>) -> Unit,
 ) {
     Frame(Modifier.fillMaxSize()) {
         HorizontalPager(state = pager, beyondViewportPageCount = 1, modifier = Modifier.fillMaxSize()) { page ->
@@ -393,6 +408,17 @@ private fun AmbientHome(
                 if (page == 0) {
                     Widget(Modifier.weight(1f)) { ClockWidget() }
                     Widget(Modifier.weight(1f), onClick = { actions.show(Screen.MEDIA) }) { MediaWidget(media, actions) }
+                } else if (page > appPages.size) {
+                    // Android app widgets, two by two.
+                    val pageSlots = widgetPages[page - 1 - appPages.size]
+                    for (col in 0 until 2) {
+                        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            for (row in 0 until 2) {
+                                val slot = pageSlots[row * 2 + col]
+                                AmbientWidgetSlot(slot, slots[slot] ?: LauncherPrefs.NO_WIDGET, widgets, actions, Modifier.weight(1f).fillMaxWidth(), onOptions)
+                            }
+                        }
+                    }
                 } else {
                     // Four small widgets: two by two.
                     val apps = appPages[page - 1]
@@ -414,6 +440,69 @@ private fun AmbientHome(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * An app widget in a frame of the accent colour; empty, an "Add a widget" tile opening the list of widgets. A long
+ * press on a widget: the Options pop-up (replace, remove).
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun AmbientWidgetSlot(
+    slot: LauncherPrefs.Slot,
+    appWidgetId: Int,
+    widgets: WidgetHost,
+    actions: LauncherActions,
+    modifier: Modifier,
+    onOptions: (List<AmbientOption>) -> Unit,
+) {
+    var picking by remember { mutableStateOf(false) }
+    val hostView = remember(appWidgetId) { if (appWidgetId >= 0) widgets.createView(appWidgetId) else null }
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    if (hostView == null) {
+        Widget(modifier, onClick = { picking = true }) { AppWidget(null, stringResource(R.string.ambient_add_widget)) }
+    } else {
+        val menu =
+            listOf(
+                AmbientOption(R.string.replace) { picking = true },
+                AmbientOption(R.string.remove) { actions.removeWidget(slot) },
+            )
+        Box(
+            modifier
+                .fillMaxHeight()
+                .background(Color.Black)
+                .border(BorderStroke(1.dp, CarColors.Accent))
+                .padding(1.dp)
+                .onSizeChanged { px ->
+                    val w = (px.width / density).toInt()
+                    val h = (px.height / density).toInt()
+                    @Suppress("DEPRECATION")
+                    if (w > 0 && h > 0) hostView.updateAppWidgetSize(null, w, h, w, h)
+                },
+        ) {
+            androidx.compose.runtime.key(appWidgetId) {
+                androidx.compose.ui.viewinterop.AndroidView(factory = { hostView }, modifier = Modifier.fillMaxSize())
+            }
+            if (hostView.appWidgetInfo?.provider == REAR_WIDGET) androidx.compose.runtime.key(appWidgetId) { RearLive(Modifier.fillMaxSize()) }
+            // The widget keeps its own touches; the small key in the corner opens the menu (a long press would not
+            // reach the launcher through the widget's views).
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .size(40.dp)
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .border(BorderStroke(1.dp, CarColors.Accent))
+                    .combinedClickable(onClick = { onOptions(menu) }),
+                contentAlignment = Alignment.Center,
+            ) { Icon(Icons.Outlined.MoreVert, null, tint = LIGHT, modifier = Modifier.size(24.dp)) }
+        }
+    }
+    if (picking) {
+        WidgetPicker(widgets, onDismiss = { picking = false }) { provider ->
+            picking = false
+            actions.addWidget(slot, provider)
         }
     }
 }
