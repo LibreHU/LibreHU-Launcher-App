@@ -153,9 +153,10 @@ internal fun AmbientShell(
     val appPages = (pinned.map<LauncherApp, LauncherApp?> { it } + null).chunked(4)
     val pager = rememberPagerState { 1 + appPages.size }
     var sources by remember { mutableStateOf(false) }
-    // The menu and its sub-menus (Navigation, Multimedia, Phone, Apps), back to the menu itself off the menu screen.
+    // The menu and its sub-menus (Navigation, Multimedia, Phone, Apps): kept while a tile's screen is open, so Back
+    // comes back to the same sub-menu; the menu itself again after the home screen.
     var section by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(AmbientSection.ROOT) }
-    androidx.compose.runtime.LaunchedEffect(screen) { if (screen != Screen.MENU) section = AmbientSection.ROOT }
+    androidx.compose.runtime.LaunchedEffect(screen) { if (screen == Screen.HOME) section = AmbientSection.ROOT }
     // Pop-up menu of the Options key (null: closed).
     var options by remember { mutableStateOf<List<AmbientOption>?>(null) }
     Box(
@@ -199,12 +200,14 @@ internal fun AmbientShell(
                 }
             }
             // Back: one step up (a sub-menu to the menu, the menu to home…); a long press, straight home.
+            val backDispatcher = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
             val back =
                 AmbientButton(R.string.ambient_back, Icons.AutoMirrored.Outlined.Undo, onLongClick = { actions.show(Screen.HOME) }) {
                     when {
                         screen == Screen.MENU && section != AmbientSection.ROOT -> section = AmbientSection.ROOT
-                        screen == Screen.MENU -> actions.show(Screen.HOME)
-                        else -> actions.show(Screen.MENU)
+                        // The screen shown before (MainActivity keeps the trail).
+                        backDispatcher != null -> backDispatcher.onBackPressed()
+                        else -> actions.show(Screen.HOME)
                     }
                 }
             val optionList = ambientOptions(screen, actions) { sources = true }

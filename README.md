@@ -98,7 +98,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   long sur une appli = son menu (épingler…). **Réglages** à la façon d'origine : liste des pages en barres gris clair à
   texte sombre, page avec touche retour encadrée et titre, interrupteurs en barres claires à case à cocher carrée,
   choix en touches encadrées ; barre d'état avec le globe à gauche de l'heure ; progression sur une ligne (écoulé,
-  barre, temps restant). Mise en page inspirée de TheCarLauncher (LazarC11), réécrite : aucun
+  barre, temps restant). Fenêtres (menu d'une appli, marche / arrêt, confirmations) en cadre noir à filet blanc ;
+  **Retour revient à l'écran précédent** (historique des écrans), pas toujours au MENU. Mise en page inspirée de TheCarLauncher (LazarC11), réécrite : aucun
   code ni dessin repris, icônes et couleurs de LibreHU. Les autres applis LibreHU le suivent pour l'instant comme le
   style moderne (`style` = `factory`).
 - **Style « LHU-Link »** (écran ambiance ; Paramètres → Personnalisation → Style) : l'allure d'une tablette de voiture connectée
@@ -114,7 +115,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   de LibreHU Téléphone), Apps (Mes apps, LibreHU Apps, Gestionnaire des apps). **Retour** remonte d'un niveau, appui
   long = accueil. Touche **Options** : menu surgissant encadré (accueil : modifier les pages, changer de thème, date et
   heure, écran noir ; Multimédia : sources, ouvrir le lecteur, réglages du son), grisée là où il n'y a rien.
-  **Réglages** en lignes noires séparées par un filet, flèche vers chaque page, interrupteurs ON / OFF. **Barre de boutons en bas** : Menu / Retour, l'action principale
+  **Réglages** en lignes noires séparées par un filet, flèche vers chaque page, interrupteurs ON / OFF. Fenêtres
+  (menu d'une appli, marche / arrêt, confirmations) en bleu nuit à filet d'accent ; Retour revient à l'écran précédent
+  (le sous-menu d'où l'on vient compris). **Barre de boutons en bas** : Menu / Retour, l'action principale
   de l'écran (Android Auto dans le menu, appui long : CarPlay ; Sources dans Multimédia) et Options. Écran
   **Multimédia** : pochette, titre, artiste, progression et boutons ronds. Les autres applis LibreHU le suivent comme
   le style moderne (`style` = `ambient`).

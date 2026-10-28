@@ -225,7 +225,7 @@ fun PowerMenu(
     onDismiss: () -> Unit,
     onChoice: (PowerChoice) -> Unit,
 ) {
-    AlertDialog(
+    CarAlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.PowerSettingsNew, null, tint = CarColors.Accent) },
         title = { Text(stringResource(R.string.power_title)) },
