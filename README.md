@@ -117,7 +117,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   de LibreHU Téléphone), Apps (Mes apps, LibreHU Apps, Gestionnaire des apps). **Retour** remonte d'un niveau, appui
   long = accueil. Touche **Options** : menu surgissant encadré (accueil : modifier les pages, changer de thème, date et
   heure, écran noir ; Multimédia : sources, ouvrir le lecteur, réglages du son), grisée là où il n'y a rien.
-  **Réglages** en lignes noires séparées par un filet, flèche vers chaque page, interrupteurs ON / OFF. Fenêtres
+  **Réglages** en lignes noires séparées par un filet dans un cadre d'accent, flèche ▶ vers chaque page, interrupteurs
+  ON | OFF dont l'état en vigueur est marqué d'un trait rouge (le rouge de sélection de l'original). Fenêtres
   (menu d'une appli, marche / arrêt, confirmations) en bleu nuit à filet d'accent ; Retour revient à l'écran précédent
   (le sous-menu d'où l'on vient compris) ; **Mes apps** en tuiles encadrées quatre par ligne (appui long : menu de l'appli).
   **Multimédia** comme le lecteur d'origine : onglets Lecture / Sources ; Lecture = pochette, titre, artiste, barre de
