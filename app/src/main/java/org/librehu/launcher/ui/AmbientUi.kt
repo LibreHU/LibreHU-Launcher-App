@@ -196,6 +196,7 @@ internal fun AmbientShell(
                     Screen.HOME -> AmbientHome(pager, appPages, media, actions, onAppMenu)
                     Screen.MENU -> AmbientMenu(section, { section = it }, actions)
                     Screen.MEDIA -> AmbientMedia(media, actions)
+                    Screen.APPS -> AmbientApps(apps, actions, onAppMenu)
                     else -> content()
                 }
             }
@@ -708,6 +709,52 @@ private fun MetalIcon(
                 )
             },
 )
+
+// --- Apps --------------------------------------------------------------------------------------------------------
+
+/** My apps: every app as a tile framed in the accent colour, four by row, sorted by name. Long press: its menu. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun AmbientApps(
+    apps: List<LauncherApp>,
+    actions: LauncherActions,
+    onAppMenu: (LauncherApp) -> Unit,
+) {
+    val look by org.librehu.launcher.data.ThemeStore
+        .get(LocalContext.current)
+        .settings
+        .collectAsStateWithLifecycle()
+    val shown = remember(apps, look.hiddenApps) { apps.filter { it.key !in look.hiddenApps }.sortedBy { it.label.lowercase() } }
+    val accent = CarColors.Accent
+    androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+        columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(4),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        items(shown.size, key = { shown[it].key }) { i ->
+            val app = shown[i]
+            val interaction = remember { MutableInteractionSource() }
+            val pressed by interaction.collectIsPressedAsState()
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier =
+                    Modifier
+                        .height(150.dp)
+                        .background(Color.Black.copy(alpha = 0.75f))
+                        .drawBehind { if (pressed) bottomGlow(deep(accent), 0.9f) }
+                        .border(BorderStroke(1.dp, accent))
+                        .combinedClickable(interactionSource = interaction, indication = null, onClick = { actions.launch(app.component) }, onLongClick = { onAppMenu(app) })
+                        .padding(8.dp),
+            ) {
+                Image(app.icon, null, modifier = Modifier.size(64.dp))
+                Spacer(Modifier.height(10.dp))
+                Text(app.label, color = LIGHT, fontSize = 19.sp, fontWeight = FontWeight.Light, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
 
 // --- Options pop-up ------------------------------------------------------------------------------------------------
 
