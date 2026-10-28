@@ -65,6 +65,12 @@ import org.librehu.launcher.ui.showPowerMenu
 
 /** Home screen: dashboard (widgets + now playing), app grid, and the shortcut rail. */
 class MainActivity : ComponentActivity() {
+    /** A click on each tap, the sound of LibreHU Launcher's style (see KeyClick). */
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        org.librehu.launcher.ui.KeyClick.onTouch(this, ev, org.librehu.launcher.data.ThemeStore.get(this).settings.value.style.name.lowercase())
+        return super.dispatchTouchEvent(ev)
+    }
+
     private lateinit var apps: AppsRepository
     private lateinit var prefs: LauncherPrefs
     private lateinit var media: MediaRepository

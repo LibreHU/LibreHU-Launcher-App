@@ -134,6 +134,11 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   de l'écran (Android Auto dans le menu, appui long : CarPlay ; Sources dans Multimédia) et Options. Écran
   **Multimédia** : pochette, titre, artiste, progression et boutons ronds. Le launcher **demande ce style aux autres
   applis LibreHU** (`style` = `ambient`) : elles prennent sa palette, des formes carrées et un texte fin.
+- **Son des touches** : chaque toucher (sans glisser ni appui long) fait un petit son selon le style : tic doux
+  (moderne), bip d'autoradio (rétro), « toc » amorti (Modularer Infotainment-Baukasten), bip électronique montant
+  (LHU-Link). Les autres applis LibreHU font le même son (elles suivent le style demandé par le launcher). Sons propres à
+  LibreHU, synthétisés (`res/raw/click_*.wav`, `ui/KeyClick.kt`) ; coupé quand les « Sons des touches » d'Android sont
+  désactivés (Paramètres → Son).
 - **Couleur d'accent** : 8 couleurs ou la **roue RGB** (rouge, vert, bleu de 0 à 255, aperçu et valeur hexadécimale) ;
   elle colore le thème, le style rétro, les pixels des animations d'afficheur et toutes les applis LibreHU.
 - **Police** : normale ou **afficheur à segments** (LibreHU Seg14 : DSEG14, celle de l'afficheur rétro de LibreHU-Disc,
