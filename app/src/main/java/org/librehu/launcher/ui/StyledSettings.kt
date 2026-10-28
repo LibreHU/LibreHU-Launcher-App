@@ -21,8 +21,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Undo
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -63,6 +63,10 @@ private val BAR_TEXT = Color(0xFF1C1D1F)
 private val BAR_VALUE = Color(0xFF55575B)
 private val AMBIENT_LINE = Color(0xFF3A414B)
 
+// The original's mark of what is selected / in force (radio preset, ON / OFF): red whatever the ambient colour.
+private val SELECTION = Color(0xFFCE0300)
+private val SELECTION_GLOW = Color(0xFF8B0F00)
+
 /**
  * The page frame of the styled settings: a title with a back key when on a page, the accent line under it, the list
  * of pages ([entries], by name) or the open page scrolled.
@@ -94,7 +98,11 @@ internal fun StyledSettingsFrame(
         }
         Box(Modifier.fillMaxWidth().height(if (look == SettingLook.FACTORY) 2.dp else 1.dp).background(CarColors.Accent))
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 12.dp),
+            Modifier
+                .fillMaxSize()
+                .then(if (look == SettingLook.AMBIENT) Modifier.padding(top = 8.dp).border(BorderStroke(1.dp, CarColors.Accent)) else Modifier)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(if (look == SettingLook.FACTORY) 10.dp else 6.dp),
         ) {
             if (open == null) {
@@ -117,7 +125,7 @@ private fun StyledEntry(
     } else {
         AmbientRow(onClick) {
             Text(name, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Light, modifier = Modifier.weight(1f))
-            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = Color.White, modifier = Modifier.size(36.dp))
+            Icon(Icons.Filled.PlayArrow, null, tint = Color.White, modifier = Modifier.size(30.dp))
         }
     }
 }
@@ -252,24 +260,29 @@ internal fun StyledSwitch(
                 if (subtitle != null) Text(subtitle, color = Color(0xFF98A3B0), fontSize = 15.sp)
             }
             Spacer(Modifier.width(16.dp))
-            // Two halves, the active one lit: like the ON / OFF keys of the original.
+            // ON | OFF keys like the original: both brushed, the state in force marked by a red bar under its word.
             Row(Modifier.border(BorderStroke(1.dp, CarColors.Accent))) {
                 for (on in listOf(true, false)) {
                     val active = on == checked
                     Box(
                         Modifier
-                            .width(64.dp)
-                            .height(44.dp)
-                            .background(
-                                if (active) {
-                                    Brush.verticalGradient(0.0225f to Color(0xFF75716C), 0.4581f to Color.Black, 1f to CarColors.Accent)
-                                } else {
-                                    Brush.verticalGradient(listOf(Color.Black, Color.Black))
-                                },
-                            ),
+                            .width(68.dp)
+                            .height(46.dp)
+                            .background(Brush.verticalGradient(0.0225f to Color(0xFF75716C), 0.4581f to Color.Black, 1f to CarColors.Accent.copy(alpha = 0.6f).compositeOverBlack())),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(if (on) "ON" else "OFF", color = if (active) Color.White else Color(0xFF6E7681), fontSize = 17.sp)
+                        Text(if (on) "ON" else "OFF", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Light)
+                        if (active) {
+                            Box(
+                                Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(bottom = 5.dp)
+                                    .width(44.dp)
+                                    .height(4.dp)
+                                    .background(SELECTION_GLOW)
+                                    .border(BorderStroke(1.dp, SELECTION)),
+                            )
+                        }
                     }
                 }
             }
