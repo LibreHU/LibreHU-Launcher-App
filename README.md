@@ -115,7 +115,10 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   **sous-menus** comme l'original : Navigation (Destination, Carte, Réglages), Multimédia (Radio, Média, Photo,
   Vidéo, Réglages du son), Téléphone (Répertoire, Historique des appels, Composer numéro, Smartphone, Réglages : onglets
   de LibreHU Téléphone), Apps (Mes apps, LibreHU Apps, Gestionnaire des apps). Là où l'original afficherait le logo
-  de son constructeur (la tuile de sa boutique), LHU-Link montre **un cric** dessiné par LibreHU. **Retour** remonte d'un niveau, appui
+  de son constructeur (la tuile de sa boutique), LHU-Link montre **un cric** dessiné par LibreHU.
+  **Véhicule** (Ambiance lumineuse, Aides à la conduite, Aides stationnement, Ordinateur de bord = OBD, Pneus) : la page
+  **Ambiance lumineuse** propose les cinq couleurs de l'original (vert, rouge, bleu, violet, ambre) et en fait la couleur
+  d'accent ; **Système** (Pages d'accueil, Affichage, Luminosité, Volume, Langue, Date et heure, Informations système). **Retour** remonte d'un niveau, appui
   long = accueil. Touche **Options** : menu surgissant encadré (accueil : modifier les pages, changer de thème, date et
   heure, écran noir ; Multimédia : sources, ouvrir le lecteur, réglages du son), grisée là où il n'y a rien.
   **Réglages** en lignes noires séparées par un filet dans un cadre d'accent, flèche ▶ vers chaque page, interrupteurs
