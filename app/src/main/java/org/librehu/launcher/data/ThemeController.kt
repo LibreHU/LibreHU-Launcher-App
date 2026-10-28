@@ -55,7 +55,7 @@ class ThemeController(
                 _dark.value = dark
                 val palette = CarPalette.of(dark, s.accentColor(dark), translucent = wallpaper, style = s.style, segment = s.segmentFont)
                 CarColors.palette = palette
-                ThemeProvider.publish(context, palette)
+                ThemeProvider.publish(context, palette, s.clickSound())
                 if (s.systemWide) setSystemNightMode(dark)
             }
         }

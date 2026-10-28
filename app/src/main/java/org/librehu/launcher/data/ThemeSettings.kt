@@ -110,6 +110,12 @@ enum class SpectrumPalette(
     VIOLET(0xFF8000FF, 0xFFB366FF, 0xFFFFFFFF),
 }
 
+/** Key click sound of the style in force: the one chosen for it, its default, or KeyClick.OFF. */
+fun ThemeSettings.clickSound(): String {
+    val st = style.name.lowercase()
+    return if (!keyClicks) org.librehu.launcher.ui.KeyClick.OFF else clickSounds[st] ?: org.librehu.launcher.ui.KeyClick.default(st)
+}
+
 /** The accent colour itself: the chosen one, light or dark variant, or the custom colour. */
 fun ThemeSettings.accentColor(dark: Boolean): androidx.compose.ui.graphics.Color =
     if (accent == Accent.CUSTOM) androidx.compose.ui.graphics.Color(customAccent) else accent.color(dark)
@@ -167,6 +173,10 @@ data class ThemeSettings(
     val rightHandDrive: Boolean = false,
     /** Built-in animated wallpapers drawn by the GPU (OpenGL ES shaders) instead of the usual drawing. */
     val gpuAnimations: Boolean = false,
+    /** A short sound on each tap, in the launcher and every LibreHU app. */
+    val keyClicks: Boolean = true,
+    /** Key click sound chosen for each style (style name in lower case → name of KeyClick.SOUNDS); else its default. */
+    val clickSounds: Map<String, String> = emptyMap(),
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -227,6 +237,8 @@ class ThemeStore private constructor(
             .putBoolean("widget_layout", s.widgetLayout)
             .putBoolean("right_hand_drive", s.rightHandDrive)
             .putBoolean("gpu_animations", s.gpuAnimations)
+            .putBoolean("key_clicks", s.keyClicks)
+            .putString("click_sounds", s.clickSounds.entries.joinToString(";") { "${it.key}=${it.value}" })
             .apply()
         _settings.value = s
     }
@@ -454,6 +466,14 @@ class ThemeStore private constructor(
             widgetLayout = prefs.getBoolean("widget_layout", false),
             rightHandDrive = prefs.getBoolean("right_hand_drive", false),
             gpuAnimations = prefs.getBoolean("gpu_animations", false),
+            keyClicks = prefs.getBoolean("key_clicks", true),
+            clickSounds =
+                prefs
+                    .getString("click_sounds", "")
+                    .orEmpty()
+                    .split(';')
+                    .mapNotNull { e -> e.split('=').takeIf { it.size == 2 && it[0].isNotBlank() }?.let { it[0] to it[1] } }
+                    .toMap(),
         )
     }
 

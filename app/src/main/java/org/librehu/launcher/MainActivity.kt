@@ -1,5 +1,6 @@
 package org.librehu.launcher
 
+import org.librehu.launcher.data.clickSound
 import android.app.Activity
 import android.app.WallpaperManager
 import android.appwidget.AppWidgetManager
@@ -65,9 +66,9 @@ import org.librehu.launcher.ui.showPowerMenu
 
 /** Home screen: dashboard (widgets + now playing), app grid, and the shortcut rail. */
 class MainActivity : ComponentActivity() {
-    /** A click on each tap, the sound of LibreHU Launcher's style (see KeyClick). */
+    /** A click on each tap, the sound chosen for the style in force (see KeyClick). */
     override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
-        org.librehu.launcher.ui.KeyClick.onTouch(this, ev, org.librehu.launcher.data.ThemeStore.get(this).settings.value.style.name.lowercase())
+        org.librehu.launcher.ui.KeyClick.onTouch(this, ev, org.librehu.launcher.data.ThemeStore.get(this).settings.value.clickSound())
         return super.dispatchTouchEvent(ev)
     }
 

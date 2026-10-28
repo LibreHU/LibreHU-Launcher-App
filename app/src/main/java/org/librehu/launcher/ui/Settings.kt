@@ -183,6 +183,33 @@ fun LookSettings(
         s.segmentFont,
     ) { seg -> actions.setTheme { it.copy(segmentFont = seg) } }
     SettingHint(stringResource(R.string.theme_font_hint))
+    // Key clicks: on / off, and the sound of the style in force (a touch plays it and chooses it).
+    SettingSection(stringResource(R.string.click_section))
+    SettingSwitch(stringResource(R.string.click_on), stringResource(R.string.click_on_hint), s.keyClicks) { on ->
+        actions.setTheme { it.copy(keyClicks = on) }
+    }
+    if (s.keyClicks) {
+        val clickContext = LocalContext.current
+        val styleKey = s.style.name.lowercase()
+        SettingHint(
+            stringResource(
+                R.string.click_choose_hint,
+                stringResource(
+                    when (s.style) {
+                        ThemeStyle.RETRO -> R.string.theme_style_retro
+                        ThemeStyle.FACTORY -> R.string.theme_style_factory
+                        ThemeStyle.AMBIENT -> R.string.theme_style_ambient
+                        ThemeStyle.MODERN -> R.string.theme_style_modern
+                    },
+                ),
+            ),
+        )
+        SettingChoices(CLICK_LABELS.map { (n, l) -> n to stringResource(l) }, s.clickSounds[styleKey] ?: KeyClick.default(styleKey)) { n ->
+            KeyClick.preview(clickContext, n)
+            actions.setTheme { it.copy(clickSounds = it.clickSounds + (styleKey to n)) }
+        }
+        SettingHint(stringResource(R.string.click_credits))
+    }
     if (full) {
         SettingSwitch(
             stringResource(R.string.theme_system_wide),
@@ -1106,3 +1133,34 @@ private data class RgbChannel(
     val tint: androidx.compose.ui.graphics.Color,
     val set: (Int) -> Unit,
 )
+
+/** Names of the key click sounds (KeyClick.SOUNDS), in the same order. */
+internal val CLICK_LABELS =
+    listOf(
+        "soft_modern" to R.string.click_soft_modern,
+        "synth_modern_b" to R.string.click_synth_modern_b,
+        "synth_modern_c" to R.string.click_synth_modern_c,
+        "aosp_effect_tick" to R.string.click_aosp_effect_tick,
+        "aosp_keypress_standard" to R.string.click_aosp_keypress_standard,
+        "kenney_tick_002" to R.string.click_kenney_tick_002,
+        "kenney_click_001" to R.string.click_kenney_click_001,
+        "soft_retro" to R.string.click_soft_retro,
+        "synth_retro_b" to R.string.click_synth_retro_b,
+        "synth_retro_c" to R.string.click_synth_retro_c,
+        "kenney_select_003" to R.string.click_kenney_select_003,
+        "kenney_toggle_004" to R.string.click_kenney_toggle_004,
+        "kenney_bong_001" to R.string.click_kenney_bong_001,
+        "soft_factory" to R.string.click_soft_factory,
+        "synth_factory_b" to R.string.click_synth_factory_b,
+        "synth_factory_c" to R.string.click_synth_factory_c,
+        "aosp_keypress_spacebar" to R.string.click_aosp_keypress_spacebar,
+        "kenney_toggle_001" to R.string.click_kenney_toggle_001,
+        "kenney_click_005" to R.string.click_kenney_click_005,
+        "kenney_switch_002" to R.string.click_kenney_switch_002,
+        "soft_ambient" to R.string.click_soft_ambient,
+        "synth_ambient_b" to R.string.click_synth_ambient_b,
+        "synth_ambient_c" to R.string.click_synth_ambient_c,
+        "kenney_glass_005" to R.string.click_kenney_glass_005,
+        "kenney_glass_006" to R.string.click_kenney_glass_006,
+        "kenney_select_005" to R.string.click_kenney_select_005,
+    )

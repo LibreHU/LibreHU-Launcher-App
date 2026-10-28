@@ -685,4 +685,36 @@
     <string name="gpu_animations">Accélération GPU</string>
     <string name="gpu_animations_hint">Cette animation dessinée par la puce graphique (shaders OpenGL ES) au lieu de forme par forme : moins de travail pour le processeur. Désactivé : le dessin habituel.</string>
     <string name="wallpaper_retro_galaxy">Afficheur : espace</string>
+    <!-- Son des touches -->
+    <string name="click_section">Son des touches</string>
+    <string name="click_on">Son à chaque toucher</string>
+    <string name="click_on_hint">Dans le launcher et toutes les applis LibreHU ; coupé : aucun son.</string>
+    <string name="click_choose_hint">Son du style %1$s (chaque style garde le sien) : touchez un son pour l\'écouter et le choisir.</string>
+    <string name="click_credits">Sons de LibreHU, de Kenney (kenney.nl, CC0, version WAV de Hugo Locurcio / Calinou) et de l\'Android Open Source Project (Apache 2.0).</string>
+    <string name="click_soft_modern">Pop feutré (LibreHU)</string>
+    <string name="click_synth_modern_b">Goutte d\'eau (LibreHU)</string>
+    <string name="click_synth_modern_c">Tape feutrée (LibreHU)</string>
+    <string name="click_aosp_effect_tick">Tic Android (AOSP)</string>
+    <string name="click_aosp_keypress_standard">Touche Android (AOSP)</string>
+    <string name="click_kenney_tick_002">Tic 2 (Kenney)</string>
+    <string name="click_kenney_click_001">Clic 1 (Kenney)</string>
+    <string name="click_soft_retro">Bip doux (LibreHU)</string>
+    <string name="click_synth_retro_b">Bip LCD (LibreHU)</string>
+    <string name="click_synth_retro_c">Double bip (LibreHU)</string>
+    <string name="click_kenney_select_003">Sélection 3 (Kenney)</string>
+    <string name="click_kenney_toggle_004">Bascule 4 (Kenney)</string>
+    <string name="click_kenney_bong_001">Bong (Kenney)</string>
+    <string name="click_soft_factory">Toc de bois (LibreHU)</string>
+    <string name="click_synth_factory_b">Tic d\'écran (LibreHU)</string>
+    <string name="click_synth_factory_c">Touche sourde (LibreHU)</string>
+    <string name="click_aosp_keypress_spacebar">Barre d\'espace Android (AOSP)</string>
+    <string name="click_kenney_toggle_001">Bascule 1 (Kenney)</string>
+    <string name="click_kenney_click_005">Clic 5 (Kenney)</string>
+    <string name="click_kenney_switch_002">Interrupteur 2 (Kenney)</string>
+    <string name="click_soft_ambient">Carillon de verre (LibreHU)</string>
+    <string name="click_synth_ambient_b">Clochette (LibreHU)</string>
+    <string name="click_synth_ambient_c">Cascade (LibreHU)</string>
+    <string name="click_kenney_glass_005">Verre 5 (Kenney)</string>
+    <string name="click_kenney_glass_006">Verre 6 (Kenney)</string>
+    <string name="click_kenney_select_005">Sélection 5 (Kenney)</string>
 </resources>
