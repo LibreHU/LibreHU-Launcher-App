@@ -52,6 +52,7 @@ import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Radio
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -341,6 +342,9 @@ private fun FactoryStatusBar(actions: LauncherActions) {
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.align(Alignment.Center)) {
+                // The globe of the original: online services reachable.
+                Icon(Icons.Outlined.Public, null, tint = STATUS, modifier = Modifier.size(23.dp))
+                Spacer(Modifier.width(30.dp))
                 Text(
                     android.text.format.DateFormat
                         .getTimeFormat(context)
@@ -491,10 +495,12 @@ private fun Progress(
     }
     val duration = np.durationMs.toFloat()
     val shown = drag ?: (position / duration).coerceIn(0f, 1f)
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
+    // One line like the original: elapsed time, the bar, the time left.
+    Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(time((shown * duration).toLong()), color = CarColors.Text, fontFamily = FactoryFont, fontSize = 20.sp, modifier = Modifier.width(72.dp))
         BoxWithConstraints(
             Modifier
-                .fillMaxWidth()
+                .weight(1f)
                 .height(28.dp)
                 .pointerInput(np.canSeek) {
                     if (!np.canSeek) return@pointerInput
@@ -519,14 +525,17 @@ private fun Progress(
                 },
             contentAlignment = Alignment.CenterStart,
         ) {
-            Box(Modifier.fillMaxWidth().height(4.dp).background(Color(0xFF3A3B3F)))
-            Box(Modifier.fillMaxWidth(shown).height(4.dp).background(CarColors.Accent))
+            Box(Modifier.fillMaxWidth().height(3.dp).background(Color(0xFF3A3B3F)))
+            Box(Modifier.fillMaxWidth(shown).height(3.dp).background(CarColors.Accent))
         }
-        Row(Modifier.fillMaxWidth()) {
-            Text(time((shown * duration).toLong()), color = CarColors.TextDim, fontFamily = FactoryFont, fontSize = 16.sp)
-            Spacer(Modifier.weight(1f))
-            Text(time(np.durationMs), color = CarColors.TextDim, fontFamily = FactoryFont, fontSize = 16.sp)
-        }
+        Text(
+            "-" + time(((1f - shown) * duration).toLong()),
+            color = CarColors.Text,
+            fontFamily = FactoryFont,
+            fontSize = 20.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            modifier = Modifier.width(80.dp),
+        )
     }
 }
 
