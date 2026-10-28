@@ -630,6 +630,7 @@
     <string name="ambient_options">Options</string>
     <string name="ambient_back">Retour</string>
     <string name="ambient_add">Ajouter une appli</string>
+    <string name="ambient_add_widget">Ajouter un widget</string>
     <string name="ambient_home_pages">Pages d\'accueil</string>
     <string name="ambient_display">Affichage</string>
     <string name="ambient_brightness">Luminosité</string>
@@ -648,7 +649,7 @@
     <string name="ambient_media">Média</string>
     <string name="ambient_photo">Photo</string>
     <string name="ambient_video">Vidéo</string>
-    <string name="ambient_sound">Réglages du son</string>
+    <string name="ambient_sound">Son (DSP)</string>
     <string name="ambient_contacts">Répertoire</string>
     <string name="ambient_call_log">Historique des appels</string>
     <string name="ambient_dial">Composer numéro</string>
@@ -717,4 +718,11 @@
     <string name="click_kenney_glass_005">Verre 5 (Kenney)</string>
     <string name="click_kenney_glass_006">Verre 6 (Kenney)</string>
     <string name="click_kenney_select_005">Sélection 5 (Kenney)</string>
+    <string name="ambient_unit_audio">Audio de l\'autoradio</string>
+    <string name="ambient_vehicle_settings">Réglages véhicule</string>
+    <string name="source_bluetooth">Bluetooth</string>
+    <string name="source_aux">AUX</string>
+    <string name="source_aux_on">Entrée AUX choisie</string>
+    <string name="wallpaper_in_style">Fond d\'écran dans ce style</string>
+    <string name="wallpaper_in_style_hint">Coupé : noir comme l\'écran d\'origine. Activé : le fond d\'écran choisi ci-dessous, assombri, derrière les écrans.</string>
 </resources>

@@ -1,5 +1,6 @@
 package org.librehu.launcher.ui
 
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -371,3 +372,22 @@ internal fun CarAlertDialog(
  */
 internal fun carShape(radius: androidx.compose.ui.unit.Dp): androidx.compose.ui.graphics.Shape =
     if (settingLook == SettingLook.MATERIAL) androidx.compose.foundation.shape.RoundedCornerShape(radius) else androidx.compose.ui.graphics.RectangleShape
+
+/**
+ * A panel's background in the look: [color] with rounded corners (Material), a nearly black tile in a thin grey frame
+ * (factory), black framed in the accent colour (ambient). [inner]: a panel inside another one (lighter frame).
+ */
+internal fun Modifier.carPanel(
+    radius: androidx.compose.ui.unit.Dp,
+    color: Color,
+    inner: Boolean = false,
+): Modifier =
+    when (settingLook) {
+        SettingLook.MATERIAL -> clip(androidx.compose.foundation.shape.RoundedCornerShape(radius)).background(color)
+        SettingLook.FACTORY ->
+            background(Brush.verticalGradient(listOf(Color(0xFF1D1E22), Color(0xFF0B0B0D))))
+                .border(BorderStroke(1.dp, if (inner) Color(0xFF3A3B3F) else Color(0xFF2C2D31)))
+        SettingLook.AMBIENT ->
+            background(Color.Black.copy(alpha = if (inner) 0.75f else 0.55f))
+                .border(BorderStroke(1.dp, if (inner) CarColors.Accent.copy(alpha = 0.6f) else CarColors.Accent))
+    }

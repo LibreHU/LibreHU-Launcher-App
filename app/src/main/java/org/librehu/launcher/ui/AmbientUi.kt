@@ -90,6 +90,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
@@ -118,6 +119,7 @@ import org.librehu.launcher.R
 import org.librehu.launcher.data.AndroidAutoLink
 import org.librehu.launcher.data.LauncherApp
 import org.librehu.launcher.data.LauncherPrefs
+import org.librehu.launcher.data.WidgetHost
 import org.librehu.launcher.data.MediaRepository
 import org.librehu.launcher.data.NowPlaying
 
@@ -154,6 +156,11 @@ internal fun AmbientShell(
     media: MediaRepository,
     actions: LauncherActions,
     onAppMenu: (LauncherApp) -> Unit,
+    /** Android app widgets on the LHU-Link pages after the apps ([LauncherPrefs.Slot.ambient]). */
+    widgets: WidgetHost,
+    slots: Map<LauncherPrefs.Slot, Int>,
+    /** The wallpaper shows behind (dimmed) instead of black. */
+    wallpaper: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -162,7 +169,13 @@ internal fun AmbientShell(
     val pinned = pins.mapNotNull { byKey[it] }
     // Home page 0: clock and what is playing; then pinned apps four by page, the last page ending with Add.
     val appPages = (pinned.map<LauncherApp, LauncherApp?> { it } + null).chunked(4)
-    val pager = rememberPagerState { 1 + appPages.size }
+    // Then the widget pages: the first one always, the second once the first is full or holds something.
+    val widgetPages =
+        LauncherPrefs.Slot.ambient.filterIndexed { i, page ->
+            i == 0 || page.any { (slots[it] ?: LauncherPrefs.NO_WIDGET) >= 0 } ||
+                LauncherPrefs.Slot.ambient[i - 1].all { (slots[it] ?: LauncherPrefs.NO_WIDGET) >= 0 }
+        }
+    val pager = rememberPagerState { 1 + appPages.size + widgetPages.size }
     var sources by remember { mutableStateOf(false) }
     // The menu and its sub-menus (Navigation, Multimedia, Phone, Apps): kept while a tile's screen is open, so Back
     // comes back to the same sub-menu; the menu itself again after the home screen.
@@ -173,7 +186,7 @@ internal fun AmbientShell(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(if (wallpaper) Color.Black.copy(alpha = 0.4f) else Color.Black)
             .drawBehind {
                 // The ambient light: an oval of the deep accent rising behind the bottom bar.
                 val glow = deep(accent)
@@ -204,7 +217,7 @@ internal fun AmbientShell(
             )
             Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                 when (screen) {
-                    Screen.HOME -> AmbientHome(pager, appPages, media, actions, onAppMenu)
+                    Screen.HOME -> AmbientHome(pager, appPages, widgetPages, widgets, slots, media, actions, onAppMenu) { options = it }
                     Screen.MENU -> AmbientMenu(section, { section = it }, actions)
                     Screen.MEDIA -> AmbientMedia(media, actions)
                     Screen.APPS -> AmbientApps(apps, actions, onAppMenu)
@@ -381,9 +394,13 @@ private fun RowScope.BarButton(b: AmbientButton) {
 private fun AmbientHome(
     pager: PagerState,
     appPages: List<List<LauncherApp?>>,
+    widgetPages: List<List<LauncherPrefs.Slot>>,
+    widgets: WidgetHost,
+    slots: Map<LauncherPrefs.Slot, Int>,
     media: MediaRepository,
     actions: LauncherActions,
     onAppMenu: (LauncherApp) -> Unit,
+    onOptions: (List<AmbientOption>) -> Unit,
 ) {
     Frame(Modifier.fillMaxSize()) {
         HorizontalPager(state = pager, beyondViewportPageCount = 1, modifier = Modifier.fillMaxSize()) { page ->
@@ -391,6 +408,17 @@ private fun AmbientHome(
                 if (page == 0) {
                     Widget(Modifier.weight(1f)) { ClockWidget() }
                     Widget(Modifier.weight(1f), onClick = { actions.show(Screen.MEDIA) }) { MediaWidget(media, actions) }
+                } else if (page > appPages.size) {
+                    // Android app widgets, two by two.
+                    val pageSlots = widgetPages[page - 1 - appPages.size]
+                    for (col in 0 until 2) {
+                        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            for (row in 0 until 2) {
+                                val slot = pageSlots[row * 2 + col]
+                                AmbientWidgetSlot(slot, slots[slot] ?: LauncherPrefs.NO_WIDGET, widgets, actions, Modifier.weight(1f).fillMaxWidth(), onOptions)
+                            }
+                        }
+                    }
                 } else {
                     // Four small widgets: two by two.
                     val apps = appPages[page - 1]
@@ -412,6 +440,69 @@ private fun AmbientHome(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * An app widget in a frame of the accent colour; empty, an "Add a widget" tile opening the list of widgets. A long
+ * press on a widget: the Options pop-up (replace, remove).
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun AmbientWidgetSlot(
+    slot: LauncherPrefs.Slot,
+    appWidgetId: Int,
+    widgets: WidgetHost,
+    actions: LauncherActions,
+    modifier: Modifier,
+    onOptions: (List<AmbientOption>) -> Unit,
+) {
+    var picking by remember { mutableStateOf(false) }
+    val hostView = remember(appWidgetId) { if (appWidgetId >= 0) widgets.createView(appWidgetId) else null }
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    if (hostView == null) {
+        Widget(modifier, onClick = { picking = true }) { AppWidget(null, stringResource(R.string.ambient_add_widget)) }
+    } else {
+        val menu =
+            listOf(
+                AmbientOption(R.string.replace) { picking = true },
+                AmbientOption(R.string.remove) { actions.removeWidget(slot) },
+            )
+        Box(
+            modifier
+                .fillMaxHeight()
+                .background(Color.Black)
+                .border(BorderStroke(1.dp, CarColors.Accent))
+                .padding(1.dp)
+                .onSizeChanged { px ->
+                    val w = (px.width / density).toInt()
+                    val h = (px.height / density).toInt()
+                    @Suppress("DEPRECATION")
+                    if (w > 0 && h > 0) hostView.updateAppWidgetSize(null, w, h, w, h)
+                },
+        ) {
+            androidx.compose.runtime.key(appWidgetId) {
+                androidx.compose.ui.viewinterop.AndroidView(factory = { hostView }, modifier = Modifier.fillMaxSize())
+            }
+            if (hostView.appWidgetInfo?.provider == REAR_WIDGET) androidx.compose.runtime.key(appWidgetId) { RearLive(Modifier.fillMaxSize()) }
+            // The widget keeps its own touches; the small key in the corner opens the menu (a long press would not
+            // reach the launcher through the widget's views).
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .size(40.dp)
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .border(BorderStroke(1.dp, CarColors.Accent))
+                    .combinedClickable(onClick = { onOptions(menu) }),
+                contentAlignment = Alignment.Center,
+            ) { Icon(Icons.Outlined.MoreVert, null, tint = LIGHT, modifier = Modifier.size(24.dp)) }
+        }
+    }
+    if (picking) {
+        WidgetPicker(widgets, onDismiss = { picking = false }) { provider ->
+            picking = false
+            actions.addWidget(slot, provider)
         }
     }
 }
@@ -612,7 +703,7 @@ private fun sectionTiles(
                     if (geo.resolveActivity(context.packageManager) != null) startOrNote(context, geo) else openNavigation(context, actions)
                 },
                 AmbientTile(Icons.Outlined.Map, R.string.ambient_map) { openNavigation(context, actions) },
-                AmbientTile(Icons.Outlined.Speed, R.string.ambient_nav_settings) { actions.show(Screen.SETTINGS) },
+                AmbientTile(Icons.Outlined.Speed, R.string.ambient_nav_settings) { openSettingsPage(actions, "DRIVING") },
             )
         AmbientSection.MULTIMEDIA ->
             listOf(
@@ -622,33 +713,33 @@ private fun sectionTiles(
                     startOrNote(context, android.content.Intent.makeMainSelectorActivity(android.content.Intent.ACTION_MAIN, android.content.Intent.CATEGORY_APP_GALLERY))
                 },
                 AmbientTile(Icons.Outlined.Movie, R.string.ambient_video) { openPackage(context, actions, "org.videolan.vlc", "org.librehu.disc") },
-                AmbientTile(Icons.Outlined.Tune, R.string.ambient_sound) { startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_SOUND_SETTINGS)) },
+                // Sound: ViPER4Android LibreHU (DSP, equaliser); the head unit's own audio (volumes, loudness) beside it.
+                AmbientTile(Icons.Outlined.Tune, R.string.ambient_sound) { openSound(context) },
+                AmbientTile(Icons.Outlined.Speaker, R.string.ambient_unit_audio) { openServiceTab(context, "AUDIO") },
             )
         AmbientSection.PHONE ->
             listOf(
                 AmbientTile(Icons.Outlined.Contacts, R.string.ambient_contacts) { dialerTab(context, "CONTACTS") },
                 AmbientTile(Icons.Outlined.History, R.string.ambient_call_log) { dialerTab(context, "RECENTS") },
                 AmbientTile(Icons.Outlined.Dialpad, R.string.ambient_dial) { dialerTab(context, "KEYPAD") },
-                AmbientTile(Icons.Outlined.Smartphone, R.string.ambient_smartphone) {
-                    startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS))
-                },
+                AmbientTile(Icons.Outlined.Smartphone, R.string.ambient_smartphone) { openServiceTab(context, "BLUETOOTH") },
                 AmbientTile(Icons.Outlined.Settings, R.string.ambient_phone_settings) { dialerTab(context, "SETTINGS") },
             )
         AmbientSection.VEHICLE ->
             listOf(
                 AmbientTile(Icons.Outlined.Lightbulb, R.string.ambient_light) { onSection(AmbientSection.LIGHT) },
-                AmbientTile(Icons.Outlined.AddRoad, R.string.ambient_driving_aids) { actions.show(Screen.SETTINGS) },
-                AmbientTile(Icons.Outlined.Videocam, R.string.ambient_parking_aids) { openPackage(context, actions, "org.librehu.service") },
+                AmbientTile(Icons.Outlined.AddRoad, R.string.ambient_driving_aids) { openSettingsPage(actions, "DRIVING") },
+                AmbientTile(Icons.Outlined.Videocam, R.string.ambient_parking_aids) { openServiceTab(context, "REVERSE") },
                 AmbientTile(Icons.Outlined.Speed, R.string.ambient_trip_computer) { actions.show(Screen.OBD) },
                 AmbientTile(Icons.Outlined.TireRepair, R.string.tpms_title) { actions.show(Screen.TPMS) },
+                AmbientTile(Icons.Outlined.DirectionsCar, R.string.ambient_vehicle_settings) { openServiceTab(context, "VEHICLE") },
             )
         AmbientSection.SYSTEM -> {
             fun android(action: String) = { startOrNote(context, android.content.Intent(action)) }
             listOf(
-                AmbientTile(Icons.Outlined.Home, R.string.ambient_home_pages) { actions.show(Screen.SETTINGS) },
-                AmbientTile(Icons.Outlined.Palette, R.string.ambient_display) { actions.show(Screen.SETTINGS) },
-                AmbientTile(Icons.Outlined.LightMode, R.string.ambient_brightness, android(android.provider.Settings.ACTION_DISPLAY_SETTINGS)),
-                AmbientTile(Icons.Outlined.VolumeUp, R.string.ambient_volume, android(android.provider.Settings.ACTION_SOUND_SETTINGS)),
+                AmbientTile(Icons.Outlined.Palette, R.string.ambient_display) { openSettingsPage(actions, "LOOK") },
+                AmbientTile(Icons.Outlined.LightMode, R.string.ambient_brightness) { openServiceTab(context, "DISPLAY") },
+                AmbientTile(Icons.Outlined.VolumeUp, R.string.ambient_sound) { openSound(context) },
                 AmbientTile(Icons.Outlined.Translate, R.string.ambient_language, android(android.provider.Settings.ACTION_LOCALE_SETTINGS)),
                 AmbientTile(Icons.Outlined.Schedule, R.string.ambient_date_time, android(android.provider.Settings.ACTION_DATE_SETTINGS)),
                 AmbientTile(Icons.Outlined.Info, R.string.ambient_system_info, android(android.provider.Settings.ACTION_DEVICE_INFO_SETTINGS)),
@@ -850,7 +941,7 @@ private fun ambientOptions(
         Screen.HOME ->
             listOf(
                 AmbientOption(R.string.ambient_edit_home) { actions.show(Screen.APPS) },
-                AmbientOption(R.string.ambient_change_theme) { actions.show(Screen.SETTINGS) },
+                AmbientOption(R.string.ambient_change_theme) { openSettingsPage(actions, "LOOK") },
                 AmbientOption(R.string.ambient_date_time) { startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_DATE_SETTINGS)) },
                 AmbientOption(R.string.ambient_black_screen) { actions.standby() },
             )
@@ -858,7 +949,7 @@ private fun ambientOptions(
             listOf(
                 AmbientOption(R.string.ambient_sources, onClick = onSources),
                 AmbientOption(R.string.ambient_open_player) { actions.mediaOpen() },
-                AmbientOption(R.string.ambient_sound) { startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_SOUND_SETTINGS)) },
+                AmbientOption(R.string.ambient_sound) { openSound(context) },
             )
         else -> emptyList()
     }
@@ -1033,7 +1124,7 @@ private fun AmbientSourceTiles(actions: LauncherActions) {
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.fillMaxSize().padding(4.dp),
     ) {
-        items(list.size, key = { list[it].component.flattenToString() }) { i ->
+        items(list.size, key = { list[it].key }) { i ->
             val src = list[i]
             val interaction = remember { MutableInteractionSource() }
             val pressed by interaction.collectIsPressedAsState()
@@ -1047,7 +1138,7 @@ private fun AmbientSourceTiles(actions: LauncherActions) {
                         .background(Color.Black.copy(alpha = 0.75f))
                         .drawBehind { if (pressed) bottomGlow(deep(accent), 0.9f) }
                         .border(BorderStroke(1.dp, accent))
-                        .clickable(interactionSource = interaction, indication = null) { actions.launch(src.component) },
+                        .clickable(interactionSource = interaction, indication = null) { src.activate(context, actions) },
             ) {
                 when {
                     src.icon != null -> MetalIcon(src.icon, 64.dp)
@@ -1155,7 +1246,7 @@ private fun AmbientSources(
             Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                 Text(stringResource(R.string.ambient_sources), color = LIGHT, fontSize = 24.sp, modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp))
                 LazyColumn(Modifier.heightIn(max = 380.dp)) {
-                    items(list, key = { it.component.flattenToString() }) { src ->
+                    items(list, key = { it.key }) { src ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier =
@@ -1163,7 +1254,7 @@ private fun AmbientSources(
                                     .fillMaxWidth()
                                     .clickable {
                                         onDismiss()
-                                        actions.launch(src.component)
+                                        src.activate(context, actions)
                                     }.padding(horizontal = 20.dp, vertical = 14.dp),
                         ) {
                             when {

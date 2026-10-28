@@ -98,8 +98,7 @@ fun ObdScreen() {
             Modifier
                 .weight(0.9f)
                 .fillMaxHeight()
-                .clip(carShape(28.dp))
-                .background(CarColors.Surface)
+                .carPanel(28.dp, CarColors.Surface)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -116,8 +115,7 @@ fun ObdScreen() {
             Modifier
                 .weight(2f)
                 .fillMaxHeight()
-                .clip(carShape(28.dp))
-                .background(CarColors.Surface)
+                .carPanel(28.dp, CarColors.Surface)
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -162,7 +160,7 @@ private fun BatteryPanel(
     val v = st.battery
     val (label, color) = batteryState(st)
     Column(
-        modifier.clip(carShape(20.dp)).background(CarColors.SurfaceHigh).padding(16.dp),
+        modifier.carPanel(20.dp, CarColors.SurfaceHigh, inner = true).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(stringResource(R.string.obd_battery), color = CarColors.TextDim, fontSize = 16.sp)
@@ -170,8 +168,8 @@ private fun BatteryPanel(
         if (label != null) Text(label, color = color, fontSize = 18.sp)
         val percent = st.batteryPercent
         if (percent != null) {
-            Box(Modifier.fillMaxWidth().height(14.dp).clip(RoundedCornerShape(7.dp)).background(CarColors.Surface)) {
-                Box(Modifier.fillMaxWidth(percent / 100f).fillMaxHeight().clip(RoundedCornerShape(7.dp)).background(color))
+            Box(Modifier.fillMaxWidth().height(14.dp).clip(carShape(7.dp)).background(CarColors.Surface)) {
+                Box(Modifier.fillMaxWidth(percent / 100f).fillMaxHeight().clip(carShape(7.dp)).background(color))
             }
         }
         Spacer(Modifier.weight(1f))
@@ -221,7 +219,7 @@ private fun BigValue(
     unit: String,
     modifier: Modifier,
 ) {
-    Column(modifier.clip(carShape(20.dp)).background(CarColors.SurfaceHigh).padding(16.dp)) {
+    Column(modifier.carPanel(20.dp, CarColors.SurfaceHigh, inner = true).padding(16.dp)) {
         Text(label, color = CarColors.TextDim, fontSize = 16.sp)
         Row {
             Text(value, color = CarColors.Text, fontSize = 64.sp, fontWeight = FontWeight.Light)
@@ -238,7 +236,7 @@ private fun ValueTile(
     sub: String? = null,
 ) {
     Column(
-        Modifier.width(200.dp).clip(RoundedCornerShape(18.dp)).background(CarColors.SurfaceHigh).padding(14.dp),
+        Modifier.width(200.dp).carPanel(18.dp, CarColors.SurfaceHigh, inner = true).padding(14.dp),
     ) {
         Text(label, color = CarColors.TextDim, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
         Text(value, color = CarColors.Text, fontSize = 26.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
