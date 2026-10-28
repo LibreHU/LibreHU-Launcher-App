@@ -364,3 +364,10 @@ internal fun CarAlertDialog(
         }
     }
 }
+
+/**
+ * Shape of the panels and cards (OBD, tyres…): square in the factory and ambient styles like the originals, rounded
+ * ([radius]) otherwise.
+ */
+internal fun carShape(radius: androidx.compose.ui.unit.Dp): androidx.compose.ui.graphics.Shape =
+    if (settingLook == SettingLook.MATERIAL) androidx.compose.foundation.shape.RoundedCornerShape(radius) else androidx.compose.ui.graphics.RectangleShape

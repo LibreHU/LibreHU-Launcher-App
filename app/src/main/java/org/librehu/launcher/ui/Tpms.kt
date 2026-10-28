@@ -94,7 +94,7 @@ fun TpmsCard(
     Column(
         modifier =
             modifier
-                .clip(RoundedCornerShape(28.dp))
+                .clip(carShape(28.dp))
                 .background(CarColors.Surface)
                 .clickable(onClick = onOpen)
                 .padding(14.dp),
@@ -402,7 +402,7 @@ fun TpmsScreen() {
             Modifier
                 .weight(1.2f)
                 .fillMaxHeight()
-                .clip(RoundedCornerShape(28.dp))
+                .clip(carShape(28.dp))
                 .background(CarColors.Surface)
                 .padding(20.dp),
         ) {
@@ -459,7 +459,7 @@ fun TpmsScreen() {
             Modifier
                 .weight(1f)
                 .fillMaxHeight()
-                .clip(RoundedCornerShape(28.dp))
+                .clip(carShape(28.dp))
                 .background(CarColors.Surface)
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
@@ -703,9 +703,9 @@ private fun TyreTile(
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(carShape(20.dp))
             .background(CarColors.SurfaceHigh.copy(alpha = 0.6f))
-            .border(if (pairing || selected || alarms.isNotEmpty()) 3.dp else 1.dp, accent, RoundedCornerShape(20.dp))
+            .border(if (pairing || selected || alarms.isNotEmpty()) 3.dp else 1.dp, accent, carShape(20.dp))
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {

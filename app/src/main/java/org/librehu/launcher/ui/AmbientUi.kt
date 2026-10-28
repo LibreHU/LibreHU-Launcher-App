@@ -61,7 +61,6 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Radio
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material.icons.outlined.Smartphone
@@ -620,7 +619,8 @@ private fun sectionTiles(
         AmbientSection.APPS ->
             listOf(
                 AmbientTile(Icons.Outlined.Apps, R.string.ambient_my_apps) { actions.show(Screen.APPS) },
-                AmbientTile(Icons.Outlined.ShoppingBag, R.string.ambient_store) { openPackage(context, actions, "org.librehu.ota") },
+                // Where the original shows its maker's store: our own jack.
+                AmbientTile(JackIcon, R.string.ambient_store) { openPackage(context, actions, "org.librehu.ota") },
                 AmbientTile(Icons.Outlined.ManageSearch, R.string.ambient_app_manager) {
                     startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_APPLICATION_SETTINGS))
                 },
@@ -1119,4 +1119,57 @@ private fun rememberMinute(): java.util.Date {
         }
     }
     return now
+}
+
+/**
+ * A scissor jack, drawn here (base plate, scissor arms, threaded rod and crank, saddle on top): LHU-Link's stand-in
+ * wherever the original would show its maker's logo.
+ */
+internal val JackIcon: ImageVector by lazy {
+    ImageVector
+        .Builder(name = "Jack", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f)
+        .apply {
+            val stroke = androidx.compose.ui.graphics.SolidColor(Color.White)
+            fun line(build: androidx.compose.ui.graphics.vector.PathBuilder.() -> Unit) =
+                addPath(
+                    pathData = androidx.compose.ui.graphics.vector.PathBuilder().apply(build).nodes,
+                    stroke = stroke,
+                    strokeLineWidth = 1.6f,
+                    strokeLineCap = StrokeCap.Round,
+                    strokeLineJoin = androidx.compose.ui.graphics.StrokeJoin.Round,
+                )
+            // Saddle and base plate.
+            line {
+                moveTo(9f, 3.5f)
+                lineTo(15f, 3.5f)
+            }
+            line {
+                moveTo(3.5f, 20.5f)
+                lineTo(20.5f, 20.5f)
+            }
+            // Scissor arms: a diamond from the saddle to the base.
+            line {
+                moveTo(12f, 3.5f)
+                lineTo(17.5f, 12f)
+                lineTo(12f, 20.5f)
+                lineTo(6.5f, 12f)
+                close()
+            }
+            // Threaded rod through the joints, the crank on its end.
+            line {
+                moveTo(5f, 12f)
+                lineTo(21f, 12f)
+                lineTo(21f, 15.5f)
+                lineTo(23f, 15.5f)
+            }
+            // Hinge pins.
+            line {
+                moveTo(6.5f, 12f)
+                lineTo(6.6f, 12f)
+            }
+            line {
+                moveTo(17.5f, 12f)
+                lineTo(17.6f, 12f)
+            }
+        }.build()
 }
