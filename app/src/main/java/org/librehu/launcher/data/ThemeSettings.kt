@@ -177,6 +177,8 @@ data class ThemeSettings(
     val keyClicks: Boolean = true,
     /** Key click sound chosen for each style (style name in lower case → name of KeyClick.SOUNDS); else its default. */
     val clickSounds: Map<String, String> = emptyMap(),
+    /** Styles (factory, ambient) that show the wallpaper behind their screens; none by default (black). */
+    val styleWallpapers: Set<String> = emptySet(),
 ) {
     val hasWallpaper get() = wallpaper != WallpaperKind.NONE
 }
@@ -238,6 +240,7 @@ class ThemeStore private constructor(
             .putBoolean("right_hand_drive", s.rightHandDrive)
             .putBoolean("gpu_animations", s.gpuAnimations)
             .putBoolean("key_clicks", s.keyClicks)
+            .putStringSet("style_wallpapers", s.styleWallpapers)
             .putString("click_sounds", s.clickSounds.entries.joinToString(";") { "${it.key}=${it.value}" })
             .apply()
         _settings.value = s
@@ -467,6 +470,7 @@ class ThemeStore private constructor(
             rightHandDrive = prefs.getBoolean("right_hand_drive", false),
             gpuAnimations = prefs.getBoolean("gpu_animations", false),
             keyClicks = prefs.getBoolean("key_clicks", true),
+            styleWallpapers = prefs.getStringSet("style_wallpapers", emptySet()).orEmpty().toSet(),
             clickSounds =
                 prefs
                     .getString("click_sounds", "")

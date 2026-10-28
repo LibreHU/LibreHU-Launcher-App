@@ -99,6 +99,8 @@ fun SettingsScreen(
     apps: List<LauncherApp> = emptyList(),
 ) {
     var tab by rememberSaveable { mutableStateOf(SettingsTab.LOOK) }
+    // A page asked by a menu tile (Driving aids, Display…): opened directly.
+    val asked = SettingsNav.page?.let { n -> SettingsTab.entries.firstOrNull { it.name == n } }
     val page: @Composable (SettingsTab) -> Unit = { t ->
         when (t) {
             SettingsTab.LOOK -> LookSettings(theme, controller, actions, apps = apps)
@@ -113,10 +115,46 @@ fun SettingsScreen(
     // Factory and ambient styles: the list of pages, then one page, like the original systems.
     if (settingLook != SettingLook.MATERIAL) {
         var open by rememberSaveable { mutableStateOf<Int?>(null) }
-        StyledSettingsFrame(stringResource(R.string.settings), SettingsTab.entries.map { stringResource(it.label) }, open, { open = it }) { i ->
+        androidx.compose.runtime.LaunchedEffect(asked) {
+            if (asked != null) {
+                open = asked.ordinal
+                SettingsNav.page = null
+            }
+        }
+        // After the launcher's pages, the other settings of the head unit, like the original Setup menu.
+        val context = androidx.compose.ui.platform.LocalContext.current
+        val links =
+            listOf(
+                stringResource(R.string.ambient_sound) to { openSound(context) },
+                stringResource(R.string.ambient_unit_audio) to { openServiceTab(context, "AUDIO") },
+                stringResource(R.string.ambient_vehicle_settings) to { openServiceTab(context, "VEHICLE") },
+                stringResource(R.string.ambient_brightness) to { openServiceTab(context, "DISPLAY") },
+                stringResource(R.string.ambient_smartphone) to { openServiceTab(context, "BLUETOOTH") },
+                stringResource(R.string.ambient_language) to {
+                    runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_LOCALE_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                    Unit
+                },
+                stringResource(R.string.ambient_date_time) to {
+                    runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_DATE_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                    Unit
+                },
+            )
+        val n = SettingsTab.entries.size
+        StyledSettingsFrame(
+            stringResource(R.string.settings),
+            SettingsTab.entries.map { stringResource(it.label) } + links.map { it.first },
+            open,
+            { i -> if (i != null && i >= n) links[i - n].second() else open = i },
+        ) { i ->
             page(SettingsTab.entries[i])
         }
         return
+    }
+    androidx.compose.runtime.LaunchedEffect(asked) {
+        if (asked != null) {
+            tab = asked
+            SettingsNav.page = null
+        }
     }
     Column(
         modifier =
@@ -352,6 +390,13 @@ fun LookSettings(
     }
 
     SettingSection(stringResource(R.string.wallpaper))
+    // Factory and ambient styles: black by default, the wallpaper only when turned on for the style.
+    if (s.style == ThemeStyle.FACTORY || s.style == ThemeStyle.AMBIENT) {
+        val key = s.style.name.lowercase()
+        SettingSwitch(stringResource(R.string.wallpaper_in_style), stringResource(R.string.wallpaper_in_style_hint), key in s.styleWallpapers) { on ->
+            actions.setTheme { it.copy(styleWallpapers = if (on) it.styleWallpapers + key else it.styleWallpapers - key) }
+        }
+    }
     val w = s.wallpaper
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SettingChoice(stringResource(R.string.wallpaper_none), w == WallpaperKind.NONE) { actions.setWallpaper(WallpaperKind.NONE) }

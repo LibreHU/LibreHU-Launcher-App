@@ -112,7 +112,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   d'ambiance** (lueur montant du bas, cadres, boutons). **Barre du haut** : heure, raccourcis carte et audio encadrés,
   points de page, téléphone encadré, météo, filet de la couleur d'accent. **Pages d'accueil** dans un cadre éclairé :
   horloge analogique + date et lecture en cours (pochette, titre, précédent / lecture / suivant), puis les applis
-  épinglées en petits widgets par quatre, terminées par « Ajouter une appli ». **Menu** de six tuiles (Navigation,
+  épinglées en petits widgets par quatre, terminées par « Ajouter une appli », puis **deux pages de vrais widgets Android**
+  (quatre par page, « Ajouter un widget » sur une case vide, touche ⋮ dans le coin : Remplacer / Retirer). **Menu** de six tuiles (Navigation,
   Multimédia, Téléphone, Applis, Véhicule, Système) aux icônes « métal brossé », qui s'ouvrent en zoom, et
   **sous-menus** comme l'original : Navigation (Destination, Carte, Réglages), Multimédia (Radio, Média, Photo,
   Vidéo, Réglages du son), Téléphone (Répertoire, Historique des appels, Composer numéro, Smartphone, Réglages : onglets
@@ -125,7 +126,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   heure, écran noir ; Multimédia : sources, ouvrir le lecteur, réglages du son), grisée là où il n'y a rien.
   **Réglages** en lignes noires séparées par un filet dans un cadre d'accent, flèche ▶ vers chaque page, interrupteurs
   ON | OFF dont l'état en vigueur est marqué d'un trait rouge (le rouge de sélection de l'original).
-  Dans les styles Modularer Infotainment-Baukasten et LHU-Link, les panneaux des écrans OBD et Pneus sont carrés. Fenêtres
+  Dans les styles Modularer Infotainment-Baukasten et LHU-Link, les écrans OBD et Pneus suivent le style : panneaux carrés en dégradé noir (Modularer Infotainment-Baukasten) ou
+  à filet d'accent (LHU-Link), sections et choix comme dans les Réglages. Fenêtres
   (menu d'une appli, marche / arrêt, confirmations) en bleu nuit à filet d'accent ; Retour revient à l'écran précédent
   (le sous-menu d'où l'on vient compris) ; **Mes apps** en tuiles encadrées quatre par ligne (appui long : menu de l'appli).
   **Multimédia** comme le lecteur d'origine : onglets Lecture / Sources ; Lecture = pochette, titre, artiste, barre de
@@ -143,6 +145,18 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   de **Hugo Locurcio (Calinou)** : [Calinou/kenney-interface-sounds](https://github.com/Calinou/kenney-interface-sounds))
   et de l'**Android Open Source Project** (sons tactiles `Effect_Tick`, `KeypressStandard`, `KeypressSpacebar`,
   Apache 2.0) : détail et licences dans `third_party/KEYCLICK-SOUNDS.md`.
+- **Menus des styles d'usine et LHU-Link** : chaque tuile ouvre la bonne page. **Son = ViPER4Android LibreHU** (DSP,
+  égaliseur ; à défaut les réglages son d'Android) : tuile Son des menus, touche Réglages de l'écran Média (MIB),
+  Options → Son ; **Audio de l'autoradio** (volumes, loudness) = onglet Audio de LibreHU-service. Aides au stationnement
+  = onglet Recul du service, Réglages véhicule = onglet Véhicule, Smartphone = onglet Bluetooth, Luminosité = onglet
+  Écran, Aides à la conduite et Réglages navigation = page Conduite du launcher, Affichage = page Personnalisation. Le
+  menu Réglages des deux styles liste aussi, après les pages du launcher, Son, Audio de l'autoradio, Véhicule,
+  Luminosité, Bluetooth, Langue, Date et heure (comme le menu Setup d'origine).
+- **Sources** (écran Média) : **Bluetooth** (audio du téléphone : entrée Android de la puce audio, écran Média, lecture)
+  et **AUX** (entrée AUX / AV de l'autoradio via LibreHU-service) en plus de la radio, du Disc, d'Android Auto, de CarPlay
+  et des applis de musique.
+- **Fond d'écran des styles d'usine et LHU-Link** : noir par défaut ; Paramètres → Personnalisation → Fond d'écran →
+  « Fond d'écran dans ce style » l'affiche, assombri, derrière les écrans (réglé pour chaque style).
 - **Couleur d'accent** : 8 couleurs ou la **roue RGB** (rouge, vert, bleu de 0 à 255, aperçu et valeur hexadécimale) ;
   elle colore le thème, le style rétro, les pixels des animations d'afficheur et toutes les applis LibreHU.
 - **Police** : normale ou **afficheur à segments** (LibreHU Seg14 : DSEG14, celle de l'afficheur rétro de LibreHU-Disc,
