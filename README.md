@@ -143,6 +143,18 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   de **Hugo Locurcio (Calinou)** : [Calinou/kenney-interface-sounds](https://github.com/Calinou/kenney-interface-sounds))
   et de l'**Android Open Source Project** (sons tactiles `Effect_Tick`, `KeypressStandard`, `KeypressSpacebar`,
   Apache 2.0) : détail et licences dans `third_party/KEYCLICK-SOUNDS.md`.
+- **Menus des styles d'usine et LHU-Link** : chaque tuile ouvre la bonne page. **Son = ViPER4Android LibreHU** (DSP,
+  égaliseur ; à défaut les réglages son d'Android) : tuile Son des menus, touche Réglages de l'écran Média (MIB),
+  Options → Son ; **Audio de l'autoradio** (volumes, loudness) = onglet Audio de LibreHU-service. Aides au stationnement
+  = onglet Recul du service, Réglages véhicule = onglet Véhicule, Smartphone = onglet Bluetooth, Luminosité = onglet
+  Écran, Aides à la conduite et Réglages navigation = page Conduite du launcher, Affichage = page Personnalisation. Le
+  menu Réglages des deux styles liste aussi, après les pages du launcher, Son, Audio de l'autoradio, Véhicule,
+  Luminosité, Bluetooth, Langue, Date et heure (comme le menu Setup d'origine).
+- **Sources** (écran Média) : **Bluetooth** (audio du téléphone : entrée Android de la puce audio, écran Média, lecture)
+  et **AUX** (entrée AUX / AV de l'autoradio via LibreHU-service) en plus de la radio, du Disc, d'Android Auto, de CarPlay
+  et des applis de musique.
+- **Fond d'écran des styles d'usine et LHU-Link** : noir par défaut ; Paramètres → Personnalisation → Fond d'écran →
+  « Fond d'écran dans ce style » l'affiche, assombri, derrière les écrans (réglé pour chaque style).
 - **Couleur d'accent** : 8 couleurs ou la **roue RGB** (rouge, vert, bleu de 0 à 255, aperçu et valeur hexadécimale) ;
   elle colore le thème, le style rétro, les pixels des animations d'afficheur et toutes les applis LibreHU.
 - **Police** : normale ou **afficheur à segments** (LibreHU Seg14 : DSEG14, celle de l'afficheur rétro de LibreHU-Disc,

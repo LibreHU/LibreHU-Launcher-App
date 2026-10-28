@@ -154,6 +154,8 @@ internal fun AmbientShell(
     media: MediaRepository,
     actions: LauncherActions,
     onAppMenu: (LauncherApp) -> Unit,
+    /** The wallpaper shows behind (dimmed) instead of black. */
+    wallpaper: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -173,7 +175,7 @@ internal fun AmbientShell(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(if (wallpaper) Color.Black.copy(alpha = 0.4f) else Color.Black)
             .drawBehind {
                 // The ambient light: an oval of the deep accent rising behind the bottom bar.
                 val glow = deep(accent)
@@ -612,7 +614,7 @@ private fun sectionTiles(
                     if (geo.resolveActivity(context.packageManager) != null) startOrNote(context, geo) else openNavigation(context, actions)
                 },
                 AmbientTile(Icons.Outlined.Map, R.string.ambient_map) { openNavigation(context, actions) },
-                AmbientTile(Icons.Outlined.Speed, R.string.ambient_nav_settings) { actions.show(Screen.SETTINGS) },
+                AmbientTile(Icons.Outlined.Speed, R.string.ambient_nav_settings) { openSettingsPage(actions, "DRIVING") },
             )
         AmbientSection.MULTIMEDIA ->
             listOf(
@@ -622,33 +624,33 @@ private fun sectionTiles(
                     startOrNote(context, android.content.Intent.makeMainSelectorActivity(android.content.Intent.ACTION_MAIN, android.content.Intent.CATEGORY_APP_GALLERY))
                 },
                 AmbientTile(Icons.Outlined.Movie, R.string.ambient_video) { openPackage(context, actions, "org.videolan.vlc", "org.librehu.disc") },
-                AmbientTile(Icons.Outlined.Tune, R.string.ambient_sound) { startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_SOUND_SETTINGS)) },
+                // Sound: ViPER4Android LibreHU (DSP, equaliser); the head unit's own audio (volumes, loudness) beside it.
+                AmbientTile(Icons.Outlined.Tune, R.string.ambient_sound) { openSound(context) },
+                AmbientTile(Icons.Outlined.Speaker, R.string.ambient_unit_audio) { openServiceTab(context, "AUDIO") },
             )
         AmbientSection.PHONE ->
             listOf(
                 AmbientTile(Icons.Outlined.Contacts, R.string.ambient_contacts) { dialerTab(context, "CONTACTS") },
                 AmbientTile(Icons.Outlined.History, R.string.ambient_call_log) { dialerTab(context, "RECENTS") },
                 AmbientTile(Icons.Outlined.Dialpad, R.string.ambient_dial) { dialerTab(context, "KEYPAD") },
-                AmbientTile(Icons.Outlined.Smartphone, R.string.ambient_smartphone) {
-                    startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS))
-                },
+                AmbientTile(Icons.Outlined.Smartphone, R.string.ambient_smartphone) { openServiceTab(context, "BLUETOOTH") },
                 AmbientTile(Icons.Outlined.Settings, R.string.ambient_phone_settings) { dialerTab(context, "SETTINGS") },
             )
         AmbientSection.VEHICLE ->
             listOf(
                 AmbientTile(Icons.Outlined.Lightbulb, R.string.ambient_light) { onSection(AmbientSection.LIGHT) },
-                AmbientTile(Icons.Outlined.AddRoad, R.string.ambient_driving_aids) { actions.show(Screen.SETTINGS) },
-                AmbientTile(Icons.Outlined.Videocam, R.string.ambient_parking_aids) { openPackage(context, actions, "org.librehu.service") },
+                AmbientTile(Icons.Outlined.AddRoad, R.string.ambient_driving_aids) { openSettingsPage(actions, "DRIVING") },
+                AmbientTile(Icons.Outlined.Videocam, R.string.ambient_parking_aids) { openServiceTab(context, "REVERSE") },
                 AmbientTile(Icons.Outlined.Speed, R.string.ambient_trip_computer) { actions.show(Screen.OBD) },
                 AmbientTile(Icons.Outlined.TireRepair, R.string.tpms_title) { actions.show(Screen.TPMS) },
+                AmbientTile(Icons.Outlined.DirectionsCar, R.string.ambient_vehicle_settings) { openServiceTab(context, "VEHICLE") },
             )
         AmbientSection.SYSTEM -> {
             fun android(action: String) = { startOrNote(context, android.content.Intent(action)) }
             listOf(
-                AmbientTile(Icons.Outlined.Home, R.string.ambient_home_pages) { actions.show(Screen.SETTINGS) },
-                AmbientTile(Icons.Outlined.Palette, R.string.ambient_display) { actions.show(Screen.SETTINGS) },
-                AmbientTile(Icons.Outlined.LightMode, R.string.ambient_brightness, android(android.provider.Settings.ACTION_DISPLAY_SETTINGS)),
-                AmbientTile(Icons.Outlined.VolumeUp, R.string.ambient_volume, android(android.provider.Settings.ACTION_SOUND_SETTINGS)),
+                AmbientTile(Icons.Outlined.Palette, R.string.ambient_display) { openSettingsPage(actions, "LOOK") },
+                AmbientTile(Icons.Outlined.LightMode, R.string.ambient_brightness) { openServiceTab(context, "DISPLAY") },
+                AmbientTile(Icons.Outlined.VolumeUp, R.string.ambient_sound) { openSound(context) },
                 AmbientTile(Icons.Outlined.Translate, R.string.ambient_language, android(android.provider.Settings.ACTION_LOCALE_SETTINGS)),
                 AmbientTile(Icons.Outlined.Schedule, R.string.ambient_date_time, android(android.provider.Settings.ACTION_DATE_SETTINGS)),
                 AmbientTile(Icons.Outlined.Info, R.string.ambient_system_info, android(android.provider.Settings.ACTION_DEVICE_INFO_SETTINGS)),
@@ -850,7 +852,7 @@ private fun ambientOptions(
         Screen.HOME ->
             listOf(
                 AmbientOption(R.string.ambient_edit_home) { actions.show(Screen.APPS) },
-                AmbientOption(R.string.ambient_change_theme) { actions.show(Screen.SETTINGS) },
+                AmbientOption(R.string.ambient_change_theme) { openSettingsPage(actions, "LOOK") },
                 AmbientOption(R.string.ambient_date_time) { startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_DATE_SETTINGS)) },
                 AmbientOption(R.string.ambient_black_screen) { actions.standby() },
             )
@@ -858,7 +860,7 @@ private fun ambientOptions(
             listOf(
                 AmbientOption(R.string.ambient_sources, onClick = onSources),
                 AmbientOption(R.string.ambient_open_player) { actions.mediaOpen() },
-                AmbientOption(R.string.ambient_sound) { startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_SOUND_SETTINGS)) },
+                AmbientOption(R.string.ambient_sound) { openSound(context) },
             )
         else -> emptyList()
     }
@@ -1033,7 +1035,7 @@ private fun AmbientSourceTiles(actions: LauncherActions) {
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.fillMaxSize().padding(4.dp),
     ) {
-        items(list.size, key = { list[it].component.flattenToString() }) { i ->
+        items(list.size, key = { list[it].key }) { i ->
             val src = list[i]
             val interaction = remember { MutableInteractionSource() }
             val pressed by interaction.collectIsPressedAsState()
@@ -1047,7 +1049,7 @@ private fun AmbientSourceTiles(actions: LauncherActions) {
                         .background(Color.Black.copy(alpha = 0.75f))
                         .drawBehind { if (pressed) bottomGlow(deep(accent), 0.9f) }
                         .border(BorderStroke(1.dp, accent))
-                        .clickable(interactionSource = interaction, indication = null) { actions.launch(src.component) },
+                        .clickable(interactionSource = interaction, indication = null) { src.activate(context, actions) },
             ) {
                 when {
                     src.icon != null -> MetalIcon(src.icon, 64.dp)
@@ -1155,7 +1157,7 @@ private fun AmbientSources(
             Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                 Text(stringResource(R.string.ambient_sources), color = LIGHT, fontSize = 24.sp, modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp))
                 LazyColumn(Modifier.heightIn(max = 380.dp)) {
-                    items(list, key = { it.component.flattenToString() }) { src ->
+                    items(list, key = { it.key }) { src ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier =
@@ -1163,7 +1165,7 @@ private fun AmbientSources(
                                     .fillMaxWidth()
                                     .clickable {
                                         onDismiss()
-                                        actions.launch(src.component)
+                                        src.activate(context, actions)
                                     }.padding(horizontal = 20.dp, vertical = 14.dp),
                         ) {
                             when {

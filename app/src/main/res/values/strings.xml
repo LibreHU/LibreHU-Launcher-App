@@ -648,7 +648,7 @@
     <string name="ambient_media">Media</string>
     <string name="ambient_photo">Photo</string>
     <string name="ambient_video">Video</string>
-    <string name="ambient_sound">Sound settings</string>
+    <string name="ambient_sound">Sound (DSP)</string>
     <string name="ambient_contacts">Contacts</string>
     <string name="ambient_call_log">Call log</string>
     <string name="ambient_dial">Dial a number</string>
@@ -718,4 +718,11 @@
     <string name="click_kenney_glass_005">Glass 5 (Kenney)</string>
     <string name="click_kenney_glass_006">Glass 6 (Kenney)</string>
     <string name="click_kenney_select_005">Select 5 (Kenney)</string>
+    <string name="ambient_unit_audio">Head unit audio</string>
+    <string name="ambient_vehicle_settings">Vehicle settings</string>
+    <string name="source_bluetooth">Bluetooth</string>
+    <string name="source_aux">AUX</string>
+    <string name="source_aux_on">AUX input selected</string>
+    <string name="wallpaper_in_style">Wallpaper in this style</string>
+    <string name="wallpaper_in_style_hint">Off: black like the original screen. On: the wallpaper chosen below, dimmed, behind the screens.</string>
 </resources>

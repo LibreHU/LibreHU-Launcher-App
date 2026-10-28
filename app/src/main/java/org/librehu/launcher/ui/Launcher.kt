@@ -232,7 +232,9 @@ fun LauncherScreen(
     val factory = look.style == ThemeStyle.FACTORY
     val ambient = look.style == ThemeStyle.AMBIENT
     Box(modifier = Modifier.fillMaxSize()) {
-        if (!factory && !ambient) Wallpaper(theme)
+        // The factory and ambient styles are black, unless the wallpaper is turned on for them (Settings → Wallpaper).
+        val styleWallpaper = (factory || ambient) && look.hasWallpaper && look.style.name.lowercase() in look.styleWallpapers
+        if ((!factory && !ambient) || styleWallpaper) Wallpaper(theme)
         when {
             screen == Screen.SETUP -> {
                 SetupScreen(theme, themeController, actions)
@@ -240,12 +242,12 @@ fun LauncherScreen(
 
             // Factory screen theme: MENU of tiles, status bar and soft keys instead of the rail.
             factory -> {
-                FactoryShell(screen, apps, pins, look, media, actions, onAppMenu = { menuFor = it }) { content() }
+                FactoryShell(screen, apps, pins, look, media, actions, onAppMenu = { menuFor = it }, wallpaper = styleWallpaper) { content() }
             }
 
             // Ambient screen theme: home pages of widgets, a menu of six tiles, a bar of buttons at the bottom.
             ambient -> {
-                AmbientShell(screen, apps, pins, media, actions, onAppMenu = { menuFor = it }) { content() }
+                AmbientShell(screen, apps, pins, media, actions, onAppMenu = { menuFor = it }, wallpaper = styleWallpaper) { content() }
             }
 
             look.rail == RailPosition.BOTTOM -> {

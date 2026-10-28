@@ -38,6 +38,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.QueueMusic
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Album
+import androidx.compose.material.icons.outlined.Input
+import androidx.compose.material.icons.outlined.Bluetooth
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -120,11 +122,13 @@ internal fun FactoryShell(
     media: MediaRepository,
     actions: LauncherActions,
     onAppMenu: (LauncherApp) -> Unit,
+    /** The wallpaper shows behind (dimmed) instead of black. */
+    wallpaper: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val byKey = apps.associateBy { it.key }
     val pinned = pins.mapNotNull { byKey[it] }
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    Box(Modifier.fillMaxSize().background(if (wallpaper) Color.Black.copy(alpha = 0.45f) else Color.Black)) {
         if (screen == Screen.HOME) {
             FactoryMenu(pinned, actions, onAppMenu)
         } else {
@@ -314,6 +318,7 @@ private fun FactoryVehicle(
     actions: LauncherActions,
     content: @Composable () -> Unit,
 ) {
+    val context = LocalContext.current
     val pages = listOf(Screen.OBD to R.string.factory_vehicle_status, Screen.TPMS to R.string.tpms_title)
     val i = pages.indexOfFirst { it.first == screen }.coerceAtLeast(0)
     Column(Modifier.fillMaxSize()) {
@@ -342,7 +347,7 @@ private fun FactoryVehicle(
                 null,
                 null,
                 null,
-                SoftKey(R.string.factory_setup, Icons.Outlined.Settings) { actions.show(Screen.SETTINGS) },
+                SoftKey(R.string.factory_setup, Icons.Outlined.Settings) { openServiceTab(context, "VEHICLE") },
             ),
         )
     }
@@ -423,6 +428,7 @@ private fun FactoryMedia(
     media: MediaRepository,
     actions: LauncherActions,
 ) {
+    val context = LocalContext.current
     val access by media.hasAccess.collectAsStateWithLifecycle()
     val np by media.nowPlaying.collectAsStateWithLifecycle()
     var sources by remember { mutableStateOf(false) }
@@ -461,7 +467,8 @@ private fun FactoryMedia(
                 SoftKey(if (playing) R.string.factory_pause else R.string.factory_play, if (playing) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, actions.mediaToggle),
                 SoftKey(R.string.factory_next, Icons.Outlined.ChevronRight, actions.mediaNext),
                 null,
-                SoftKey(R.string.factory_setup, Icons.Outlined.Settings) { actions.show(Screen.SETTINGS) },
+                // The media's Setup is the sound: ViPER4Android LibreHU (DSP), like the original's sound settings.
+                SoftKey(R.string.factory_setup, Icons.Outlined.Settings) { openSound(context) },
             ),
         )
     }
@@ -671,7 +678,7 @@ private fun SourcePopup(
                                 if (i == 1) Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(Color(0xFF6A6B70)))
                                 SourceCell(src, Modifier.weight(1f)) {
                                     onDismiss()
-                                    actions.launch(src.component)
+                                    src.activate(context, actions)
                                 }
                             }
                             if (row.size == 1) {
@@ -727,11 +734,50 @@ private fun SourceCell(
 }
 
 internal class MediaSource(
-    val component: ComponentName,
+    /** The app to open; null for the head unit's inputs (AUX, Bluetooth audio), which [open] handles. */
+    val component: ComponentName?,
     val label: String,
     val icon: ImageVector?,
     val image: androidx.compose.ui.graphics.ImageBitmap?,
-)
+    /** A unique key for lists. */
+    val key: String = component?.flattenToString() ?: label,
+    val open: ((Context, LauncherActions) -> Unit)? = null,
+) {
+    /** Makes it the source: its app, or the head unit's input. */
+    fun activate(
+        context: Context,
+        actions: LauncherActions,
+    ) {
+        val o = open
+        if (o != null) o(context, actions) else component?.let { actions.launch(it) }
+    }
+}
+
+/** LibreHU-service's audio chip input: the AUX / AV input, or Android (Bluetooth, apps). */
+private fun audioInput(
+    context: Context,
+    aux: Boolean,
+) {
+    val i =
+        Intent("org.librehu.service.AUDIO_SOURCE")
+            .setClassName(LIBREHU_SERVICE, "$LIBREHU_SERVICE.LibreHuService")
+            .putExtra("source", if (aux) "aux" else "android")
+    runCatching { context.startService(i) }.onFailure { runCatching { context.startForegroundService(i) } }
+}
+
+/** Bluetooth audio of the phone: Android's input, the media screen, then play (media key, heard by the BT session). */
+private fun bluetoothAudio(
+    context: Context,
+    actions: LauncherActions,
+) {
+    audioInput(context, aux = false)
+    actions.show(Screen.MEDIA)
+    val am = context.getSystemService(android.media.AudioManager::class.java)
+    val now = android.os.SystemClock.uptimeMillis()
+    for (a in listOf(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP)) {
+        am.dispatchMediaKeyEvent(android.view.KeyEvent(now, now, a, android.view.KeyEvent.KEYCODE_MEDIA_PLAY, 0))
+    }
+}
 
 // --- Apps ----------------------------------------------------------------------------------------------------------
 
@@ -812,6 +858,49 @@ internal const val CARPLAY = "org.librehu.carplay"
 internal val ANDROID_AUTO = arrayOf("org.librehu.headunit", "com.andrerinas.headunitrevived")
 internal const val DIALER = "org.librehu.dialer"
 
+/** ViPER4Android LibreHU: the DSP and the audio settings of every style (Sound tiles and keys). */
+internal const val VIPER = "com.llsl.viper4android"
+
+/** LibreHU-service: vehicle, reverse camera, head unit audio, Bluetooth… (opened on one of its tabs). */
+internal const val LIBREHU_SERVICE = "org.librehu.service"
+
+/** The sound settings: ViPER4Android LibreHU (equaliser, DSP), else Android's sound settings. */
+internal fun openSound(context: Context) {
+    val i = context.packageManager.getLaunchIntentForPackage(VIPER) ?: Intent(android.provider.Settings.ACTION_SOUND_SETTINGS)
+    try {
+        context.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: RuntimeException) {
+        android.widget.Toast.makeText(context, R.string.factory_no_app, android.widget.Toast.LENGTH_SHORT).show()
+    }
+}
+
+/** LibreHU-service on one of its tabs (VEHICLE, REVERSE, AUDIO, BLUETOOTH, DISPLAY, LIGHTS, SYSTEM…). */
+internal fun openServiceTab(
+    context: Context,
+    tab: String,
+) {
+    val i = context.packageManager.getLaunchIntentForPackage(LIBREHU_SERVICE)
+    if (i == null) {
+        android.widget.Toast.makeText(context, R.string.factory_no_app, android.widget.Toast.LENGTH_SHORT).show()
+        return
+    }
+    context.startActivity(i.putExtra("tab", tab).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP))
+}
+
+/** A page of the launcher's own settings to open (the name of a SettingsTab: LOOK, DRIVING…), read by SettingsScreen. */
+internal object SettingsNav {
+    var page: String? by androidx.compose.runtime.mutableStateOf(null)
+}
+
+/** The launcher's settings on one of their pages. */
+internal fun openSettingsPage(
+    actions: LauncherActions,
+    page: String,
+) {
+    SettingsNav.page = page
+    actions.show(Screen.SETTINGS)
+}
+
 /** Navigation apps tried in this order before a plain geo: link. */
 private val NAV_APPS = listOf("net.osmand.plus", "net.osmand", "app.organicmaps", "com.mapswithme.maps.pro", "com.waze", "com.google.android.apps.maps", "com.generalmagic.magicearth")
 
@@ -856,7 +945,17 @@ internal fun mediaSources(context: Context): List<MediaSource> {
     runCatching {
         pm.queryIntentServices(Intent("android.media.browse.MediaBrowserService"), 0).forEach { packages += it.serviceInfo.packageName }
     }
-    return packages.mapNotNull { pkg ->
+    // The head unit's own inputs first: the phone's Bluetooth audio and the AUX input (LibreHU-service).
+    val inputs =
+        listOf(
+            MediaSource(null, context.getString(R.string.source_bluetooth), Icons.Outlined.Bluetooth, null, "bt", ::bluetoothAudio),
+            MediaSource(null, context.getString(R.string.source_aux), Icons.Outlined.Input, null, "aux") { c, a ->
+                audioInput(c, aux = true)
+                android.widget.Toast.makeText(c, R.string.source_aux_on, android.widget.Toast.LENGTH_SHORT).show()
+                a.show(Screen.MEDIA)
+            },
+        )
+    return inputs + packages.filter { it != "com.android.bluetooth" }.mapNotNull { pkg ->
         val c = launchComponent(context, pkg) ?: return@mapNotNull null
         val label = runCatching { pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString() }.getOrDefault(pkg)
         val icon =
