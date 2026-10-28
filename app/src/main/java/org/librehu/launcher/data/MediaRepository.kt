@@ -18,6 +18,8 @@ data class NowPlaying(
     val packageName: String,
     val title: String,
     val subtitle: String,
+    /** Album, when the player gives one besides the artist (empty otherwise). */
+    val album: String = "",
     val art: Bitmap?,
     val playing: Boolean,
     /** Track length in ms, 0 when unknown (radio, streams). */
@@ -221,6 +223,7 @@ class MediaRepository(
                     subtitle =
                         md.getString(MediaMetadata.METADATA_KEY_ARTIST)
                             ?: md.getString(MediaMetadata.METADATA_KEY_ALBUM).orEmpty(),
+                    album = if (md.getString(MediaMetadata.METADATA_KEY_ARTIST) != null) md.getString(MediaMetadata.METADATA_KEY_ALBUM).orEmpty() else "",
                     art =
                         md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
                             ?: md.getBitmap(MediaMetadata.METADATA_KEY_ART),
