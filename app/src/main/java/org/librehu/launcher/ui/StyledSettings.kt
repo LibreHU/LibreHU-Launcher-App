@@ -276,3 +276,78 @@ internal fun StyledSwitch(
         }
     }
 }
+
+/**
+ * [androidx.compose.material3.AlertDialog] in the style: square black box in a thin white frame (factory), night blue
+ * framed in the accent colour (ambient); the Material dialog otherwise. Same slots.
+ */
+@Composable
+internal fun CarAlertDialog(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    dismissButton: @Composable (() -> Unit)? = null,
+    icon: @Composable (() -> Unit)? = null,
+    title: @Composable (() -> Unit)? = null,
+    text: @Composable (() -> Unit)? = null,
+) {
+    val look = settingLook
+    if (look == SettingLook.MATERIAL) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = onDismissRequest,
+            confirmButton = confirmButton,
+            dismissButton = dismissButton,
+            icon = icon,
+            title = title,
+            text = text,
+        )
+        return
+    }
+    val accent = CarColors.Accent
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismissRequest) {
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.material3.LocalContentColor provides Color.White,
+            androidx.compose.material3.LocalTextStyle provides
+                androidx.compose.ui.text.TextStyle(
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontFamily = if (look == SettingLook.FACTORY) FactoryFont else null,
+                    fontWeight = if (look == SettingLook.FACTORY) FontWeight.Normal else FontWeight.Light,
+                ),
+        ) {
+            Column(
+                Modifier
+                    .width(560.dp)
+                    .background(if (look == SettingLook.FACTORY) Color.Black else Color(0xF20E1626))
+                    .border(BorderStroke(if (look == SettingLook.FACTORY) 1.5.dp else 1.dp, if (look == SettingLook.FACTORY) Color(0xFFE6E6E6) else accent)),
+            ) {
+                if (icon != null || title != null) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (icon != null) {
+                            icon()
+                            Spacer(Modifier.width(16.dp))
+                        }
+                        if (title != null) {
+                            androidx.compose.runtime.CompositionLocalProvider(
+                                androidx.compose.material3.LocalTextStyle provides
+                                    androidx.compose.material3.LocalTextStyle.current.copy(
+                                        fontSize = 24.sp,
+                                        fontWeight = if (look == SettingLook.FACTORY) FontWeight.SemiBold else FontWeight.Light,
+                                    ),
+                            ) { title() }
+                        }
+                    }
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(if (look == SettingLook.FACTORY) accent else accent.copy(alpha = 0.8f)))
+                }
+                if (text != null) {
+                    Box(Modifier.fillMaxWidth().heightIn(max = 460.dp).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp)) { text() }
+                }
+                Box(Modifier.fillMaxWidth().height(1.dp).background(if (look == SettingLook.FACTORY) Color(0xFF3A3B3F) else accent.copy(alpha = 0.8f)))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                    dismissButton?.invoke()
+                    Spacer(Modifier.width(8.dp))
+                    confirmButton()
+                }
+            }
+        }
+    }
+}

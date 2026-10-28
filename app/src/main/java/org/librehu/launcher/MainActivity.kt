@@ -38,6 +38,7 @@ import org.librehu.launcher.data.LauncherPrefs
 import org.librehu.launcher.data.MediaRepository
 import org.librehu.launcher.data.ThemeController
 import org.librehu.launcher.data.ThemeStore
+import org.librehu.launcher.ui.ThemeStyle
 import org.librehu.launcher.data.VehicleLink
 import org.librehu.launcher.data.WallpaperKind
 import org.librehu.launcher.data.WidgetHost
@@ -72,6 +73,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var theme: ThemeStore
     private lateinit var themeController: ThemeController
     private val screen = mutableStateOf(Screen.HOME)
+
+    /** Screens shown before the current one (factory and ambient styles: back goes to the previous screen). */
+    private val trail = ArrayDeque<Screen>()
     private var started = false
     private var homeReported: Boolean? = null
 
@@ -215,9 +219,13 @@ class MainActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
-                // A launcher never finishes on back: go back to the dashboard.
+                // A launcher never finishes on back: go back to the dashboard (factory and ambient styles: to the
+                // screen shown before, like the original systems).
                 override fun handleOnBackPressed() {
-                    screen.value = Screen.HOME
+                    val style = ThemeStore.get(this@MainActivity).settings.value.style
+                    val previous = if (style == ThemeStyle.FACTORY || style == ThemeStyle.AMBIENT) trail.removeLastOrNull() else null
+                    if (previous == null) trail.clear()
+                    screen.value = previous ?: Screen.HOME
                 }
             },
         )
@@ -227,7 +235,17 @@ class MainActivity : ComponentActivity() {
                 launch = { c -> AppsRepository.launch(this, c) },
                 togglePin = prefs::togglePin,
                 movePin = prefs::movePin,
-                show = { screen.value = it },
+                show = {
+                    when {
+                        it == Screen.HOME -> trail.clear()
+                        it != screen.value -> {
+                            trail.remove(it)
+                            trail.addLast(screen.value)
+                            if (trail.size > 8) trail.removeFirst()
+                        }
+                    }
+                    screen.value = it
+                },
                 volumeUp = headUnit::volumeUp,
                 volumeDown = headUnit::volumeDown,
                 volume = headUnit::volume,
