@@ -134,18 +134,22 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   de l'écran (Android Auto dans le menu, appui long : CarPlay ; Sources dans Multimédia) et Options. Écran
   **Multimédia** : pochette, titre, artiste, progression et boutons ronds. Le launcher **demande ce style aux autres
   applis LibreHU** (`style` = `ambient`) : elles prennent sa palette, des formes carrées et un texte fin.
-- **Son des touches** : chaque toucher (sans glisser ni appui long) fait un petit son selon le style : tic doux
-  (moderne), bip d'autoradio (rétro), « toc » amorti (Modularer Infotainment-Baukasten), bip électronique montant
-  (LHU-Link). Les autres applis LibreHU font le même son (elles suivent le style demandé par le launcher). Sons propres à
-  LibreHU, synthétisés (`res/raw/click_*.wav`, `ui/KeyClick.kt`) ; coupé quand les « Sons des touches » d'Android sont
-  désactivés (Paramètres → Son).
+- **Son des touches** (Paramètres → Personnalisation → Son des touches) : chaque toucher (sans glisser ni appui long)
+  fait un petit son, **un par style** au choix parmi **26** (un toucher sur un son le fait entendre et le choisit, chaque
+  style garde le sien), ou **aucun** (interrupteur). Par défaut : pop feutré (moderne), bip doux (rétro), toc de bois
+  (Modularer Infotainment-Baukasten), carillon de verre (LHU-Link). Le launcher publie le son aux autres applis LibreHU
+  (colonne / extra `click` : nom du son ou `off`), qui le jouent aussi ; réglable depuis l'appli téléphone (Bridge).
+  Sons de LibreHU (synthétisés), de **Kenney** ([kenney.nl](https://kenney.nl/assets/interface-sounds), CC0, version WAV
+  de **Hugo Locurcio (Calinou)** : [Calinou/kenney-interface-sounds](https://github.com/Calinou/kenney-interface-sounds))
+  et de l'**Android Open Source Project** (sons tactiles `Effect_Tick`, `KeypressStandard`, `KeypressSpacebar`,
+  Apache 2.0) : détail et licences dans `third_party/KEYCLICK-SOUNDS.md`.
 - **Couleur d'accent** : 8 couleurs ou la **roue RGB** (rouge, vert, bleu de 0 à 255, aperçu et valeur hexadécimale) ;
   elle colore le thème, le style rétro, les pixels des animations d'afficheur et toutes les applis LibreHU.
 - **Police** : normale ou **afficheur à segments** (LibreHU Seg14 : DSEG14, celle de l'afficheur rétro de LibreHU-Disc,
   en majuscules sans accents comme sur un autoradio ; les lettres accentuées sont dessinées sans leur accent ; police
   générée par `tools/make_retro_font.py`, SIL OFL 1.1, `third_party/DSEG-LICENSE.txt`), dans tous les styles.
   **Style, police et palette suivis par toutes les applis LibreHU** (publiés par
-  `content://org.librehu.launcher.theme/theme` : colonnes `style` (`modern` / `retro` / `factory` / `ambient`), `font` (`normal` /
+  `content://org.librehu.launcher.theme/theme` : colonnes `style` (`modern` / `retro` / `factory` / `ambient`), `click` (son des touches ou `off`), `font` (`normal` /
   `segment`), `background`, `surface`, `surface_high`, `on_accent`, `text`, `text_dim` en plus de `dark` et `accent`,
   mêmes extras dans `THEME_CHANGED`).
   **Widgets compris** (ceux du launcher et ceux des applis) : couleurs rétro, et police à segments dessinée en image

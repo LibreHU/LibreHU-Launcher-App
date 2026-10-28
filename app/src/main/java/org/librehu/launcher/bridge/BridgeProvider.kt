@@ -77,6 +77,14 @@ class BridgeProvider : BridgeKitProvider() {
                 listOf(false to s(R.string.theme_font_normal), true to s(R.string.theme_font_segment)),
                 s(R.string.theme_font_hint),
             ) { v -> store.update { it.copy(segmentFont = v) } }
+            switch("key_clicks", s(R.string.click_on), t.keyClicks, s(R.string.click_on_hint)) { v -> store.update { it.copy(keyClicks = v) } }
+            val styleKey = t.style.name.lowercase()
+            choice(
+                "click_sound",
+                s(R.string.click_section),
+                t.clickSounds[styleKey] ?: org.librehu.launcher.ui.KeyClick.default(styleKey),
+                org.librehu.launcher.ui.CLICK_LABELS.map { (n, l) -> n to s(l) },
+            ) { v -> store.update { it.copy(clickSounds = it.clickSounds + (styleKey to v)) } }
             pick("accent", s(R.string.accent), t.accent, label = { s(ACCENT_NAMES.getValue(it)) }) { v -> store.update { it.copy(accent = v) } }
             if (t.accent == Accent.CUSTOM) {
                 val argb = t.customAccent
