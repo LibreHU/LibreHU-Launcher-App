@@ -225,7 +225,7 @@ internal fun AmbientShell(
                             },
                             optionsKey,
                         )
-                    Screen.MEDIA -> listOf(back, AmbientButton(R.string.ambient_sources, null) { sources = true }, optionsKey)
+                    Screen.MEDIA -> listOf(back, AmbientButton(R.string.factory_browse, null) { actions.mediaOpen() }, optionsKey)
                     else -> listOf(back, optionsKey)
                 },
             )
@@ -860,16 +860,61 @@ private fun GlowIcon(
 
 // --- Multimedia ----------------------------------------------------------------------------------------------------
 
-/** Multimedia: the cover on the left, title, artist and progress on the right, the controls under them. */
+/**
+ * Multimedia: two tabs like the original, Playback (the cover, title, artist, a framed progress bar with the times on
+ * each side, previous / play / next keys side by side) and Sources (the players as tiles).
+ */
 @Composable
 private fun AmbientMedia(
     media: MediaRepository,
     actions: LauncherActions,
 ) {
+    var tab by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
+    Column(Modifier.fillMaxSize()) {
+        AmbientTabs(listOf(stringResource(R.string.ambient_playback), stringResource(R.string.ambient_sources)), tab) { tab = it }
+        Box(Modifier.weight(1f).fillMaxWidth().border(BorderStroke(1.dp, CarColors.Accent))) {
+            if (tab == 0) AmbientPlayback(media, actions) else AmbientSourceTiles(actions)
+        }
+    }
+}
+
+/** Tabs: framed in the accent colour, the open one without its bottom line and in white, the others dimmed. */
+@Composable
+private fun AmbientTabs(
+    labels: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+) {
+    val accent = CarColors.Accent
+    Row(Modifier.fillMaxWidth().height(52.dp)) {
+        labels.forEachIndexed { i, label ->
+            val open = i == selected
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .drawBehind {
+                        val w = 1.dp.toPx()
+                        drawLine(accent, Offset(0f, w / 2), Offset(size.width, w / 2), w)
+                        drawLine(accent, Offset(w / 2, 0f), Offset(w / 2, size.height), w)
+                        drawLine(accent, Offset(size.width - w / 2, 0f), Offset(size.width - w / 2, size.height), w)
+                        if (!open) drawLine(accent, Offset(0f, size.height - w / 2), Offset(size.width, size.height - w / 2), w)
+                    }.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { onSelect(i) },
+                contentAlignment = Alignment.Center,
+            ) { Text(label, color = if (open) LIGHT else DIM.copy(alpha = 0.7f), fontSize = 21.sp, fontWeight = FontWeight.Light) }
+        }
+    }
+}
+
+@Composable
+private fun AmbientPlayback(
+    media: MediaRepository,
+    actions: LauncherActions,
+) {
     val access by media.hasAccess.collectAsStateWithLifecycle()
     val np by media.nowPlaying.collectAsStateWithLifecycle()
-    Frame(Modifier.fillMaxSize()) {
-        val p = np
+    val p = np
+    Box(Modifier.fillMaxSize()) {
         when {
             !access ->
                 Text(
@@ -881,30 +926,62 @@ private fun AmbientMedia(
             p == null -> Text(stringResource(R.string.factory_no_media), color = DIM, fontSize = 22.sp, modifier = Modifier.align(Alignment.Center))
             else ->
                 Row(Modifier.fillMaxSize().padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Cover(p, Modifier.fillMaxHeight(0.9f).aspectRatio(1f))
+                    Cover(p, Modifier.fillMaxHeight(0.92f).aspectRatio(1f))
                     Spacer(Modifier.width(32.dp))
                     Column(Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.MusicNote, null, tint = DIM, modifier = Modifier.size(28.dp))
-                            Spacer(Modifier.width(14.dp))
-                            Text(p.title, color = LIGHT, fontSize = 30.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        }
+                        Text(p.title, color = LIGHT, fontSize = 28.sp, fontWeight = FontWeight.Light, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         if (p.subtitle.isNotEmpty()) {
-                            Spacer(Modifier.height(14.dp))
+                            Spacer(Modifier.height(8.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Outlined.Person, null, tint = DIM, modifier = Modifier.size(28.dp))
-                                Spacer(Modifier.width(14.dp))
-                                Text(p.subtitle, color = DIM, fontSize = 24.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                Icon(Icons.Outlined.Person, null, tint = LIGHT, modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(p.subtitle, color = LIGHT, fontSize = 18.sp, fontWeight = FontWeight.Light, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
-                        if (p.durationMs > 0) {
-                            Spacer(Modifier.height(22.dp))
-                            ProgressLine(p)
-                        }
-                        Spacer(Modifier.height(22.dp))
+                        Spacer(Modifier.height(20.dp))
+                        if (p.durationMs > 0) ProgressLine(p)
+                        Spacer(Modifier.height(16.dp))
                         Transport(p.playing, actions, small = false)
                     }
                 }
+        }
+    }
+}
+
+/** The players as tiles, three by row: the radio, the disc player, the projections and the music apps installed. */
+@Composable
+private fun AmbientSourceTiles(actions: LauncherActions) {
+    val context = LocalContext.current
+    val list = remember { mediaSources(context) }
+    androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+        columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(3),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.fillMaxSize().padding(4.dp),
+    ) {
+        items(list.size, key = { list[it].component.flattenToString() }) { i ->
+            val src = list[i]
+            val interaction = remember { MutableInteractionSource() }
+            val pressed by interaction.collectIsPressedAsState()
+            val accent = CarColors.Accent
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier =
+                    Modifier
+                        .height(170.dp)
+                        .background(Color.Black.copy(alpha = 0.75f))
+                        .drawBehind { if (pressed) bottomGlow(deep(accent), 0.9f) }
+                        .border(BorderStroke(1.dp, accent))
+                        .clickable(interactionSource = interaction, indication = null) { actions.launch(src.component) },
+            ) {
+                when {
+                    src.icon != null -> MetalIcon(src.icon, 64.dp)
+                    src.image != null -> Image(src.image, null, modifier = Modifier.size(64.dp))
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(src.label, color = LIGHT, fontSize = 21.sp, fontWeight = FontWeight.Light, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }
@@ -915,14 +992,7 @@ private fun Cover(
     modifier: Modifier,
 ) {
     val art = remember(np?.art) { np?.art?.asImageBitmap() }
-    val accent = CarColors.Accent
-    Box(
-        modifier
-            .drawBehind {
-                drawRect(Brush.radialGradient(listOf(accent.copy(alpha = 0.35f), Color.Transparent), center = Offset(size.width / 2, size.height), radius = size.width * 0.7f))
-            }.border(BorderStroke(1.dp, Color(0xFF5A6575))),
-        contentAlignment = Alignment.Center,
-    ) {
+    Box(modifier, contentAlignment = Alignment.Center) {
         if (art != null) {
             Image(art, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         } else {
@@ -933,7 +1003,7 @@ private fun Cover(
     }
 }
 
-/** Progress of the track (shown only; seeking stays in the player and the media widgets). */
+/** Progress of the track: a thin framed bar filled in the accent colour, the times on each side (shown only). */
 @Composable
 private fun ProgressLine(np: NowPlaying) {
     var position by remember { mutableLongStateOf(np.positionNow()) }
@@ -945,30 +1015,36 @@ private fun ProgressLine(np: NowPlaying) {
         }
     }
     val f = (position.toFloat() / np.durationMs).coerceIn(0f, 1f)
-    Column {
-        Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFF2A3442))) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(time(position), color = LIGHT, fontSize = 15.sp, fontWeight = FontWeight.Light)
+        Spacer(Modifier.width(8.dp))
+        Box(Modifier.weight(1f).height(12.dp).border(BorderStroke(1.dp, CarColors.Accent)).padding(2.dp)) {
             Box(Modifier.fillMaxWidth(f).fillMaxHeight().background(CarColors.Accent))
         }
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-            Text(time(position), color = DIM, fontSize = 15.sp)
-            Spacer(Modifier.weight(1f))
-            Text(time(np.durationMs), color = DIM, fontSize = 15.sp)
-        }
+        Spacer(Modifier.width(8.dp))
+        Text(time(np.durationMs), color = LIGHT, fontSize = 15.sp, fontWeight = FontWeight.Light)
     }
 }
 
-/** Previous, play / pause, next: round brushed buttons, the middle one lit by the accent colour. */
+/** Previous, play / pause, next: keys side by side like the bottom bar's (round ones in the small home widget). */
 @Composable
 private fun Transport(
     playing: Boolean,
     actions: LauncherActions,
     small: Boolean,
 ) {
-    val s = if (small) 44.dp else 64.dp
-    Row(horizontalArrangement = Arrangement.spacedBy(if (small) 14.dp else 24.dp), verticalAlignment = Alignment.CenterVertically) {
-        RoundButton(Icons.Outlined.SkipPrevious, s, false, actions.mediaPrevious)
-        RoundButton(if (playing) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, s * 1.2f, true, actions.mediaToggle)
-        RoundButton(Icons.Outlined.SkipNext, s, false, actions.mediaNext)
+    if (small) {
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            RoundButton(Icons.Outlined.SkipPrevious, 44.dp, false, actions.mediaPrevious)
+            RoundButton(if (playing) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, 52.dp, true, actions.mediaToggle)
+            RoundButton(Icons.Outlined.SkipNext, 44.dp, false, actions.mediaNext)
+        }
+        return
+    }
+    Row(Modifier.fillMaxWidth().height(60.dp)) {
+        BarButton(AmbientButton(R.string.factory_previous, Icons.Outlined.SkipPrevious, onClick = actions.mediaPrevious))
+        BarButton(AmbientButton(if (playing) R.string.factory_pause else R.string.factory_play, if (playing) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, onClick = actions.mediaToggle))
+        BarButton(AmbientButton(R.string.factory_next, Icons.Outlined.SkipNext, onClick = actions.mediaNext))
     }
 }
 

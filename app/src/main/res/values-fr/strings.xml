@@ -630,6 +630,7 @@
     <string name="ambient_options">Options</string>
     <string name="ambient_back">Retour</string>
     <string name="ambient_add">Ajouter une appli</string>
+    <string name="ambient_playback">Lecture</string>
     <string name="ambient_destination">Destination</string>
     <string name="ambient_map">Carte</string>
     <string name="ambient_nav_settings">Réglages</string>
