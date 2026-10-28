@@ -616,6 +616,7 @@
     <string name="factory_no_app">Not installed</string>
     <string name="factory_carplay">CarPlay</string>
     <string name="factory_menu">MENU</string>
+    <string name="factory_vehicle_status">Vehicle status</string>
     <string name="factory_add">Add</string>
     <string name="factory_search">Search</string>
     <string name="factory_all">All</string>
@@ -629,6 +630,7 @@
     <string name="ambient_options">Options</string>
     <string name="ambient_back">Back</string>
     <string name="ambient_add">Add an app</string>
+    <string name="ambient_playback">Playback</string>
     <string name="ambient_destination">Destination</string>
     <string name="ambient_map">Map</string>
     <string name="ambient_nav_settings">Settings</string>
