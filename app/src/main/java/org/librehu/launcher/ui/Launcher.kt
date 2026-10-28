@@ -289,7 +289,7 @@ fun LauncherScreen(
         }
     }
     confirmPower?.let { choice ->
-        AlertDialog(
+        CarAlertDialog(
             onDismissRequest = { confirmPower = null },
             title = {
                 Text(
@@ -1537,7 +1537,7 @@ private fun AppMenu(
     val pkg = app.component.packageName
     var confirmUninstall by remember { mutableStateOf(false) }
     var renaming by remember { mutableStateOf(false) }
-    AlertDialog(
+    CarAlertDialog(
         onDismissRequest = onDismiss,
         icon = { AppIconImage(app, 56, Modifier.size(56.dp).clip(CircleShape)) },
         title = { Text(app.label) },
@@ -1584,7 +1584,7 @@ private fun AppMenu(
     )
     if (renaming) {
         var name by remember { mutableStateOf(app.label) }
-        AlertDialog(
+        CarAlertDialog(
             onDismissRequest = { renaming = false },
             title = { Text(stringResource(R.string.app_rename)) },
             text = {
@@ -1606,7 +1606,7 @@ private fun AppMenu(
         )
     }
     if (confirmUninstall) {
-        AlertDialog(
+        CarAlertDialog(
             onDismissRequest = { confirmUninstall = false },
             title = { Text(stringResource(R.string.uninstall_confirm, app.label)) },
             confirmButton = {
