@@ -35,12 +35,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.Contacts
+import androidx.compose.material.icons.outlined.Dialpad
 import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.ListAlt
+import androidx.compose.material.icons.outlined.ManageSearch
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Navigation
 import androidx.compose.material.icons.outlined.Pause
@@ -48,10 +58,16 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.Radio
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
+import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material.icons.outlined.Speaker
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,12 +81,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -81,6 +99,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlinx.coroutines.delay
 import org.librehu.launcher.R
 import org.librehu.launcher.data.AndroidAutoLink
@@ -88,9 +109,6 @@ import org.librehu.launcher.data.LauncherApp
 import org.librehu.launcher.data.LauncherPrefs
 import org.librehu.launcher.data.MediaRepository
 import org.librehu.launcher.data.NowPlaying
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
 /*
  * Ambient style ([ThemeStyle.AMBIENT]): the layout of a connected-car tablet screen. Black fading to night blue, the
@@ -135,6 +153,11 @@ internal fun AmbientShell(
     val appPages = (pinned.map<LauncherApp, LauncherApp?> { it } + null).chunked(4)
     val pager = rememberPagerState { 1 + appPages.size }
     var sources by remember { mutableStateOf(false) }
+    // The menu and its sub-menus (Navigation, Multimedia, Phone, Apps), back to the menu itself off the menu screen.
+    var section by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(AmbientSection.ROOT) }
+    androidx.compose.runtime.LaunchedEffect(screen) { if (screen != Screen.MENU) section = AmbientSection.ROOT }
+    // Pop-up menu of the Options key (null: closed).
+    var options by remember { mutableStateOf<List<AmbientOption>?>(null) }
     Box(
         Modifier
             .fillMaxSize()
@@ -159,7 +182,7 @@ internal fun AmbientShell(
                 actions,
                 if (screen == Screen.HOME) pager else null,
                 when (screen) {
-                    Screen.MENU -> stringResource(R.string.ambient_menu)
+                    Screen.MENU -> stringResource(section.title)
                     Screen.MEDIA -> stringResource(R.string.ambient_multimedia)
                     Screen.APPS -> stringResource(R.string.factory_apps)
                     Screen.SETTINGS -> stringResource(R.string.ambient_system)
@@ -170,16 +193,25 @@ internal fun AmbientShell(
             Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                 when (screen) {
                     Screen.HOME -> AmbientHome(pager, appPages, media, actions, onAppMenu)
-                    Screen.MENU -> AmbientMenu(actions)
+                    Screen.MENU -> AmbientMenu(section, { section = it }, actions)
                     Screen.MEDIA -> AmbientMedia(media, actions)
                     else -> content()
                 }
             }
-            val back = AmbientButton(R.string.ambient_back, Icons.AutoMirrored.Outlined.ArrowBack) { actions.show(if (screen == Screen.MENU) Screen.HOME else Screen.MENU) }
-            val options = AmbientButton(R.string.ambient_options, Icons.Outlined.MoreVert) { actions.show(Screen.SETTINGS) }
+            // Back: one step up (a sub-menu to the menu, the menu to home…); a long press, straight home.
+            val back =
+                AmbientButton(R.string.ambient_back, Icons.AutoMirrored.Outlined.Undo, onLongClick = { actions.show(Screen.HOME) }) {
+                    when {
+                        screen == Screen.MENU && section != AmbientSection.ROOT -> section = AmbientSection.ROOT
+                        screen == Screen.MENU -> actions.show(Screen.HOME)
+                        else -> actions.show(Screen.MENU)
+                    }
+                }
+            val optionList = ambientOptions(screen, actions) { sources = true }
+            val optionsKey = AmbientButton(R.string.ambient_options, Icons.Outlined.ListAlt, enabled = optionList.isNotEmpty()) { options = optionList }
             AmbientBottomBar(
                 when (screen) {
-                    Screen.HOME -> listOf(AmbientButton(R.string.ambient_menu, null) { actions.show(Screen.MENU) }, options)
+                    Screen.HOME -> listOf(AmbientButton(R.string.ambient_menu, null) { actions.show(Screen.MENU) }, optionsKey)
                     // Main action of the menu: the phone projection (a long press: CarPlay).
                     Screen.MENU ->
                         listOf(
@@ -187,19 +219,15 @@ internal fun AmbientShell(
                             AmbientButton(R.string.factory_projection, null, onLongClick = { openPackage(context, actions, CARPLAY) }) {
                                 if (AndroidAutoLink.state.value.active) AndroidAutoLink.show(context) else openPackage(context, actions, *ANDROID_AUTO)
                             },
-                            options,
+                            optionsKey,
                         )
-                    Screen.MEDIA ->
-                        listOf(
-                            back,
-                            AmbientButton(R.string.ambient_sources, Icons.Outlined.Speaker) { sources = true },
-                            AmbientButton(R.string.factory_browse, Icons.Outlined.Menu) { actions.mediaOpen() },
-                        )
-                    else -> listOf(back, options)
+                    Screen.MEDIA -> listOf(back, AmbientButton(R.string.ambient_sources, null) { sources = true }, optionsKey)
+                    else -> listOf(back, optionsKey)
                 },
             )
         }
         if (sources) AmbientSources(actions) { sources = false }
+        options?.let { list -> AmbientOptionsPopup(list) { options = null } }
     }
 }
 
@@ -280,6 +308,8 @@ private class AmbientButton(
     val label: Int,
     val icon: ImageVector?,
     val onLongClick: (() -> Unit)? = null,
+    /** Off: drawn at 40 % and not touchable, like the original's greyed keys. */
+    val enabled: Boolean = true,
     val onClick: () -> Unit,
 )
 
@@ -304,6 +334,7 @@ private fun RowScope.BarButton(b: AmbientButton) {
             Modifier
                 .weight(1f)
                 .fillMaxHeight()
+                .graphicsLayer { alpha = if (b.enabled) 1f else 0.4f }
                 .background(
                     Brush.verticalGradient(
                         0.0225f to SHEEN,
@@ -311,7 +342,13 @@ private fun RowScope.BarButton(b: AmbientButton) {
                         1f to if (pressed) accent else deep(accent),
                     ),
                 ).border(BorderStroke(1.dp, accent))
-                .combinedClickable(interactionSource = interaction, indication = null, onClick = b.onClick, onLongClick = b.onLongClick),
+                .then(
+                    if (b.enabled) {
+                        Modifier.combinedClickable(interactionSource = interaction, indication = null, onClick = b.onClick, onLongClick = b.onLongClick)
+                    } else {
+                        Modifier
+                    },
+                ),
     ) {
         if (b.icon != null) {
             Icon(b.icon, stringResource(b.label), tint = LIGHT, modifier = Modifier.size(30.dp))
@@ -487,34 +524,128 @@ private fun BoxScope.AppWidget(
 
 // --- Menu ----------------------------------------------------------------------------------------------------------
 
+/** The menu and its sub-menus, each a grid of tiles with its own title. */
+internal enum class AmbientSection(
+    val title: Int,
+) {
+    ROOT(R.string.ambient_menu),
+    NAV(R.string.factory_navigation),
+    MULTIMEDIA(R.string.ambient_multimedia),
+    PHONE(R.string.factory_phone),
+    APPS(R.string.factory_apps),
+}
+
 private class AmbientTile(
     val icon: ImageVector,
     val label: Int,
     val onClick: () -> Unit,
 )
 
-/** Menu: six tiles, three by two. */
+/** Opens [intent] as a new task; nothing to open it: a short note. */
+private fun startOrNote(
+    context: android.content.Context,
+    intent: android.content.Intent,
+) {
+    try {
+        context.startActivity(intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: RuntimeException) {
+        android.widget.Toast.makeText(context, R.string.factory_no_app, android.widget.Toast.LENGTH_SHORT).show()
+    }
+}
+
+/** The LibreHU phone app on one of its tabs (CONTACTS, RECENTS, KEYPAD, SETTINGS). */
+private fun dialerTab(
+    context: android.content.Context,
+    tab: String,
+) {
+    val i = context.packageManager.getLaunchIntentForPackage(DIALER)
+    if (i == null) {
+        android.widget.Toast.makeText(context, R.string.factory_no_app, android.widget.Toast.LENGTH_SHORT).show()
+        return
+    }
+    startOrNote(context, i.putExtra("org.librehu.dialer.extra.OPEN_TAB", tab))
+}
+
 @Composable
-private fun AmbientMenu(actions: LauncherActions) {
+private fun sectionTiles(
+    section: AmbientSection,
+    onSection: (AmbientSection) -> Unit,
+    actions: LauncherActions,
+): List<AmbientTile> {
     val context = LocalContext.current
-    val tiles =
-        listOf(
-            AmbientTile(Icons.Outlined.Navigation, R.string.factory_navigation) { openNavigation(context, actions) },
-            AmbientTile(Icons.Outlined.MusicNote, R.string.ambient_multimedia) { actions.show(Screen.MEDIA) },
-            AmbientTile(Icons.Outlined.Phone, R.string.factory_phone) { openPackage(context, actions, DIALER) },
-            AmbientTile(Icons.Outlined.Apps, R.string.factory_apps) { actions.show(Screen.APPS) },
-            AmbientTile(Icons.Outlined.DirectionsCar, R.string.factory_vehicle) { actions.show(Screen.OBD) },
-            AmbientTile(Icons.Outlined.Settings, R.string.ambient_system) { actions.show(Screen.SETTINGS) },
-        )
-    // Tiles side by side in thin frames of the accent colour, the ambient light of the screen behind them.
-    Column(
-        Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        tiles.chunked(3).forEach { row ->
-            Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                row.forEach { t -> MenuTile(t, Modifier.weight(1f)) }
+    return when (section) {
+        AmbientSection.ROOT ->
+            listOf(
+                AmbientTile(Icons.Outlined.Navigation, R.string.factory_navigation) { onSection(AmbientSection.NAV) },
+                AmbientTile(Icons.Outlined.PlayCircle, R.string.ambient_multimedia) { onSection(AmbientSection.MULTIMEDIA) },
+                AmbientTile(Icons.Outlined.Phone, R.string.factory_phone) { onSection(AmbientSection.PHONE) },
+                AmbientTile(Icons.Outlined.Apps, R.string.factory_apps) { onSection(AmbientSection.APPS) },
+                AmbientTile(Icons.Outlined.DirectionsCar, R.string.factory_vehicle) { actions.show(Screen.OBD) },
+                AmbientTile(Icons.Outlined.Settings, R.string.ambient_system) { actions.show(Screen.SETTINGS) },
+            )
+        AmbientSection.NAV ->
+            listOf(
+                // Destination: the navigation app's search (geo: query), else the app itself.
+                AmbientTile(Icons.Outlined.Flag, R.string.ambient_destination) {
+                    val geo = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("geo:0,0?q="))
+                    if (geo.resolveActivity(context.packageManager) != null) startOrNote(context, geo) else openNavigation(context, actions)
+                },
+                AmbientTile(Icons.Outlined.Map, R.string.ambient_map) { openNavigation(context, actions) },
+                AmbientTile(Icons.Outlined.Speed, R.string.ambient_nav_settings) { actions.show(Screen.SETTINGS) },
+            )
+        AmbientSection.MULTIMEDIA ->
+            listOf(
+                AmbientTile(Icons.Outlined.Radio, R.string.factory_radio) { openPackage(context, actions, LauncherPrefs.FM_PACKAGE) },
+                AmbientTile(Icons.Outlined.Album, R.string.ambient_media) { actions.show(Screen.MEDIA) },
+                AmbientTile(Icons.Outlined.Image, R.string.ambient_photo) {
+                    startOrNote(context, android.content.Intent.makeMainSelectorActivity(android.content.Intent.ACTION_MAIN, android.content.Intent.CATEGORY_APP_GALLERY))
+                },
+                AmbientTile(Icons.Outlined.Movie, R.string.ambient_video) { openPackage(context, actions, "org.videolan.vlc", "org.librehu.disc") },
+                AmbientTile(Icons.Outlined.Tune, R.string.ambient_sound) { startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_SOUND_SETTINGS)) },
+            )
+        AmbientSection.PHONE ->
+            listOf(
+                AmbientTile(Icons.Outlined.Contacts, R.string.ambient_contacts) { dialerTab(context, "CONTACTS") },
+                AmbientTile(Icons.Outlined.History, R.string.ambient_call_log) { dialerTab(context, "RECENTS") },
+                AmbientTile(Icons.Outlined.Dialpad, R.string.ambient_dial) { dialerTab(context, "KEYPAD") },
+                AmbientTile(Icons.Outlined.Smartphone, R.string.ambient_smartphone) {
+                    startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS))
+                },
+                AmbientTile(Icons.Outlined.Settings, R.string.ambient_phone_settings) { dialerTab(context, "SETTINGS") },
+            )
+        AmbientSection.APPS ->
+            listOf(
+                AmbientTile(Icons.Outlined.Apps, R.string.ambient_my_apps) { actions.show(Screen.APPS) },
+                AmbientTile(Icons.Outlined.ShoppingBag, R.string.ambient_store) { openPackage(context, actions, "org.librehu.ota") },
+                AmbientTile(Icons.Outlined.ManageSearch, R.string.ambient_app_manager) {
+                    startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_APPLICATION_SETTINGS))
+                },
+            )
+    }
+}
+
+/** A menu: its tiles three by row, side by side in thin frames of the accent colour. */
+@Composable
+internal fun AmbientMenu(
+    section: AmbientSection,
+    onSection: (AmbientSection) -> Unit,
+    actions: LauncherActions,
+) {
+    val tiles = sectionTiles(section, onSection, actions)
+    // A new set of tiles zooms in, like the original.
+    androidx.compose.runtime.key(section) {
+        Column(
+            Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            tiles.chunked(3).forEach { row ->
+                Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    row.forEach { t -> MenuTile(t, Modifier.weight(1f)) }
+                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
             }
+            // Fewer than six tiles: keep the tiles the size of the menu's.
+            repeat(2 - (tiles.size + 2) / 3) { Spacer(Modifier.weight(1f)) }
         }
     }
 }
@@ -528,19 +659,136 @@ private fun MenuTile(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val accent = CarColors.Accent
+    // Previews and screenshots draw the end of the animation.
+    val still = androidx.compose.ui.platform.LocalInspectionMode.current
+    val zoom = remember { androidx.compose.animation.core.Animatable(if (still) 1f else 0.86f) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { zoom.animateTo(1f, androidx.compose.animation.core.tween(220)) }
     Box(
         modifier
             .fillMaxHeight()
-            .background(Color.Black.copy(alpha = 0.75f))
+            .graphicsLayer {
+                scaleX = zoom.value
+                scaleY = zoom.value
+                alpha = (zoom.value - 0.86f) / 0.14f
+            }.background(Color.Black.copy(alpha = 0.75f))
             .drawBehind { if (pressed) bottomGlow(deep(accent), 0.9f) }
             .border(BorderStroke(1.dp, accent))
             .clickable(interactionSource = interaction, indication = null, onClick = t.onClick),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(t.icon, null, tint = Color(0xFFD8DCE2), modifier = Modifier.size(56.dp))
+            MetalIcon(t.icon, 76.dp)
             Spacer(Modifier.height(10.dp))
-            Text(stringResource(t.label), color = LIGHT, fontSize = 23.sp, fontWeight = FontWeight.Light)
+            Text(stringResource(t.label), color = LIGHT, fontSize = 23.sp, fontWeight = FontWeight.Light, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/** An icon in brushed metal: white at the top fading to grey at the bottom, like the original's grey glyphs. */
+@Composable
+private fun MetalIcon(
+    icon: ImageVector,
+    size: androidx.compose.ui.unit.Dp,
+) = Icon(
+    icon,
+    null,
+    tint = Color.White,
+    modifier =
+        Modifier
+            .size(size)
+            .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+            .drawWithContent {
+                drawContent()
+                drawRect(
+                    Brush.verticalGradient(listOf(Color(0xFFFFFFFF), Color(0xFFC9CDD3), Color(0xFF7E848D))),
+                    blendMode = androidx.compose.ui.graphics.BlendMode.SrcIn,
+                )
+            },
+)
+
+// --- Options pop-up ------------------------------------------------------------------------------------------------
+
+internal class AmbientOption(
+    val label: Int,
+    val enabled: Boolean = true,
+    val onClick: () -> Unit,
+)
+
+/** What the Options key offers on each screen; empty: the key is greyed. */
+@Composable
+private fun ambientOptions(
+    screen: Screen,
+    actions: LauncherActions,
+    onSources: () -> Unit,
+): List<AmbientOption> {
+    val context = LocalContext.current
+    return when (screen) {
+        Screen.HOME ->
+            listOf(
+                AmbientOption(R.string.ambient_edit_home) { actions.show(Screen.APPS) },
+                AmbientOption(R.string.ambient_change_theme) { actions.show(Screen.SETTINGS) },
+                AmbientOption(R.string.ambient_date_time) { startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_DATE_SETTINGS)) },
+                AmbientOption(R.string.ambient_black_screen) { actions.standby() },
+            )
+        Screen.MEDIA ->
+            listOf(
+                AmbientOption(R.string.ambient_sources, onClick = onSources),
+                AmbientOption(R.string.ambient_open_player) { actions.mediaOpen() },
+                AmbientOption(R.string.ambient_sound) { startOrNote(context, android.content.Intent(android.provider.Settings.ACTION_SOUND_SETTINGS)) },
+            )
+        else -> emptyList()
+    }
+}
+
+/**
+ * The pop-up menu: a column of choices over the right of the bottom bar, each line framed in the accent colour on
+ * night blue, the screen dimmed behind. A touch outside closes it.
+ */
+@Composable
+internal fun AmbientOptionsPopup(
+    items: List<AmbientOption>,
+    onDismiss: () -> Unit,
+) {
+    val accent = CarColors.Accent
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.45f))
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
+    ) {
+        Column(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 62.dp)
+                .fillMaxWidth(0.5f)
+                .background(Color(0xF00E1626))
+                .border(BorderStroke(1.dp, accent))
+                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
+        ) {
+            items.forEachIndexed { i, item ->
+                if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(accent))
+                val interaction = remember { MutableInteractionSource() }
+                val pressed by interaction.collectIsPressedAsState()
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                        .drawBehind { if (pressed) drawRect(Brush.verticalGradient(listOf(Color.Transparent, accent))) }
+                        .then(
+                            if (item.enabled) {
+                                Modifier.clickable(interactionSource = interaction, indication = null) {
+                                    onDismiss()
+                                    item.onClick()
+                                }
+                            } else {
+                                Modifier
+                            },
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(stringResource(item.label), color = if (item.enabled) LIGHT else DIM.copy(alpha = 0.6f), fontSize = 21.sp, fontWeight = FontWeight.Light)
+                }
+            }
         }
     }
 }

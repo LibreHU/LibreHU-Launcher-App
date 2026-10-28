@@ -99,6 +99,25 @@ fun SettingsScreen(
     apps: List<LauncherApp> = emptyList(),
 ) {
     var tab by rememberSaveable { mutableStateOf(SettingsTab.LOOK) }
+    val page: @Composable (SettingsTab) -> Unit = { t ->
+        when (t) {
+            SettingsTab.LOOK -> LookSettings(theme, controller, actions, apps = apps)
+            SettingsTab.STANDBY -> StandbySettingsPage(actions)
+            SettingsTab.SOS -> SosSettingsPage(actions)
+            SettingsTab.LOCK -> LockSettingsPage(actions)
+            SettingsTab.DRIVING -> DrivingSettingsPage(actions)
+            SettingsTab.REGION -> RegionSettingsPage()
+            SettingsTab.GENERAL -> GeneralSettings(actions)
+        }
+    }
+    // Factory and ambient styles: the list of pages, then one page, like the original systems.
+    if (settingLook != SettingLook.MATERIAL) {
+        var open by rememberSaveable { mutableStateOf<Int?>(null) }
+        StyledSettingsFrame(stringResource(R.string.settings), SettingsTab.entries.map { stringResource(it.label) }, open, { open = it }) { i ->
+            page(SettingsTab.entries[i])
+        }
+        return
+    }
     Column(
         modifier =
             Modifier
@@ -111,15 +130,7 @@ fun SettingsScreen(
     ) {
         Text(stringResource(R.string.settings), color = CarColors.Text, fontSize = 26.sp, fontWeight = FontWeight.Medium)
         SettingChoices(SettingsTab.entries.map { it to stringResource(it.label) }, tab) { tab = it }
-        when (tab) {
-            SettingsTab.LOOK -> LookSettings(theme, controller, actions, apps = apps)
-            SettingsTab.STANDBY -> StandbySettingsPage(actions)
-            SettingsTab.SOS -> SosSettingsPage(actions)
-            SettingsTab.LOCK -> LockSettingsPage(actions)
-            SettingsTab.DRIVING -> DrivingSettingsPage(actions)
-            SettingsTab.REGION -> RegionSettingsPage()
-            SettingsTab.GENERAL -> GeneralSettings(actions)
-        }
+        page(tab)
         Spacer(Modifier.height(8.dp))
     }
 }
@@ -915,6 +926,7 @@ private fun HiddenAppsDialog(
 
 @Composable
 fun SettingSection(title: String) {
+    if (settingLook != SettingLook.MATERIAL) return StyledSection(title)
     Text(title, color = CarColors.Accent, fontSize = 18.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 12.dp))
 }
 
@@ -927,6 +939,7 @@ fun SettingChoice(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
+    if (settingLook != SettingLook.MATERIAL) return StyledChoice(label, selected, onClick)
     Text(
         label,
         color = if (selected) CarColors.OnAccent else CarColors.Text,
@@ -960,6 +973,7 @@ fun SettingSwitch(
     checked: Boolean,
     onChange: (Boolean) -> Unit,
 ) {
+    if (settingLook != SettingLook.MATERIAL) return StyledSwitch(title, subtitle, checked, onChange)
     Row(
         modifier =
             Modifier
