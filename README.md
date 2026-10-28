@@ -103,8 +103,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   **Retour revient à l'écran précédent** (historique des écrans), pas toujours au MENU.
   **Véhicule** : titre entre deux touches encadrées ‹ › qui passent d'« État du véhicule » (OBD) aux Pneus, touches du
   bas Véhicule, Média et Réglages. Mise en page inspirée de TheCarLauncher (LazarC11), réécrite : aucun
-  code ni dessin repris, icônes et couleurs de LibreHU. Les autres applis LibreHU le suivent pour l'instant comme le
-  style moderne (`style` = `factory`).
+  code ni dessin repris, icônes et couleurs de LibreHU. Le launcher **demande ce style aux autres applis LibreHU**
+  (`style` = `factory`, comme les couleurs et le mode rétro) : elles prennent sa palette, des formes carrées et la police
+  Source Sans 3.
 - **Style « LHU-Link »** (écran ambiance ; Paramètres → Personnalisation → Style) : l'allure d'une tablette de voiture connectée
   (mise en page inspirée de l'interface R-Link 2 de Renault ; aucun logo, nom, icône, police ni image de Renault : tout
   est redessiné avec les icônes de LibreHU). Fond du noir au bleu nuit, **la couleur d'accent sert d'éclairage
@@ -131,8 +132,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   progression encadrée avec les temps de chaque côté, touches précédent / lecture / suivant côte à côte ; Sources = les
   lecteurs en tuiles ; barre du bas Retour / Parcourir / Options. **Barre de boutons en bas** : Menu / Retour, l'action principale
   de l'écran (Android Auto dans le menu, appui long : CarPlay ; Sources dans Multimédia) et Options. Écran
-  **Multimédia** : pochette, titre, artiste, progression et boutons ronds. Les autres applis LibreHU le suivent comme
-  le style moderne (`style` = `ambient`).
+  **Multimédia** : pochette, titre, artiste, progression et boutons ronds. Le launcher **demande ce style aux autres
+  applis LibreHU** (`style` = `ambient`) : elles prennent sa palette, des formes carrées et un texte fin.
 - **Couleur d'accent** : 8 couleurs ou la **roue RGB** (rouge, vert, bleu de 0 à 255, aperçu et valeur hexadécimale) ;
   elle colore le thème, le style rétro, les pixels des animations d'afficheur et toutes les applis LibreHU.
 - **Police** : normale ou **afficheur à segments** (LibreHU Seg14 : DSEG14, celle de l'afficheur rétro de LibreHU-Disc,
