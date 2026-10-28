@@ -686,4 +686,36 @@
     <string name="gpu_animations">GPU acceleration</string>
     <string name="gpu_animations_hint">This animation drawn by the graphics chip (OpenGL ES shaders) instead of shape by shape: less work for the processor. Off: the usual drawing.</string>
     <string name="wallpaper_retro_galaxy">Display: deep space</string>
+    <!-- Key clicks -->
+    <string name="click_section">Key clicks</string>
+    <string name="click_on">Sound on each touch</string>
+    <string name="click_on_hint">In the launcher and every LibreHU app; off: no sound.</string>
+    <string name="click_choose_hint">Sound for the %1$s style (each style keeps its own): touch a sound to hear it and choose it.</string>
+    <string name="click_credits">Sounds by LibreHU, Kenney (kenney.nl, CC0, WAV version by Hugo Locurcio / Calinou) and the Android Open Source Project (Apache 2.0).</string>
+    <string name="click_soft_modern">Soft pop (LibreHU)</string>
+    <string name="click_synth_modern_b">Water drop (LibreHU)</string>
+    <string name="click_synth_modern_c">Felt tap (LibreHU)</string>
+    <string name="click_aosp_effect_tick">Android tick (AOSP)</string>
+    <string name="click_aosp_keypress_standard">Android key (AOSP)</string>
+    <string name="click_kenney_tick_002">Tick 2 (Kenney)</string>
+    <string name="click_kenney_click_001">Click 1 (Kenney)</string>
+    <string name="click_soft_retro">Soft beep (LibreHU)</string>
+    <string name="click_synth_retro_b">LCD beep (LibreHU)</string>
+    <string name="click_synth_retro_c">Two-tone beep (LibreHU)</string>
+    <string name="click_kenney_select_003">Select 3 (Kenney)</string>
+    <string name="click_kenney_toggle_004">Toggle 4 (Kenney)</string>
+    <string name="click_kenney_bong_001">Bong (Kenney)</string>
+    <string name="click_soft_factory">Wood knock (LibreHU)</string>
+    <string name="click_synth_factory_b">Display tick (LibreHU)</string>
+    <string name="click_synth_factory_c">Deep key (LibreHU)</string>
+    <string name="click_aosp_keypress_spacebar">Android space bar (AOSP)</string>
+    <string name="click_kenney_toggle_001">Toggle 1 (Kenney)</string>
+    <string name="click_kenney_click_005">Click 5 (Kenney)</string>
+    <string name="click_kenney_switch_002">Switch 2 (Kenney)</string>
+    <string name="click_soft_ambient">Glass chime (LibreHU)</string>
+    <string name="click_synth_ambient_b">Soft bell (LibreHU)</string>
+    <string name="click_synth_ambient_c">Sparkle (LibreHU)</string>
+    <string name="click_kenney_glass_005">Glass 5 (Kenney)</string>
+    <string name="click_kenney_glass_006">Glass 6 (Kenney)</string>
+    <string name="click_kenney_select_005">Select 5 (Kenney)</string>
 </resources>
