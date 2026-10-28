@@ -630,6 +630,17 @@
     <string name="ambient_options">Options</string>
     <string name="ambient_back">Back</string>
     <string name="ambient_add">Add an app</string>
+    <string name="ambient_home_pages">Home pages</string>
+    <string name="ambient_display">Display</string>
+    <string name="ambient_brightness">Brightness</string>
+    <string name="ambient_volume">Volume</string>
+    <string name="ambient_language">Language</string>
+    <string name="ambient_system_info">System information</string>
+    <string name="ambient_light">Ambient lighting</string>
+    <string name="ambient_light_hint">The colour lights the whole screen (frames, buttons, glow) and every LibreHU app: it is the accent colour.</string>
+    <string name="ambient_driving_aids">Driving aids</string>
+    <string name="ambient_parking_aids">Parking aids</string>
+    <string name="ambient_trip_computer">Trip computer</string>
     <string name="ambient_playback">Playback</string>
     <string name="ambient_destination">Destination</string>
     <string name="ambient_map">Map</string>

@@ -37,14 +37,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AddRoad
 import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.material.icons.outlined.Dialpad
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.ListAlt
 import androidx.compose.material.icons.outlined.ManageSearch
 import androidx.compose.material.icons.outlined.Map
@@ -53,6 +59,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Navigation
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
@@ -60,13 +67,18 @@ import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Radio
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material.icons.outlined.Speaker
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.TireRepair
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Videocam
+import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -204,6 +216,7 @@ internal fun AmbientShell(
             val back =
                 AmbientButton(R.string.ambient_back, Icons.AutoMirrored.Outlined.Undo, onLongClick = { actions.show(Screen.HOME) }) {
                     when {
+                        screen == Screen.MENU && section == AmbientSection.LIGHT -> section = AmbientSection.VEHICLE
                         screen == Screen.MENU && section != AmbientSection.ROOT -> section = AmbientSection.ROOT
                         // The screen shown before (MainActivity keeps the trail).
                         backDispatcher != null -> backDispatcher.onBackPressed()
@@ -536,6 +549,11 @@ internal enum class AmbientSection(
     MULTIMEDIA(R.string.ambient_multimedia),
     PHONE(R.string.factory_phone),
     APPS(R.string.factory_apps),
+    VEHICLE(R.string.factory_vehicle),
+    SYSTEM(R.string.ambient_system),
+
+    /** Not tiles: the ambient light page of the vehicle menu. */
+    LIGHT(R.string.ambient_light),
 }
 
 private class AmbientTile(
@@ -583,8 +601,8 @@ private fun sectionTiles(
                 AmbientTile(Icons.Outlined.PlayCircle, R.string.ambient_multimedia) { onSection(AmbientSection.MULTIMEDIA) },
                 AmbientTile(Icons.Outlined.Phone, R.string.factory_phone) { onSection(AmbientSection.PHONE) },
                 AmbientTile(Icons.Outlined.Apps, R.string.factory_apps) { onSection(AmbientSection.APPS) },
-                AmbientTile(Icons.Outlined.DirectionsCar, R.string.factory_vehicle) { actions.show(Screen.OBD) },
-                AmbientTile(Icons.Outlined.Settings, R.string.ambient_system) { actions.show(Screen.SETTINGS) },
+                AmbientTile(Icons.Outlined.DirectionsCar, R.string.factory_vehicle) { onSection(AmbientSection.VEHICLE) },
+                AmbientTile(Icons.Outlined.Settings, R.string.ambient_system) { onSection(AmbientSection.SYSTEM) },
             )
         AmbientSection.NAV ->
             listOf(
@@ -616,6 +634,27 @@ private fun sectionTiles(
                 },
                 AmbientTile(Icons.Outlined.Settings, R.string.ambient_phone_settings) { dialerTab(context, "SETTINGS") },
             )
+        AmbientSection.VEHICLE ->
+            listOf(
+                AmbientTile(Icons.Outlined.Lightbulb, R.string.ambient_light) { onSection(AmbientSection.LIGHT) },
+                AmbientTile(Icons.Outlined.AddRoad, R.string.ambient_driving_aids) { actions.show(Screen.SETTINGS) },
+                AmbientTile(Icons.Outlined.Videocam, R.string.ambient_parking_aids) { openPackage(context, actions, "org.librehu.service") },
+                AmbientTile(Icons.Outlined.Speed, R.string.ambient_trip_computer) { actions.show(Screen.OBD) },
+                AmbientTile(Icons.Outlined.TireRepair, R.string.tpms_title) { actions.show(Screen.TPMS) },
+            )
+        AmbientSection.SYSTEM -> {
+            fun android(action: String) = { startOrNote(context, android.content.Intent(action)) }
+            listOf(
+                AmbientTile(Icons.Outlined.Home, R.string.ambient_home_pages) { actions.show(Screen.SETTINGS) },
+                AmbientTile(Icons.Outlined.Palette, R.string.ambient_display) { actions.show(Screen.SETTINGS) },
+                AmbientTile(Icons.Outlined.LightMode, R.string.ambient_brightness, android(android.provider.Settings.ACTION_DISPLAY_SETTINGS)),
+                AmbientTile(Icons.Outlined.VolumeUp, R.string.ambient_volume, android(android.provider.Settings.ACTION_SOUND_SETTINGS)),
+                AmbientTile(Icons.Outlined.Translate, R.string.ambient_language, android(android.provider.Settings.ACTION_LOCALE_SETTINGS)),
+                AmbientTile(Icons.Outlined.Schedule, R.string.ambient_date_time, android(android.provider.Settings.ACTION_DATE_SETTINGS)),
+                AmbientTile(Icons.Outlined.Info, R.string.ambient_system_info, android(android.provider.Settings.ACTION_DEVICE_INFO_SETTINGS)),
+            )
+        }
+        AmbientSection.LIGHT -> emptyList()
         AmbientSection.APPS ->
             listOf(
                 AmbientTile(Icons.Outlined.Apps, R.string.ambient_my_apps) { actions.show(Screen.APPS) },
@@ -635,6 +674,7 @@ internal fun AmbientMenu(
     onSection: (AmbientSection) -> Unit,
     actions: LauncherActions,
 ) {
+    if (section == AmbientSection.LIGHT) return AmbientLightPage(actions)
     val tiles = sectionTiles(section, onSection, actions)
     // A new set of tiles zooms in, like the original.
     androidx.compose.runtime.key(section) {
@@ -651,6 +691,40 @@ internal fun AmbientMenu(
             // Fewer than six tiles: keep the tiles the size of the menu's.
             repeat(2 - (tiles.size + 2) / 3) { Spacer(Modifier.weight(1f)) }
         }
+    }
+}
+
+/** The ambient light colours offered, like the original's five (green, red, blue, purple, amber). */
+private val AMBIENT_LIGHTS = listOf(0xFF7BC23A, 0xFFE0261B, 0xFF0078DC, 0xFF8E3FD1, 0xFFC9A24A)
+
+/**
+ * Ambient light: the five colours as swatches lit from the bottom, the one in force framed in white; a touch makes it
+ * the accent colour (everything LibreHU follows it).
+ */
+@Composable
+private fun AmbientLightPage(actions: LauncherActions) {
+    val look by org.librehu.launcher.data.ThemeStore
+        .get(LocalContext.current)
+        .settings
+        .collectAsStateWithLifecycle()
+    Column(Modifier.fillMaxSize().border(BorderStroke(1.dp, CarColors.Accent)).padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        Text(stringResource(R.string.ambient_light), color = LIGHT, fontSize = 24.sp, fontWeight = FontWeight.Light)
+        Row(Modifier.fillMaxWidth().height(170.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            AMBIENT_LIGHTS.forEach { argb ->
+                val color = Color(argb)
+                val on = look.accent == Accent.CUSTOM && look.customAccent == argb.toInt()
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(Brush.verticalGradient(listOf(Color(0xFF15171B), color.copy(alpha = 0.85f))))
+                        .border(BorderStroke(if (on) 3.dp else 1.dp, if (on) Color.White else color))
+                        .clickable { actions.setTheme { it.copy(accent = Accent.CUSTOM, customAccent = argb.toInt()) } },
+                    contentAlignment = Alignment.Center,
+                ) { if (on) Icon(Icons.Outlined.Check, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
+            }
+        }
+        Text(stringResource(R.string.ambient_light_hint), color = DIM, fontSize = 17.sp, fontWeight = FontWeight.Light)
     }
 }
 
