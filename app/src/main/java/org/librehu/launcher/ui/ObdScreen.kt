@@ -98,7 +98,7 @@ fun ObdScreen() {
             Modifier
                 .weight(0.9f)
                 .fillMaxHeight()
-                .clip(RoundedCornerShape(28.dp))
+                .clip(carShape(28.dp))
                 .background(CarColors.Surface)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -116,7 +116,7 @@ fun ObdScreen() {
             Modifier
                 .weight(2f)
                 .fillMaxHeight()
-                .clip(RoundedCornerShape(28.dp))
+                .clip(carShape(28.dp))
                 .background(CarColors.Surface)
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState()),
@@ -162,7 +162,7 @@ private fun BatteryPanel(
     val v = st.battery
     val (label, color) = batteryState(st)
     Column(
-        modifier.clip(RoundedCornerShape(20.dp)).background(CarColors.SurfaceHigh).padding(16.dp),
+        modifier.clip(carShape(20.dp)).background(CarColors.SurfaceHigh).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(stringResource(R.string.obd_battery), color = CarColors.TextDim, fontSize = 16.sp)
@@ -221,7 +221,7 @@ private fun BigValue(
     unit: String,
     modifier: Modifier,
 ) {
-    Column(modifier.clip(RoundedCornerShape(20.dp)).background(CarColors.SurfaceHigh).padding(16.dp)) {
+    Column(modifier.clip(carShape(20.dp)).background(CarColors.SurfaceHigh).padding(16.dp)) {
         Text(label, color = CarColors.TextDim, fontSize = 16.sp)
         Row {
             Text(value, color = CarColors.Text, fontSize = 64.sp, fontWeight = FontWeight.Light)
