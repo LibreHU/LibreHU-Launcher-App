@@ -98,7 +98,8 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   long sur une appli = son menu (épingler…). **Réglages** à la façon d'origine : liste des pages en barres gris clair à
   texte sombre, page avec touche retour encadrée et titre, interrupteurs en barres claires à case à cocher carrée,
   choix en touches encadrées ; barre d'état avec le globe à gauche de l'heure ; progression sur une ligne (écoulé,
-  barre, temps restant). Fenêtres (menu d'une appli, marche / arrêt, confirmations) en cadre noir à filet blanc ;
+  barre, temps restant) ; album sous l'artiste avec l'icône disque ; sans pochette, un carré sombre à grande note fine ;
+  **enveloppe** dans la barre d'état quand des notifications attendent. Fenêtres (menu d'une appli, marche / arrêt, confirmations) en cadre noir à filet blanc ;
   **Retour revient à l'écran précédent** (historique des écrans), pas toujours au MENU.
   **Véhicule** : titre entre deux touches encadrées ‹ › qui passent d'« État du véhicule » (OBD) aux Pneus, touches du
   bas Véhicule, Média et Réglages. Mise en page inspirée de TheCarLauncher (LazarC11), réécrite : aucun

@@ -44,6 +44,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.MailOutline
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Navigation
 import androidx.compose.material.icons.outlined.Pause
@@ -400,6 +401,13 @@ private fun FactoryStatusBar(actions: LauncherActions) {
                 )
                 Spacer(Modifier.width(24.dp))
                 PhoneStatusView(compact = true)
+                // Notifications waiting: the envelope of the original.
+                val waiting by org.librehu.launcher.data.MediaListenerService.waiting
+                    .collectAsStateWithLifecycle()
+                if (waiting > 0) {
+                    Spacer(Modifier.width(14.dp))
+                    Icon(Icons.Outlined.MailOutline, null, tint = STATUS, modifier = Modifier.size(24.dp))
+                }
             }
             Box(Modifier.align(Alignment.CenterEnd)) { WeatherChip() }
         }
@@ -482,6 +490,14 @@ private fun NowPlayingFactory(
                         Text(np.subtitle, color = CarColors.Text, fontFamily = FactoryFont, fontSize = 26.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }
+                if (np.album.isNotEmpty()) {
+                    Spacer(Modifier.height(18.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.Album, null, tint = CarColors.Text, modifier = Modifier.size(30.dp))
+                        Spacer(Modifier.width(18.dp))
+                        Text(np.album, color = CarColors.Text, fontFamily = FactoryFont, fontSize = 26.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
             }
             Cover(np)
         }
@@ -515,8 +531,9 @@ private fun Cover(np: NowPlaying) {
         if (art != null) {
             Image(art, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().border(1.dp, Color(0xFF8A8C90)))
         } else {
-            Box(Modifier.fillMaxSize().background(Color(0xFF1A1B1E)).border(1.dp, TILE_BORDER), contentAlignment = Alignment.Center) {
-                Icon(Icons.Outlined.MusicNote, null, tint = CarColors.TextDim, modifier = Modifier.size(96.dp))
+            // No cover: a dark square shading to black with a large thin note, like the original.
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF2A2B2F), Color(0xFF0E0E10)))), contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.MusicNote, null, tint = Color(0xFF55575C), modifier = Modifier.fillMaxSize(0.5f))
             }
         }
     }
