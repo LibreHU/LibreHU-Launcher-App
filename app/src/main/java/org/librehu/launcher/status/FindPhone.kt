@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import org.librehu.launcher.system.Su
 import java.lang.reflect.Method
 import java.util.concurrent.TimeUnit
 
@@ -97,7 +98,7 @@ object FindPhone {
     /** `pm grant` as root (SuperSU asks once); true when granted. */
     private fun grantAsRoot(context: Context): Boolean {
         runCatching {
-            val p = ProcessBuilder("su", "-c", "pm grant ${context.packageName} ${Manifest.permission.SEND_SMS}").start()
+            val p = ProcessBuilder(*Su.argv("pm grant ${context.packageName} ${Manifest.permission.SEND_SMS}")).start()
             p.outputStream.close()
             if (!p.waitFor(20, TimeUnit.SECONDS)) p.destroy()
         }

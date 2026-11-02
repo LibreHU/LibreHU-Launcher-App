@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import org.librehu.launcher.data.AaManeuver
 import org.librehu.launcher.data.AndroidAutoLink
 import org.librehu.launcher.data.ThemeStore
+import org.librehu.launcher.system.Su
 import org.librehu.launcher.ui.CarColors
 
 /**
@@ -228,7 +229,7 @@ object TurnPopup {
         Thread({
             val granted =
                 runCatching {
-                    val p = ProcessBuilder("su", "-c", "appops set ${app.packageName} SYSTEM_ALERT_WINDOW allow").redirectErrorStream(true).start()
+                    val p = ProcessBuilder(*Su.argv("appops set ${app.packageName} SYSTEM_ALERT_WINDOW allow")).redirectErrorStream(true).start()
                     p.inputStream.readBytes()
                     p.waitFor() == 0
                 }.getOrDefault(false)

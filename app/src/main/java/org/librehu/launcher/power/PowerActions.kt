@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import android.util.Log
+import org.librehu.launcher.system.Su
 
 /**
  * Restart / shut down Android. REBOOT and SHUTDOWN are granted to privileged installs only; otherwise root (`su`,
@@ -40,7 +41,7 @@ object PowerActions {
 
     private fun root(command: String): Boolean =
         try {
-            val p = ProcessBuilder("su", "-c", command).redirectErrorStream(true).start()
+            val p = ProcessBuilder(*Su.argv(command)).redirectErrorStream(true).start()
             p.outputStream.close()
             // The command does not return when it works: give up waiting after a few seconds.
             !p.waitFor(5, java.util.concurrent.TimeUnit.SECONDS) || p.exitValue() == 0

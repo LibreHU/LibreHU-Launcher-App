@@ -102,7 +102,7 @@ object RegionSettings {
     /** [command] as root; its output read on its own thread, so that the 20 s timeout holds even if it hangs. */
     private fun root(command: String): Boolean =
         try {
-            val p = ProcessBuilder("su", "-c", command).redirectErrorStream(true).start()
+            val p = ProcessBuilder(*Su.argv(command)).redirectErrorStream(true).start()
             p.outputStream.close()
             val out = StringBuilder()
             val reader =
