@@ -229,7 +229,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
        (« Se souvenir » sous SuperSU, pas « une seule fois » sous Magisk) ;
      - **KernelSU / KernelSU Next / APatch** (pas de demande : une appli non autorisée ne voit pas le root) : bouton
        **« Ouvrir KernelSU… »**, activer chaque appli LibreHU dans l'onglet Superuser du gestionnaire, puis vérifier ;
-     - **su seul** (intégré au noyau ou à la ROM, sans gestionnaire) : rien à accorder, simple vérification ;
+     - **su seul** (intégré au noyau ou à la ROM, sans gestionnaire) : rien à accorder, simple vérification ; le vieux
+       `su` d'AOSP de certaines ROM Jancar (`/system/xbin/su` : `su UID COMMANDE`, refuse `-c` avec « invalid uid/gid »)
+       est pris en charge ;
      - **aucun root** : ce qui ne marchera pas, et comment en installer un ;
      puis bouton **« Autoriser le root pour toutes les applis LibreHU »** : le launcher, puis LibreHU-service,
      LibreHU Apps, la radio FM, ViPER4Android, MCU Toolkit et Android Auto (ceux qui sont installés) demandent le root
@@ -238,8 +240,11 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
      bouton « Passer cette appli » pendant l'attente ; les applis jamais ouvertes sont réveillées
      (`FLAG_INCLUDE_STOPPED_PACKAGES`). Protocole : diffusion
      `org.librehu.action.REQUEST_ROOT` envoyée au paquet (`reply_to` = le launcher), réponse
-     `org.librehu.action.ROOT_RESULT` (`package`, `granted`) ; chaque appli lance seulement `su -c id`
-     (`system/RootGrants.kt`, `RootRequestReceiver` dans chaque appli).
+     `org.librehu.action.ROOT_RESULT` (`package`, `granted`) ; chaque appli lance seulement `id` par `su`
+     (`system/RootGrants.kt`, `RootRequestReceiver` dans chaque appli). Toutes les commandes root du launcher passent
+     par `system/Su.kt` : `su -c COMMANDE` (Magisk, KernelSU, KernelSU Next, APatch, SuperSU), ou `su 0 sh -c COMMANDE`
+     pour le vieux `su` d'AOSP, reconnu une fois par `su -v` (les autres y répondent par leur version, sans demande de
+     root).
   2. **Langue et heure** : langue d'Android, fuseau horaire, heure / fuseau automatiques, format 24 h, date et heure à
      la main ; réglés en root par un assistant `app_process` (`LocalePicker.updateLocales`,
      `IAlarmManager.setTimeZone` / `setTime` d'Android 9), sans permission privilégiée en plus ; sans root, l'écran

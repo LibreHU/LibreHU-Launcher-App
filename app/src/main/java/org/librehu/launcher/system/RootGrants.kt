@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Root for every LibreHU app at once (first start assistant). SuperSU grants root app by app, and only the app itself
- * can ask: each LibreHU app that uses root has a `RootRequestReceiver` that runs `su -c id` on
+ * can ask: each LibreHU app that uses root has a `RootRequestReceiver` that runs `id` through `su` on
  * `org.librehu.action.REQUEST_ROOT` and answers `org.librehu.action.ROOT_RESULT`. [requestAll] asks them one after
  * the other (the launcher itself first), so the SuperSU prompts come one by one; each is granted with "Remember" once
  * for good.
@@ -89,7 +89,7 @@ object RootGrants {
     private suspend fun suSelf(): Boolean =
         withContext(Dispatchers.IO) {
             runCatching {
-                val p = ProcessBuilder("su", "-c", "id").redirectErrorStream(true).start()
+                val p = ProcessBuilder(*Su.argv("id")).redirectErrorStream(true).start()
                 p.outputStream.close()
                 val done = p.waitFor(WAIT_S, TimeUnit.SECONDS)
                 if (!done) p.destroy()
