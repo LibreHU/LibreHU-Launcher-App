@@ -347,6 +347,7 @@ class BridgeProvider : BridgeKitProvider() {
         val t = m.settings.value
         fun up(f: (TpmsSettings) -> TpmsSettings) = m.updateSettings(f)
         return page(c, "tpms", c.getString(R.string.tpms_title), "tire") {
+            switch("on", s(R.string.tpms_power_on), t.on, s(R.string.tpms_power_hint)) { v -> up { it.copy(on = v) } }
             switch("enabled", s(R.string.tpms_on_dashboard), t.enabled) { v -> up { it.copy(enabled = v) } }
             switch("ble", s(R.string.tpms_ble_enable), t.bleEnabled, s(R.string.tpms_ble_hint)) { v -> up { it.copy(bleEnabled = v) } }
             section(s(R.string.tpms_thresholds))

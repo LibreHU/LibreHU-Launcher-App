@@ -701,7 +701,7 @@ private fun Dashboard(
                 .get(LocalContext.current)
                 .settings
                 .collectAsStateWithLifecycle()
-            if (tpmsSettings.enabled) TpmsCard(Modifier.weight(0.9f).fillMaxWidth()) { actions.show(Screen.TPMS) }
+            if (tpmsSettings.on && tpmsSettings.enabled) TpmsCard(Modifier.weight(0.9f).fillMaxWidth()) { actions.show(Screen.TPMS) }
             if (sos.onDashboard) SosCard(sos, actions, Modifier.weight(0.6f).fillMaxWidth())
             WidgetSlot(
                 slot = side,
