@@ -36,3 +36,19 @@ Les apps `syt` retirent 15 kPa à la pression affichée ; les apps `cz` non. Le 
 
 Les apps `syt` contiennent aussi un ancien protocole (`AA … somme`, classe `FrameDecode`), jamais utilisé : elles
 instancient toujours `FrameDecode3`.
+
+## Adaptateur partagé avec l'OBD (rapport LibreHU Helper du 02/11/2026)
+
+Le launcher ouvrait le **premier** adaptateur USB-série branché et se mettait en route tout seul : avec un ELM327 USB
+(FT232R) pour l'OBD de LibreHU-service, les deux applis se prenaient l'adaptateur toutes les 15 s
+(`LibreHU-TPMS: TPMS read: Queueing USB request failed`, `LibreHU-OBD: Error writing 5 bytes … rc=-1`), parce que
+usb-serial-for-android réclame les interfaces **de force** et les retire ainsi à la connexion de l'autre appli.
+
+Maintenant (`tpms/TpmsManager.kt`) :
+- chaque interface est d'abord réclamée **sans force** : un adaptateur tenu par une autre appli lui est laissé (aucun
+  pilote du noyau ne prend ces adaptateurs sur ces ROM) ;
+- un adaptateur qui n'envoie **aucune trame TPMS valide dans les 15 s** (la réponse à la poignée de main arrive en une
+  ou deux secondes) est rendu et laissé tranquille jusqu'à son débranchement ; le suivant est essayé ;
+- la carte TPMS ne s'affiche d'elle-même qu'à la première trame TPMS reçue, plus au simple branchement d'un adaptateur.
+
+LibreHU-service fait de même pour l'OBD (réclamation sans force, adaptateur qui ne répond pas `ELM` sauté).

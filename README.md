@@ -32,7 +32,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Pneus (TPMS)** : récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte
   sur le tableau de bord, écran détaillé (pression, température, batterie, ID), appairage, permutation, seuils et
   notification d'alerte, **widget « Pneus »** (4 pneus autour de la voiture, rouge en alerte, ouvre l'écran TPMS)
-  utilisable dans les emplacements du launcher ou sur n'importe quel autre écran d'accueil. Protocole :
+  utilisable dans les emplacements du launcher ou sur n'importe quel autre écran d'accueil. Le récepteur doit répondre
+  comme un récepteur TPMS dans les 15 s, sinon l'adaptateur USB-série est rendu (un adaptateur OBD ELM327 n'est plus
+  gardé) ; un adaptateur déjà tenu par une autre appli (l'OBD de LibreHU-service) ne lui est plus pris. Protocole :
   [docs/tpms.md](docs/tpms.md).
 - **Météo** (Paramètres → Conduite, désactivée par défaut) : température, temps, ressenti, min / max du jour à la
   position GPS de l'autoradio (arrondie à 0,01°, environ 1 km) par **Open-Meteo** (gratuit sans clé pour un usage non
