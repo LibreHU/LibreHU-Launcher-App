@@ -45,6 +45,9 @@ enum class PressureUnit { KPA, BAR, PSI }
 enum class CarInvert { NONE, IN_LIGHT, IN_DARK }
 
 data class TpmsSettings(
+    /** TPMS on: off, the launcher opens no USB adapter, scans no Bluetooth sensor, raises no alarm, shows no card. */
+    val on: Boolean = true,
+    /** Card on the dashboard. */
     val enabled: Boolean = false,
     val lowKpa: Int = 180,
     val highKpa: Int = 320,
@@ -249,12 +252,13 @@ class TpmsManager private constructor(
             }.distinctUntilChanged().collect { (st, s) -> TpmsWidget.updateAll(context, st, s) }
         }
         connect()
-        if (_settings.value.bleEnabled) ble.start(_settings.value.refreshSec)
+        if (_settings.value.on && _settings.value.bleEnabled) ble.start(_settings.value.refreshSec)
     }
 
     // --- Bluetooth LE sensors -------------------------------------------------------------------------------------
 
     private fun onBleReading(r: BleTpmsReading) {
+        if (!_settings.value.on) return
         val s = _state.value
         _state.value = s.copy(bleSeen = s.bleSeen + (r.id to r), bleError = "")
         val pos =
@@ -473,7 +477,7 @@ class TpmsManager private constructor(
      * binds them on these ROMs). An adapter that answers nothing like a TPMS receiver is given back ([identify]).
      */
     fun connect() {
-        if (port != null) return
+        if (port != null || !_settings.value.on) return
         notTpms.retainAll(usb.deviceList.keys)
         for (driver in candidates()) {
             val device = driver.device
@@ -544,7 +548,7 @@ class TpmsManager private constructor(
 
     private val reconnect =
         Runnable {
-            if (!started || port != null) return@Runnable
+            if (!started || port != null || !_settings.value.on) return@Runnable
             connect()
             // Adapter still there but not opened yet (permission, used by another app): again later; dropped on detach
             if (port == null && candidates().isNotEmpty()) scheduleReconnect(RETRY_MS)
@@ -594,6 +598,7 @@ class TpmsManager private constructor(
         val s = transform(old)
         prefs
             .edit()
+            .putBoolean("on", s.on)
             .putBoolean("enabled", s.enabled)
             .putInt("low", s.lowKpa)
             .putInt("high", s.highKpa)
@@ -612,8 +617,21 @@ class TpmsManager private constructor(
             .apply()
         _settings.value = s
         if (s.carInvert != old.carInvert) TpmsWidget.refresh(context)
-        if (started && (s.bleEnabled != old.bleEnabled || s.refreshSec != old.refreshSec)) {
-            if (s.bleEnabled) ble.start(s.refreshSec) else ble.stop()
+        if (started && (s.bleEnabled != old.bleEnabled || s.refreshSec != old.refreshSec || s.on != old.on)) {
+            if (s.on && s.bleEnabled) ble.start(s.refreshSec) else ble.stop()
+        }
+        if (started && s.on != old.on) {
+            if (s.on) {
+                connect()
+            } else {
+                // Off: the adapter is given back at once, the alarms and their sound stop.
+                main.removeCallbacks(reconnect)
+                disconnect()
+                main.removeCallbacks(beepAgain)
+                alarmed.forEach { nm().cancel(NOTIFICATION_BASE + it.ordinal) }
+                alarmed.clear()
+                _state.value = _state.value.copy(tyres = emptyMap(), pairing = null, silenced = false)
+            }
         }
     }
 
@@ -700,6 +718,7 @@ class TpmsManager private constructor(
     private fun loadSettings(): TpmsSettings {
         val d = TpmsSettings()
         return TpmsSettings(
+            on = prefs.getBoolean("on", d.on),
             enabled = prefs.getBoolean("enabled", d.enabled),
             lowKpa = prefs.getInt("low", d.lowKpa),
             highKpa = prefs.getInt("high", d.highKpa),

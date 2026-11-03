@@ -52,3 +52,10 @@ Maintenant (`tpms/TpmsManager.kt`) :
 - la carte TPMS ne s'affiche d'elle-même qu'à la première trame TPMS reçue, plus au simple branchement d'un adaptateur.
 
 LibreHU-service fait de même pour l'OBD (réclamation sans force, adaptateur qui ne répond pas `ELM` sauté).
+
+## Interrupteur TPMS
+
+En tête de l'écran Pneus (et page TPMS de l'appli téléphone) : **TPMS activé / désactivé** (`TpmsSettings.on`,
+préférence `on`, activé par défaut). Désactivé, le launcher n'ouvre plus aucun adaptateur USB-série (celui de l'OBD
+reste libre), arrête l'écoute des capteurs Bluetooth LE, coupe les alertes et leur son et cache la carte du tableau de
+bord. « Sur le tableau de bord » ne règle plus que l'affichage de la carte.

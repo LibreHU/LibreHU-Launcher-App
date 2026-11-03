@@ -407,11 +407,12 @@ fun TpmsScreen() {
             Text(stringResource(R.string.tpms_title), color = CarColors.Text, fontSize = 24.sp, fontWeight = FontWeight.Medium)
             Text(
                 when {
+                    !s.on -> stringResource(R.string.tpms_off_status)
                     st.connected -> stringResource(R.string.tpms_receiver, st.device)
                     s.bleEnabled -> stringResource(R.string.tpms_ble_status, st.bleIds.size)
                     else -> stringResource(R.string.tpms_plug_hint)
                 },
-                color = if (st.connected || s.bleEnabled) CarColors.TextDim else AlarmRed,
+                color = if (!s.on || st.connected || s.bleEnabled) CarColors.TextDim else AlarmRed,
                 fontSize = 14.sp,
             )
             if (st.tyres.values.any { it.alarms(s).isNotEmpty() } && s.alarmSound && !st.silenced) {
@@ -462,6 +463,13 @@ fun TpmsScreen() {
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            // TPMS on / off: off, no USB adapter is opened and no Bluetooth sensor scanned.
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Pill(stringResource(if (s.on) R.string.tpms_power_on else R.string.tpms_power_off), s.on) {
+                    tpms.updateSettings { it.copy(on = !it.on) }
+                }
+            }
+            Hint(stringResource(R.string.tpms_power_hint))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 TpmsTab.entries.forEach { t -> Pill(stringResource(t.label), tab == t) { tab = t } }
             }
