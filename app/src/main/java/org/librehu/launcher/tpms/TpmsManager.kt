@@ -216,6 +216,10 @@ class TpmsManager private constructor(
 
                     UsbManager.ACTION_USB_DEVICE_DETACHED -> {
                         val d: UsbDevice? = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+                        if (d != null) {
+                            notTpms -= d.deviceName
+                            busyLogged -= d.deviceName
+                        }
                         if (d != null && d.deviceName == _state.value.device) {
                             main.removeCallbacks(reconnect)
                             disconnect()
@@ -436,19 +440,67 @@ class TpmsManager private constructor(
         }.start()
     }
 
-    /** Opens the first USB-serial adapter found (asks the permission if needed). */
+    /**
+     * USB-serial adapters that sent no TPMS frame within [IDENTIFY_MS] of being opened (an ELM327 OBD adapter, a GPS…):
+     * left alone until they are unplugged.
+     */
+    private val notTpms = mutableSetOf<String>()
+
+    /** Adapters found in use by another app, already reported in the log. */
+    private val busyLogged = mutableSetOf<String>()
+
+    /** The adapter opened now has sent a valid TPMS frame (it is a TPMS receiver). */
+    private var identified = false
+
+    private val identify =
+        Runnable {
+            val name = _state.value.device
+            if (identified || port == null || name.isEmpty()) return@Runnable
+            Log.w(TAG, "$name sent no TPMS frame in ${IDENTIFY_MS / 1000} s: not a TPMS receiver (OBD adapter?), left alone until unplugged")
+            notTpms += name
+            disconnect()
+            scheduleReconnect()
+        }
+
+    /** USB-serial adapters the TPMS may try: not the ones known not to be TPMS receivers. */
+    private fun candidates() = prober.findAllDrivers(usb).filter { it.device.deviceName !in notTpms }
+
+    /**
+     * Opens the first USB-serial adapter that may be the TPMS receiver (asks the permission if needed). It is not taken
+     * from another app: usb-serial-for-android claims the interfaces by force, which took the ELM327 of LibreHU-service's
+     * OBD from it (both then failed in a loop, "Queueing USB request failed" / "Error writing 5 bytes … rc=-1"); each
+     * interface is first claimed without force, and a refusal means another app holds the adapter (no kernel driver
+     * binds them on these ROMs). An adapter that answers nothing like a TPMS receiver is given back ([identify]).
+     */
     fun connect() {
         if (port != null) return
-        val driver = prober.findAllDrivers(usb).firstOrNull() ?: return
-        val device = driver.device
-        if (!_settings.value.enabled) updateSettings { it.copy(enabled = true) } // a receiver is plugged: show the card
-        if (!usb.hasPermission(device)) {
-            val flags = if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0
-            val pi = PendingIntent.getBroadcast(context, 0, Intent(ACTION_PERMISSION).setPackage(context.packageName), flags)
-            usb.requestPermission(device, pi)
+        notTpms.retainAll(usb.deviceList.keys)
+        for (driver in candidates()) {
+            val device = driver.device
+            if (!usb.hasPermission(device)) {
+                val flags = if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0
+                val pi = PendingIntent.getBroadcast(context, 0, Intent(ACTION_PERMISSION).setPackage(context.packageName), flags)
+                usb.requestPermission(device, pi)
+                return
+            }
+            val connection = usb.openDevice(device) ?: continue
+            val free = (0 until device.interfaceCount).all { connection.claimInterface(device.getInterface(it), false) }
+            if (!free) {
+                connection.close()
+                if (busyLogged.add(device.deviceName)) Log.i(TAG, "${device.deviceName} used by another app (OBD of LibreHU-service?): left to it")
+                continue
+            }
+            busyLogged -= device.deviceName
+            open(driver, connection)
             return
         }
-        val connection = usb.openDevice(device) ?: return
+    }
+
+    private fun open(
+        driver: com.hoho.android.usbserial.driver.UsbSerialDriver,
+        connection: android.hardware.usb.UsbDeviceConnection,
+    ) {
+        val device = driver.device
         try {
             val p = driver.ports.first()
             p.open(connection)
@@ -473,10 +525,14 @@ class TpmsManager private constructor(
             connectedAt = SystemClock.elapsedRealtime()
             main.removeCallbacks(reconnect)
             _state.value = _state.value.copy(connected = true, device = device.deviceName, message = "")
+            identified = false
+            main.removeCallbacks(identify)
+            main.postDelayed(identify, IDENTIFY_MS)
             write(TpmsProtocol.handshake((System.currentTimeMillis() and 0xFF).toInt()))
             main.post(heartbeat)
         } catch (e: Exception) {
             Log.w(TAG, "TPMS open: ${e.message}")
+            connection.close()
             disconnect()
             scheduleReconnect()
         }
@@ -490,8 +546,8 @@ class TpmsManager private constructor(
         Runnable {
             if (!started || port != null) return@Runnable
             connect()
-            // Adapter still there but not opened yet: again later (it is dropped on detach)
-            if (port == null && prober.findAllDrivers(usb).isNotEmpty()) scheduleReconnect(RETRY_MS)
+            // Adapter still there but not opened yet (permission, used by another app): again later; dropped on detach
+            if (port == null && candidates().isNotEmpty()) scheduleReconnect(RETRY_MS)
         }
 
     private fun scheduleReconnect(delay: Long = RECONNECT_MS) {
@@ -501,6 +557,7 @@ class TpmsManager private constructor(
 
     fun disconnect() {
         main.removeCallbacks(heartbeat)
+        main.removeCallbacks(identify)
         io?.stop()
         io = null
         try {
@@ -570,6 +627,13 @@ class TpmsManager private constructor(
 
     private fun onFrame(f: TpmsFrame) {
         lastFrameAt = SystemClock.elapsedRealtime()
+        if (!identified) {
+            // A TPMS receiver answers: its card is shown (it used to be on as soon as any USB-serial adapter was
+            // plugged, an OBD adapter included).
+            identified = true
+            main.removeCallbacks(identify)
+            if (!_settings.value.enabled) updateSettings { it.copy(enabled = true) }
+        }
         val s = _state.value
         when (f) {
             is TpmsFrame.Tyre -> {
@@ -664,6 +728,9 @@ class TpmsManager private constructor(
         private const val RECONNECT_MS = 3_000L
         private const val RETRY_MS = 5_000L
         private const val SILENCE_MS = 90_000L
+
+        /** A TPMS receiver answers the handshake within a second or two; nothing in this time: not one. */
+        private const val IDENTIFY_MS = 15_000L
         private const val CAR_MAX_PX = 800
         private const val CAR_MAX_BYTES = 40 * 1024 * 1024
 
