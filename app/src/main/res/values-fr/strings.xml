@@ -725,4 +725,8 @@
     <string name="source_aux_on">Entrée AUX choisie</string>
     <string name="wallpaper_in_style">Fond d\'écran dans ce style</string>
     <string name="wallpaper_in_style_hint">Coupé : noir comme l\'écran d\'origine. Activé : le fond d\'écran choisi ci-dessous, assombri, derrière les écrans.</string>
+    <string name="tpms_power_on">TPMS activé</string>
+    <string name="tpms_power_off">TPMS désactivé</string>
+    <string name="tpms_power_hint">Désactivé : aucun récepteur USB ouvert (l\'adaptateur OBD reste libre), aucun capteur Bluetooth écouté, ni alerte ni carte.</string>
+    <string name="tpms_off_status">TPMS désactivé</string>
 </resources>

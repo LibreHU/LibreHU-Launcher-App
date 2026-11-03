@@ -726,4 +726,8 @@
     <string name="source_aux_on">AUX input selected</string>
     <string name="wallpaper_in_style">Wallpaper in this style</string>
     <string name="wallpaper_in_style_hint">Off: black like the original screen. On: the wallpaper chosen below, dimmed, behind the screens.</string>
+    <string name="tpms_power_on">TPMS on</string>
+    <string name="tpms_power_off">TPMS off</string>
+    <string name="tpms_power_hint">Off: no USB receiver opened (an OBD adapter stays free), no Bluetooth sensor scanned, no alarm, no card.</string>
+    <string name="tpms_off_status">TPMS off</string>
 </resources>

@@ -29,7 +29,9 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   ou, sinon, demandée à l'activation.
   Réglages d'Android Auto : LibreHU-service, onglet Android Auto.
 - **Toutes les applis** : grille ; appui long pour épingler, retirer ou réordonner dans le rail.
-- **Pneus (TPMS)** : récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte
+- **Pneus (TPMS)** : interrupteur **TPMS activé / désactivé** en tête de l'écran Pneus (désactivé : aucun
+  adaptateur USB ouvert, aucun capteur Bluetooth écouté, ni alerte ni carte ; aussi dans l'appli téléphone) ;
+  récepteur TPMS USB (les modèles vendus avec les apps « USB TPMS ») lu directement, carte
   sur le tableau de bord, écran détaillé (pression, température, batterie, ID), appairage, permutation, seuils et
   notification d'alerte, **widget « Pneus »** (4 pneus autour de la voiture, rouge en alerte, ouvre l'écran TPMS)
   utilisable dans les emplacements du launcher ou sur n'importe quel autre écran d'accueil. Le récepteur doit répondre
