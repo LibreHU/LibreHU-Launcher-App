@@ -88,6 +88,7 @@ private enum class SettingsTab(
     DRIVING(R.string.driving_title),
     REGION(R.string.region_title),
     GENERAL(R.string.settings_general),
+    INFO(R.string.info_title),
 }
 
 /** Launcher settings: customisation, standby clock, SOS, general (assistant, reset). */
@@ -110,6 +111,7 @@ fun SettingsScreen(
             SettingsTab.DRIVING -> DrivingSettingsPage(actions)
             SettingsTab.REGION -> RegionSettingsPage()
             SettingsTab.GENERAL -> GeneralSettings(actions)
+            SettingsTab.INFO -> InfoColumn()
         }
     }
     // Factory and ambient styles: the list of pages, then one page, like the original systems.
