@@ -283,7 +283,7 @@
     <string name="speed_widget_title">Speed</string>
     <string name="speed_widget_description">GPS speed, OBD speed (LibreHU-service + ELM327), both, or the speed with the road\'s limit; touch to change the view</string>
     <string name="speed_gps">GPS</string>
-    <string name="speed_obd">OBD</string>
+    <string name="speed_obd">Car (CAN / OBD)</string>
     <string name="speed_unit">km/h</string>
     <string name="speed_gps_permission">GPS (permission?)</string>
     <string name="tpms_tab_usb">USB receiver</string>
