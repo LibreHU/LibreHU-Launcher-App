@@ -37,8 +37,10 @@ data class GpsFix(
 )
 
 /**
- * GPS speed of the head unit (LocationManager, speed of the fixes) and OBD speed sent by LibreHU-service
- * (`org.librehu.action.OBD` broadcast, about once a second, extra `SPEED`). Reference counted (widgets, cards).
+ * GPS speed of the head unit (LocationManager, speed of the fixes) and the car's speed sent by LibreHU-service: its
+ * values combined from the CAN box and the OBD adapter (`org.librehu.action.CAR_DATA`, extra `role:vehicle.speed`),
+ * or the OBD adapter's alone (`org.librehu.action.OBD`, extra `SPEED`), about once a second. Reference counted
+ * (widgets, cards).
  */
 class SpeedMonitor private constructor(
     context: Context,
@@ -75,13 +77,26 @@ class SpeedMonitor private constructor(
             override fun onProviderDisabled(provider: String) = set(_state.value.copy(gpsKmh = null))
         }
 
+    /** Last combined speed (CAR_DATA), ms. */
+    private var carAt = 0L
+
     private val obd =
         object : BroadcastReceiver() {
             override fun onReceive(
                 c: Context,
                 intent: Intent,
             ) {
-                val v = intent.getDoubleExtra(EXTRA_SPEED, Double.NaN)
+                // The car's speed: combined from the CAN box and the OBD adapter (CAR_DATA), or the adapter's alone
+                // from a service without CAR_DATA. CAR_DATA has the adapter's too: while it comes, it alone counts
+                // (the box's and the adapter's speeds would take turns).
+                val now = System.currentTimeMillis()
+                val v =
+                    if (intent.action == ACTION_CAR_DATA) {
+                        intent.getDoubleExtra(EXTRA_CAR_SPEED, Double.NaN).also { if (!it.isNaN()) carAt = now }
+                    } else {
+                        if (now - carAt < STALE_MS) return
+                        intent.getDoubleExtra(EXTRA_SPEED, Double.NaN)
+                    }
                 if (v.isNaN()) return
                 obdAt = System.currentTimeMillis()
                 set(_state.value.copy(obdKmh = v.toFloat()))
@@ -104,7 +119,14 @@ class SpeedMonitor private constructor(
     fun start() {
         if (users++ > 0) return
         // Only from LibreHU-service (signature permission VEHICLE): no other app can fake the speed.
-        ContextCompat.registerReceiver(app, obd, IntentFilter(ACTION_OBD), org.librehu.launcher.obd.ObdLive.VEHICLE_PERMISSION, null, ContextCompat.RECEIVER_EXPORTED)
+        ContextCompat.registerReceiver(
+            app,
+            obd,
+            IntentFilter(ACTION_OBD).apply { addAction(ACTION_CAR_DATA) },
+            org.librehu.launcher.obd.ObdLive.VEHICLE_PERMISSION,
+            null,
+            ContextCompat.RECEIVER_EXPORTED,
+        )
         val granted =
             ContextCompat.checkSelfPermission(app, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         set(_state.value.copy(gpsPermission = granted))
@@ -137,6 +159,10 @@ class SpeedMonitor private constructor(
     companion object {
         const val ACTION_OBD = "org.librehu.action.OBD"
         const val EXTRA_SPEED = "SPEED"
+
+        /** LibreHU-service's values combined from the CAN box and the OBD adapter (service versionCode 189 and later). */
+        const val ACTION_CAR_DATA = "org.librehu.action.CAR_DATA"
+        const val EXTRA_CAR_SPEED = "role:vehicle.speed"
         const val STALE_MS = 5_000L
 
         @Volatile

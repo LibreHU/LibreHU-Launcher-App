@@ -50,7 +50,7 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
   est rattachée à la route la plus proche allant dans son sens (cap GPS), une autre route doit gagner deux fois de
   suite. **Alerte de dépassement** : marge en km/h et/ou en %, durée minimale, 6 sons au choix (bip, double, triple,
   carillon, alarme, son de notification) ou aucun, volume, une fois ou répétée, signal au changement de limitation,
-  vitesse GPS ou OBD. **Widget « Limitation »** (panneau, rouge en dépassement), **mode « avec la limitation »** du
+  vitesse GPS ou de la voiture (boîtier CAN et OBD combinés par LibreHU-service). **Widget « Limitation »** (panneau, rouge en dépassement), **mode « avec la limitation »** du
   widget Vitesse, et panneau **dans la barre** (option). Serveur Overpass au choix. Alerte de limitation seulement :
   **aucun radar** (signaler leur position est interdit en France, art. R413-15 du Code de la route). Données OSM
   participatives : les panneaux font foi. `speed/SpeedLimits.kt`, `speed/SpeedLimitManager.kt`.
@@ -316,7 +316,7 @@ Google ni Android Auto, et sans aucun de leurs éléments graphiques.
 - **Téléphone** : « Pas de service » quand le réseau est perdu ; charge déduite (téléphone sur l'USB de l'autoradio,
   ou batterie qui remonte) : le profil HFP ne transmet ni l'état de charge ni le type de réseau (2G…5G).
 - **Widget « Vitesse »** (fourni par le launcher, emplacements ou tout écran d'accueil) : vitesse GPS de
-  l'autoradio, vitesse OBD (diffusion `org.librehu.action.OBD` de LibreHU-service avec un ELM327), les deux côte à
+  l'autoradio, vitesse de la voiture (diffusion `org.librehu.action.CAR_DATA` de LibreHU-service : boîtier CAN et OBD combinés ; à défaut `org.librehu.action.OBD`, ELM327 seul), les deux côte à
   côte, ou la vitesse **avec le panneau de limitation** de la route (rouge en dépassement) ; un toucher change de vue.
   Aux couleurs du thème.
 - **TPMS** : alerte sonore (bips sur le haut-parleur média, répétition réglable, bouton « Couper »), fréquence
